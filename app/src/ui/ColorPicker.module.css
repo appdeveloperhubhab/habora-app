@@ -1,0 +1,42 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.label {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: var(--sp-2);
+}
+
+.swatch {
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: var(--swatch);
+  transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast) linear;
+}
+
+.swatch:active {
+  transform: scale(0.88);
+}
+
+.selected {
+  /* Обводка идёт цветом фона, а не белым: иначе на светлой теме
+     выделение спорит со светлыми оттенками палитры. */
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch);
+}

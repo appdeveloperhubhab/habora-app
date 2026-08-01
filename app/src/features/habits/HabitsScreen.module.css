@@ -1,0 +1,77 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) 0;
+}
+
+/*
+ * Карточки появляются каскадом сверху вниз. Задержки заданы через nth-child,
+ * а не инлайном: так компоненты карточек ничего не знают про анимацию списка
+ * и остаются переиспользуемыми.
+ *
+ * Первые восемь достаточно: дальше по списку задержка уже не читается,
+ * зато ожидание становится заметным.
+ */
+.list > * {
+  animation: cardIn var(--t-list) var(--ease-screen) backwards;
+}
+
+.list > *:nth-child(2) {
+  animation-delay: var(--t-stagger);
+}
+.list > *:nth-child(3) {
+  animation-delay: calc(var(--t-stagger) * 2);
+}
+.list > *:nth-child(4) {
+  animation-delay: calc(var(--t-stagger) * 3);
+}
+.list > *:nth-child(5) {
+  animation-delay: calc(var(--t-stagger) * 4);
+}
+.list > *:nth-child(6) {
+  animation-delay: calc(var(--t-stagger) * 5);
+}
+.list > *:nth-child(7) {
+  animation-delay: calc(var(--t-stagger) * 6);
+}
+.list > *:nth-child(n + 8) {
+  animation-delay: calc(var(--t-stagger) * 7);
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* Плитка: две карточки в ряд. Колонки с minmax(0, …), иначе длинное название
+   распирает колонку и сетка вылезает за край экрана. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+/* В режиме настройки вида снизу висит капсула переключателя —
+   оставляем под неё место, чтобы последняя карточка не пряталась. */
+.orderMode {
+  padding-bottom: calc(var(--tabbar-h) + var(--sp-6));
+}
+
+/* Подсказка новичку — выровнена по правому краю, под кнопку отметки,
+   на которую и показывает. */
+.hint {
+  padding: 0 var(--sp-5) var(--sp-2);
+  text-align: right;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  animation: fadeIn var(--t-screen) var(--ease-screen) backwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}

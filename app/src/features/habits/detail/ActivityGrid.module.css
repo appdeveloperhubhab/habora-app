@@ -1,0 +1,78 @@
+.card {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-2) var(--sp-4) var(--sp-4);
+  border-radius: var(--r-card);
+  /* Карточка залита цветом привычки заметнее, чем в списке: это главный
+     блок экрана, и он должен сразу задавать её цвет. */
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--habit) 26%, var(--surface)),
+    color-mix(in srgb, var(--habit) 12%, var(--surface))
+  );
+  overflow: hidden;
+}
+
+.labels {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: none;
+}
+
+.dayLabel {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: color-mix(in srgb, var(--habit) 45%, var(--text-dim));
+}
+
+/* Полгода в одну ширину экрана не влезает — сетка прокручивается вбок,
+   и открывается сразу на текущей неделе. */
+.scroller {
+  overflow-x: auto;
+  /* Без этого flex-элемент не сжимается меньше своего содержимого,
+     и полугодовая сетка растянула бы карточку за край экрана. */
+  min-width: 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.grid {
+  display: flex;
+  gap: 4px;
+  padding-right: var(--sp-2);
+}
+
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cell {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-cell);
+  background: color-mix(in srgb, var(--habit) 14%, var(--cell-empty));
+  transition: background var(--t-mid) var(--ease-soft);
+}
+
+.done {
+  background: var(--habit);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
+}
+
+.today {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, #fff 70%, transparent);
+}
+
+.future {
+  opacity: 0.35;
+}

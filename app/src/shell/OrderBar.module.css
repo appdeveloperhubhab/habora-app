@@ -1,0 +1,105 @@
+.wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Держится над нижними вкладками, но не прилипает к ним вплотную. */
+  bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + env(safe-area-inset-bottom) + var(--sp-3));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4);
+}
+
+/*
+ * Капсула выезжает снизу с лёгким перелётом — так она ощущается предметом,
+ * который положили на экран, а не картинкой, которая просто возникла.
+ */
+.capsule {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 6px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  transform-origin: bottom center;
+  animation: capsuleIn var(--t-sheet) var(--ease-screen) backwards;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  /* Крестик приходит чуть позже капсулы — взгляд успевает зацепиться
+     за главное, а потом за вспомогательное. */
+  animation: capsuleIn var(--t-sheet) var(--ease-screen) var(--t-stagger) backwards;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.close:active {
+  transform: scale(0.9);
+}
+
+/* Подсветка выбранного вида. Ширина ровно на одну кнопку, поэтому
+   translateX в процентах переносит её к соседней позиции. */
+.thumb {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 52px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  box-shadow: inset 0 1px 0 var(--card-highlight);
+  transition: transform var(--t-screen) var(--ease-screen);
+}
+
+.item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  color: var(--text-faint);
+  transition: color var(--t-mid) linear, transform var(--t-fast) var(--ease-spring);
+  animation: iconIn var(--t-list) var(--ease-screen) backwards;
+}
+
+.item:active {
+  transform: scale(0.88);
+}
+
+.active {
+  color: var(--text);
+}
+
+@keyframes capsuleIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.86);
+  }
+}
+
+/* Иконки проявляются по очереди — капсула словно наполняется содержимым. */
+@keyframes iconIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.7);
+  }
+}

@@ -1,0 +1,77 @@
+/*
+ * Неделя занимает всё место от середины карточки до кнопки отметки.
+ * Полоски тянутся, деля его поровну, поэтому их толщина зависит от ширины
+ * экрана, а не задана жёстко — на широком телефоне они шире.
+ */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  /* Зазор до кнопки отметки — здесь, а не в gap карточки. */
+  padding-right: var(--sp-2);
+}
+
+.bar {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  border-radius: var(--r-pill);
+  transform-origin: center;
+
+  /* Объём: градиент по высоте, светлый блик сверху и тень снизу. */
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--habit) 38%, transparent),
+    color-mix(in srgb, var(--habit) 22%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  transition:
+    background var(--t-check-fill) var(--ease-soft),
+    box-shadow var(--t-check-fill) var(--ease-soft),
+    transform var(--t-check-fill) var(--ease-spring);
+}
+
+.done {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--habit) 100%, #fff 18%),
+    var(--habit)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent),
+    0 1px 3px color-mix(in srgb, var(--habit) 45%, transparent);
+}
+
+/* Сегодняшний день выше остальных — его видно, не пересчитывая дни. */
+.today {
+  height: 42px;
+}
+
+.future {
+  opacity: 0.55;
+}
+
+/* Волна отметки: полоска плавно подскакивает и подсвечивается, каждая
+   следующая — заметно позже предыдущей, чтобы волна читалась как движение. */
+.pulse {
+  animation: bump var(--t-check-wave) var(--ease-soft);
+}
+
+@keyframes bump {
+  0% {
+    transform: scaleY(1);
+  }
+  40% {
+    transform: scaleY(1.24);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent),
+      0 0 12px color-mix(in srgb, var(--habit) 65%, transparent);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}

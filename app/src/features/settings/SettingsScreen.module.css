@@ -1,0 +1,152 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.back:active {
+  transform: scale(0.88);
+}
+
+.title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding: var(--sp-4);
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--sp-8));
+}
+
+.content > * {
+  flex: none;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.groupTitle {
+  padding-left: var(--sp-4);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Строки одной группы собраны в общую карточку и разделены линиями —
+   так список читается как в системных настройках телефона. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-4);
+  text-align: left;
+  transition: background var(--t-fast) linear;
+}
+
+.row + .row {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+button.row:active {
+  background: var(--surface-2);
+}
+
+.rowDisabled {
+  opacity: 0.55;
+}
+
+.rowLabel {
+  font-size: var(--fs-body);
+}
+
+.rowValue {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+}
+
+.badge {
+  padding: 3px var(--sp-2);
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+  background: var(--surface-2);
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+.segmentItem {
+  padding: var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  transition: background var(--t-mid) var(--ease-soft), color var(--t-mid) linear;
+}
+
+.segmentActive {
+  color: #fff;
+  background: var(--accent);
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}

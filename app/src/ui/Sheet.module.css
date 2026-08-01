@@ -1,0 +1,78 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: flex-end;
+  background: var(--overlay);
+  animation: fade var(--t-sheet) var(--ease-screen);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Окно не на весь экран: сверху остаётся полоска фона, чтобы было понятно,
+     что это слой поверх, а не новая страница. */
+  max-height: 82vh;
+  padding: var(--sp-2) 0 calc(env(safe-area-inset-bottom) + var(--sp-4));
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  background: var(--surface-2);
+  animation: slideUp var(--t-sheet) var(--ease-screen);
+}
+
+.grabber {
+  align-self: center;
+  width: 38px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex: none;
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+}
+
+.title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  color: var(--text-dim);
+  background: var(--surface-3);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.close:active {
+  transform: scale(0.88);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-2) var(--sp-4) 0;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+}

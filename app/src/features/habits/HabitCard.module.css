@@ -1,0 +1,176 @@
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Зазоры заданы отступами внутри частей, а не gap: только так правый край
+     текстовой половины попадает точно в середину карточки. */
+  gap: 0;
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3);
+  /* Полная капсула — форма карточки повторяет форму кнопки внутри неё. */
+  border-radius: var(--r-pill);
+
+  /*
+   * Карточка должна читаться как отдельный физический объект на чёрном, а не
+   * как пятно. Объём складывается из трёх вещей: заливка градиентом (светлее
+   * сверху, темнее снизу), светлый контур по краю и мягкая тень в цвете
+   * привычки под карточкой.
+   */
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--habit) calc(var(--tint-top) * 100%), var(--surface)),
+    color-mix(in srgb, var(--habit) calc(var(--tint-strength) * 100%), var(--surface))
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    inset 0 1px 0 var(--card-highlight),
+    0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  transition: box-shadow var(--t-slow) var(--ease-out);
+}
+
+/* Тонировка выключена в настройках привычки: карточка нейтральная,
+   цвет остаётся только на полосках, иконке и кнопке. */
+.plain {
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    inset 0 1px 0 var(--card-highlight);
+}
+
+/* Мягкая вспышка в момент отметки — подтверждение всей карточкой.
+   Две одинаковые анимации под разными именами чередуются между нажатиями,
+   иначе повторный тап подряд не перезапустил бы её. */
+.flashA {
+  animation: flashA var(--t-check-flash) var(--ease-soft);
+}
+
+.flashB {
+  animation: flashB var(--t-check-flash) var(--ease-soft);
+}
+
+/*
+ * Левая половина карточки целиком отдана иконке и названию. Благодаря этому
+ * первая полоска недели всегда начинается ровно на середине карточки —
+ * у всех привычек в списке они выстраиваются в одну вертикаль.
+ */
+.open {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  /*
+   * Ширина подобрана так, чтобы правый край половины совпал с центром карточки.
+   * Поправка — половина разницы горизонтальных отступов: доли flex считаются
+   * от внутренней ширины без них, а середина нужна от внешней ширины карточки.
+   */
+  flex: 0 0 calc(50% - 2px);
+  padding-right: var(--sp-2);
+  min-width: 0;
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.open:active {
+  transform: scale(0.98);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  /* Иконка приглушена: она помогает узнать привычку, но не спорит с названием. */
+  color: color-mix(in srgb, var(--habit) 55%, var(--text-faint));
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--fs-habit);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Кнопка таймера мельче и тише кнопки отметки: отметка — главное действие
+   карточки, запуск отсчёта — вспомогательное. */
+.timerButton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-right: var(--sp-2);
+  border-radius: var(--r-pill);
+  color: color-mix(in srgb, var(--habit) 75%, var(--text-dim));
+  background: color-mix(in srgb, var(--habit) 14%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.timerButton:active {
+  transform: scale(0.88);
+}
+
+.subtitle {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: color-mix(in srgb, var(--habit) 70%, var(--text-dim));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Подсветка нарастает и тает постепенно, без скачка в начале и обрыва в конце.
+ * Каждый кадр повторяет базовые контур, блик и тень карточки — иначе на время
+ * анимации её объём пропадал бы.
+ */
+@keyframes flashA {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--card-edge),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  }
+  35% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+  }
+  65% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 26%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 24px -8px color-mix(in srgb, var(--habit) 62%, transparent);
+  }
+}
+
+@keyframes flashB {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--card-edge),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  }
+  35% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+  }
+  65% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 26%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 24px -8px color-mix(in srgb, var(--habit) 62%, transparent);
+  }
+}

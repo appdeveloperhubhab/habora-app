@@ -1,0 +1,317 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: screenUp var(--t-screen) var(--ease-screen);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.close:active {
+  transform: scale(0.88);
+}
+
+/* Кнопка сохранения окрашена в цвет привычки — смену цвета видно сразу,
+   ещё до того, как изменения записаны. */
+.save {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  color: #fff;
+  background: var(--habit);
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--habit) 70%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring), background var(--t-mid) var(--ease-soft);
+}
+
+.save:active {
+  transform: scale(0.9);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) calc(env(safe-area-inset-bottom) + var(--sp-8));
+}
+
+.content > * {
+  flex: none;
+}
+
+/* Иконка и название — одной строкой, как на референсе. */
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-pill);
+  color: var(--habit);
+  background: color-mix(in srgb, var(--habit) 18%, var(--surface-2));
+  transition: transform var(--t-fast) var(--ease-spring), background var(--t-mid) var(--ease-soft);
+}
+
+.iconButton:active {
+  transform: scale(0.9);
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  padding: 0 var(--sp-4);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font-size: var(--fs-habit);
+  font-weight: var(--fw-bold);
+  outline: none;
+  transition: box-shadow var(--t-fast) linear;
+}
+
+.nameInput:focus {
+  box-shadow: inset 0 0 0 2px var(--habit);
+}
+
+.nameInput::placeholder {
+  font-weight: var(--fw-regular);
+  color: var(--text-faint);
+}
+
+.colorBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.tintRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.tintText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tintTitle {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+}
+
+.tintHint {
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+}
+
+.input {
+  padding: var(--sp-3) var(--sp-4);
+  border: none;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  font-size: var(--fs-body);
+  outline: none;
+  transition: box-shadow var(--t-fast) linear;
+}
+
+.input:focus {
+  box-shadow: inset 0 0 0 2px var(--habit);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.error {
+  font-size: var(--fs-caption);
+  color: #ff6b5a;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.heading {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+}
+
+/* Пояснение под заголовком раздела: без своего стиля оно наследовало
+   размер заголовка и читалось как второй заголовок. */
+.hint {
+  margin-top: calc(var(--sp-2) * -1);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  color: var(--text-faint);
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+.segmentItem {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  transition: background var(--t-mid) var(--ease-soft), color var(--t-mid) linear;
+}
+
+.segmentActive {
+  color: #fff;
+  background: var(--habit);
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-2);
+}
+
+.day {
+  padding: var(--sp-3) 0;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  background: var(--surface-2);
+  transition: transform var(--t-fast) var(--ease-spring), background var(--t-fast) linear,
+    color var(--t-fast) linear;
+}
+
+.day:active {
+  transform: scale(0.9);
+}
+
+.dayOn {
+  color: #fff;
+  background: var(--habit);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.stepperLabel {
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+  min-width: 0;
+}
+
+.stepperControls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+}
+
+.stepperButton {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface-3);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-fast) linear;
+}
+
+.stepperButton:active {
+  transform: scale(0.85);
+}
+
+.stepperButton:disabled {
+  opacity: 0.35;
+}
+
+.stepperValue {
+  min-width: 32px;
+  text-align: center;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: #ff6b5a;
+  background: color-mix(in srgb, #ff6b5a 12%, transparent);
+}
+
+/* Форма поднимается снизу — движение то же по характеру, что у экранов,
+   только по другой оси. */
+@keyframes screenUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}

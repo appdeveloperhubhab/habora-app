@@ -1,0 +1,267 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-6) var(--sp-4) calc(env(safe-area-inset-bottom) + var(--sp-5));
+  padding-top: calc(env(safe-area-inset-top) + var(--sp-6));
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+/* Мягкая подсветка сверху, чтобы первый кадр не был плоским чёрным
+   прямоугольником. Тот же приём, что в варианте фона «С акцентом». */
+.glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    110% 55% at 50% -8%,
+    color-mix(in srgb, var(--accent) 34%, transparent),
+    transparent 70%
+  );
+}
+
+.welcome {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  text-align: center;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: var(--sp-3);
+  border-radius: 26px;
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 16px 40px -16px color-mix(in srgb, var(--accent) 90%, transparent);
+  animation: logoIn var(--t-screen) var(--ease-screen) backwards;
+}
+
+.appName {
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.04em;
+  animation: fadeUp var(--t-screen) var(--ease-screen) var(--t-stagger) backwards;
+}
+
+.tagline {
+  font-size: var(--fs-title);
+  font-weight: var(--fw-medium);
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  animation: fadeUp var(--t-screen) var(--ease-screen) calc(var(--t-stagger) * 2) backwards;
+}
+
+.intro {
+  max-width: 300px;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--text-dim);
+  animation: fadeUp var(--t-screen) var(--ease-screen) calc(var(--t-stagger) * 3) backwards;
+}
+
+.pickHeader {
+  position: relative;
+  flex: none;
+  margin-bottom: var(--sp-5);
+  animation: fadeUp var(--t-screen) var(--ease-screen) backwards;
+}
+
+.pickTitle {
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+}
+
+.pickHint {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.chips {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-4);
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-pill);
+  text-align: left;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--card-edge);
+  transition:
+    background var(--t-mid) var(--ease-soft),
+    box-shadow var(--t-mid) var(--ease-soft),
+    transform var(--t-fast) var(--ease-spring);
+  animation: fadeUp var(--t-list) var(--ease-screen) backwards;
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+/* Каскад: чипы проявляются сверху вниз тем же шагом, что карточки в списке. */
+.chip:nth-child(2) {
+  animation-delay: calc(var(--t-stagger) * 0.5);
+}
+.chip:nth-child(3) {
+  animation-delay: var(--t-stagger);
+}
+.chip:nth-child(4) {
+  animation-delay: calc(var(--t-stagger) * 1.5);
+}
+.chip:nth-child(5) {
+  animation-delay: calc(var(--t-stagger) * 2);
+}
+.chip:nth-child(n + 6) {
+  animation-delay: calc(var(--t-stagger) * 2.5);
+}
+
+/*
+ * Вход в редактор стоит последним в списке и оформлен пунктиром: он не один
+ * из вариантов выбора, а другое действие — «ничего из этого, хочу своё».
+ */
+.ownChip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+  margin-top: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-pill);
+  border: 1.5px dashed var(--surface-3);
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring), border-color var(--t-mid) linear;
+  animation: fadeUp var(--t-list) var(--ease-screen) calc(var(--t-stagger) * 3) backwards;
+}
+
+.ownChip:active {
+  transform: scale(0.97);
+  border-color: var(--accent);
+}
+
+.ownIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--accent);
+}
+
+.ownHint {
+  display: block;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  color: var(--text-faint);
+}
+
+.chipOn {
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--habit) calc(var(--tint-top) * 100%), var(--surface)),
+    color-mix(in srgb, var(--habit) calc(var(--tint-strength) * 100%), var(--surface))
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--habit) 45%, transparent),
+    0 6px 18px -10px color-mix(in srgb, var(--habit) 70%, transparent);
+}
+
+/* Иконка окрашена в цвет привычки: у невыбранного чипа это единственная
+   подсказка, каким он станет после нажатия. */
+.chipIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--habit);
+}
+
+.chipName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipMark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  color: #fff;
+  background: var(--surface-3);
+  transition: background var(--t-mid) var(--ease-soft);
+}
+
+.chipOn .chipMark {
+  background: var(--habit);
+}
+
+.primary {
+  position: relative;
+  flex: none;
+  margin-top: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--accent) 90%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-mid) linear;
+}
+
+.primary:active {
+  transform: scale(0.97);
+}
+
+.primary:disabled {
+  opacity: 0.6;
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes logoIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}

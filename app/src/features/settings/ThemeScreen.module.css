@@ -1,0 +1,287 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.back:active {
+  transform: scale(0.88);
+}
+
+.title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-2) var(--sp-4) calc(env(safe-area-inset-bottom) + var(--sp-8));
+}
+
+.content > * {
+  flex: none;
+}
+
+.previewBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Макет телефона: фон выбирается вслепую, если не показать результат сразу. */
+.phone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 160px;
+  height: 220px;
+  padding: var(--sp-3);
+  border-radius: 26px;
+  background-color: var(--bg);
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    0 8px 24px -12px rgba(0, 0, 0, 0.7);
+}
+
+.phoneBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-1);
+}
+
+.phoneDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+.phoneTitle {
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  color: var(--text);
+}
+
+.phoneCard {
+  height: 30px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--habit) calc(var(--tint-strength) * 100%), var(--surface));
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    inset 0 1px 0 var(--card-highlight);
+}
+
+.previewHint {
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.groupTitle {
+  padding-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+.segmentItem {
+  padding: var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  transition: background var(--t-mid) var(--ease-soft), color var(--t-mid) linear;
+}
+
+.segmentActive {
+  color: #fff;
+  background: var(--accent);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  text-align: left;
+  transition: background var(--t-fast) linear;
+}
+
+.option + .option {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.option:active {
+  background: var(--surface-2);
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.optionTitle {
+  font-size: var(--fs-body);
+}
+
+.optionHint {
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+}
+
+.radio {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  color: #fff;
+  background: var(--surface-3);
+  transition: background var(--t-mid) var(--ease-soft);
+}
+
+.optionActive .radio {
+  background: var(--accent);
+}
+
+.gradientRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.gradientSwatch {
+  display: flex;
+  align-items: flex-end;
+  height: 64px;
+  padding: var(--sp-2);
+  border-radius: var(--r-lg);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.gradientSwatch:active {
+  transform: scale(0.96);
+}
+
+.gradientLabel {
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: var(--fw-medium);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+}
+
+.preset {
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast) linear;
+}
+
+.preset:active {
+  transform: scale(0.9);
+}
+
+.presetActive {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+.photoButton,
+.photoRemove {
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.photoButton {
+  color: #fff;
+  background: var(--accent);
+}
+
+.photoRemove {
+  color: #ff6b5a;
+  background: color-mix(in srgb, #ff6b5a 12%, transparent);
+}
+
+.photoButton:active,
+.photoRemove:active {
+  transform: scale(0.97);
+}
+
+.fileInput {
+  display: none;
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}

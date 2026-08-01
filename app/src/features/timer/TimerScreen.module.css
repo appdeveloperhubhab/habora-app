@@ -1,0 +1,121 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+/* Подсветка в цвет привычки: экран таймера принадлежит конкретному делу. */
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    110% 50% at 50% -5%,
+    color-mix(in srgb, var(--habit) 28%, transparent),
+    transparent 70%
+  );
+}
+
+.bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.close:active {
+  transform: scale(0.88);
+}
+
+.title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+}
+
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+  padding: var(--sp-4) var(--sp-5) calc(env(safe-area-inset-bottom) + var(--sp-8));
+}
+
+.name {
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+/* Цифры табличные — иначе строка дёргается на каждой смене секунды. */
+.time {
+  font-size: 52px;
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--sp-3);
+  width: 100%;
+  max-width: 320px;
+  margin-top: var(--sp-4);
+}
+
+.primary,
+.secondary {
+  padding: var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.primary:active,
+.secondary:active {
+  transform: scale(0.96);
+}
+
+.primary {
+  color: #fff;
+  background: var(--habit);
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--habit) 90%, transparent);
+}
+
+.secondary {
+  color: var(--text-dim);
+  background: var(--surface);
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}

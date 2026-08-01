@@ -1,0 +1,119 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.description {
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.iconButton:active {
+  transform: scale(0.88);
+}
+
+/* Карандаш окрашен в цвет привычки — он ведёт к её редактированию. */
+.edit {
+  color: var(--habit);
+  background: color-mix(in srgb, var(--habit) 18%, var(--surface));
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) calc(env(safe-area-inset-bottom) + var(--sp-8));
+}
+
+/*
+ * Блоки не должны ужиматься по высоте: в колонке flex по умолчанию сжимает
+ * элементы, чтобы уместить их в контейнер, и сетка активности схлопывалась
+ * в полоску вместо того, чтобы вытолкнуть страницу в прокрутку.
+ */
+.content > * {
+  flex: none;
+}
+
+/* Запуск таймера — единственное действие на экране просмотра, поэтому
+   оно окрашено в цвет привычки и стоит первым. */
+.timerButton {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: color-mix(in srgb, var(--habit) 85%, #000 25%);
+  background: color-mix(in srgb, var(--habit) var(--check-fill), #fff);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.timerButton:active {
+  transform: scale(0.97);
+}
+
+.timerDuration {
+  margin-left: auto;
+  font-weight: var(--fw-medium);
+  opacity: 0.7;
+}
+
+/* Экран приходит справа, но смещение маленькое, а времени много:
+   движение читается как мягкий наплыв, а не как рывок. */
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}

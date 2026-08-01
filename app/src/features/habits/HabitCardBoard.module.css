@@ -1,0 +1,194 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--habit) calc(var(--tint-top) * 100%), var(--surface)),
+    color-mix(in srgb, var(--habit) calc(var(--tint-strength) * 100%), var(--surface))
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    inset 0 1px 0 var(--card-highlight),
+    0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  transition: box-shadow var(--t-slow) var(--ease-out);
+}
+
+.plain {
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--card-edge),
+    inset 0 1px 0 var(--card-highlight);
+}
+
+.grid {
+  /* Плитка теснее: две карточки в ряд, значит всё внутри мельче. */
+  padding: var(--sp-3);
+  gap: var(--sp-2);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.body:active {
+  transform: scale(0.985);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: color-mix(in srgb, var(--habit) 60%, var(--text-faint));
+}
+
+.name {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid .name {
+  font-size: var(--fs-caption);
+}
+
+/* Сетка выполнения: столбцы — недели, строки — дни. Клетки тянутся,
+   поэтому одна и та же разметка работает и во всю ширину, и в плитке. */
+.cells {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--habit) 12%, var(--cell-empty));
+  transition: background var(--t-check-fill) var(--ease-soft);
+}
+
+.cellDone {
+  background: var(--habit);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent);
+}
+
+.cellToday {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #fff 65%, transparent);
+}
+
+.cellFuture {
+  opacity: 0.35;
+}
+
+.total {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--habit) 60%, var(--text-dim));
+}
+
+/* Кнопка отметки — светлая плашка в тон привычки во всю ширину карточки. */
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: color-mix(in srgb, var(--habit) 85%, #000 30%);
+  background: color-mix(in srgb, var(--habit) 22%, #fff);
+  transition: transform var(--t-check-press) var(--ease-spring), background var(--t-check-fill) var(--ease-soft);
+}
+
+.grid .mark {
+  padding: var(--sp-2);
+  font-size: var(--fs-caption);
+}
+
+.mark:active {
+  transform: scale(0.96);
+}
+
+.markDone {
+  background: color-mix(in srgb, var(--habit) var(--check-fill), #fff);
+}
+
+.markIcon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.markDone .markIcon {
+  box-shadow: none;
+  color: inherit;
+}
+
+.flashA {
+  animation: flashA var(--t-check-flash) var(--ease-soft);
+}
+
+.flashB {
+  animation: flashB var(--t-check-flash) var(--ease-soft);
+}
+
+@keyframes flashA {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--card-edge),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  }
+  35% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+  }
+}
+
+@keyframes flashB {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--card-edge),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+  }
+  35% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
+      inset 0 1px 0 var(--card-highlight),
+      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+  }
+}

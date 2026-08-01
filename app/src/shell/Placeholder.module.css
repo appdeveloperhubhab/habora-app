@@ -1,0 +1,50 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg);
+  animation: screenIn var(--t-screen) var(--ease-screen);
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  padding-top: env(safe-area-inset-top);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.back:active {
+  transform: scale(0.88);
+}
+
+.title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+}
+
+.note {
+  padding: var(--sp-8) var(--sp-6);
+  text-align: center;
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}

@@ -1,0 +1,97 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+/*
+ * Затухание у правого края: без него обрезанный кружок читается как край
+ * списка, и непонятно, что ряд можно листать дальше.
+ */
+.wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+  background: linear-gradient(to right, transparent, var(--surface-2));
+  pointer-events: none;
+}
+
+.palette {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-pill);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.palette:active {
+  transform: scale(0.88);
+}
+
+.rainbow {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: conic-gradient(
+    #ff3b30,
+    #ff9500,
+    #ffd60a,
+    #34c759,
+    #06b6d4,
+    #007aff,
+    #8b5cf6,
+    #ff6fa5,
+    #ff3b30
+  );
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 26px;
+  background: var(--surface-3);
+}
+
+/* Ряд прокручивается вбок; полоса прокрутки скрыта, чтобы не ломать линию. */
+.strip {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  min-width: 0;
+  padding: 3px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+.swatch {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-pill);
+  background: var(--swatch);
+  transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast) linear;
+}
+
+.swatch:active {
+  transform: scale(0.88);
+}
+
+.selected {
+  /* Обводка идёт цветом фона, а не белым: иначе на светлой теме
+     выделение спорит со светлыми оттенками палитры. */
+  box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px var(--swatch);
+}

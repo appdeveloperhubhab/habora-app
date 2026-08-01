@@ -1,0 +1,119 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.title {
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hint {
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+.ringSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+}
+
+.ringValue {
+  font-size: var(--fs-body);
+  color: var(--habit);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.legend strong {
+  display: block;
+  color: var(--text);
+  font-size: var(--fs-caption);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  flex: none;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.barColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.barTrack {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 96px;
+}
+
+.bar {
+  width: 100%;
+  border-radius: var(--r-cell);
+  background: var(--habit);
+  transition: height var(--t-slow) var(--ease-soft);
+}
+
+/* Выходные приглушены: так сразу видно, где кончается рабочая неделя. */
+.barWeekend {
+  background: color-mix(in srgb, var(--habit) 40%, transparent);
+}
+
+.barLabel {
+  font-size: 9px;
+  color: var(--text-faint);
+}
+
+.empty {
+  padding: var(--sp-6) 0;
+  text-align: center;
+  font-size: var(--fs-label);
+  color: var(--text-faint);
+}

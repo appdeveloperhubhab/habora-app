@@ -1,0 +1,22 @@
+.wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.wrap svg {
+  position: absolute;
+  inset: 0;
+}
+
+.value {
+  transition: stroke-dasharray var(--t-slow) var(--ease-soft);
+}
+
+.label {
+  position: relative;
+  text-align: center;
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+}

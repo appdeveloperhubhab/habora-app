@@ -1,0 +1,18 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.content {
+  flex: 1;
+  /* Обе панели плавают поверх списка — оставляем под них место вместе с их
+     отступами от краёв, иначе карточки уходят под капсулы. */
+  padding-top: calc(var(--topbar-h) + var(--topbar-gap) + env(safe-area-inset-top) + var(--sp-3));
+  padding-bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + env(safe-area-inset-bottom) + var(--sp-5));
+}
+
+.splash {
+  min-height: 100dvh;
+  background: var(--bg);
+}

@@ -1,0 +1,48 @@
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.label {
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+}
+
+.button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface-3);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-fast) linear;
+}
+
+.button:active {
+  transform: scale(0.85);
+}
+
+.button:disabled {
+  opacity: 0.35;
+}
+
+.value {
+  min-width: 32px;
+  text-align: center;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}

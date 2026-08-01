@@ -1,0 +1,108 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.title {
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.month {
+  min-width: 104px;
+  text-align: center;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+}
+
+.navButton {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface-2);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-fast) linear;
+}
+
+.navButton:active {
+  transform: scale(0.88);
+}
+
+.navButton:disabled {
+  opacity: 0.3;
+}
+
+.weekdays,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekdayLabel {
+  text-align: center;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: var(--text-faint);
+}
+
+.day {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  background: var(--cell-empty);
+  transition:
+    background var(--t-mid) var(--ease-soft),
+    color var(--t-mid) var(--ease-soft),
+    transform var(--t-fast) var(--ease-spring);
+}
+
+.day:active:not(:disabled) {
+  transform: scale(0.88);
+}
+
+.day:disabled {
+  opacity: 0.3;
+}
+
+/* Дни соседних месяцев показываем, чтобы недели были целыми,
+   но приглушаем — они не про этот месяц. */
+.outside {
+  opacity: 0.35;
+}
+
+.done {
+  color: #fff;
+  background: var(--habit);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent);
+}
+
+.today {
+  box-shadow: inset 0 0 0 1.5px var(--habit);
+}
