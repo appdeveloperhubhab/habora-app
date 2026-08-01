@@ -4,7 +4,7 @@ import { telegramLang } from '../lib/telegram'
 import { toIso } from '../lib/dates'
 import { detectMilestone, type Milestone } from '../lib/milestones'
 import { DEFAULT_SETTINGS, type DataSource } from './datasource'
-import { LocalDataSource } from './local'
+import { pickDataSource } from './pickDataSource'
 import { StoreContext, type StoreValue } from './context'
 
 /**
@@ -21,12 +21,12 @@ function entryKey(habitId: string, date: IsoDate): string {
 
 interface Props {
   children: ReactNode
-  /** Подменяется на `ApiDataSource` при подключении бэкенда (M7). */
+  /** Явная подмена хранилища; обычно не нужна — выбор делает `pickDataSource`. */
   source?: DataSource
 }
 
 export function StoreProvider({ children, source }: Props) {
-  const dataSource = useRef(source ?? new LocalDataSource()).current
+  const dataSource = useRef(source ?? pickDataSource()).current
 
   const [ready, setReady] = useState(false)
   const [habits, setHabits] = useState<Habit[]>([])
