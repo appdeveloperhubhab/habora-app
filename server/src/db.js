@@ -75,12 +75,31 @@ await db.executeMultiple(`
   CREATE TABLE IF NOT EXISTS users (
     user_id    INTEGER PRIMARY KEY,
     first_name TEXT    NOT NULL DEFAULT '',
+    username   TEXT,
     language   TEXT,
     first_seen TEXT    NOT NULL,
     last_seen  TEXT    NOT NULL,
     opens      INTEGER NOT NULL DEFAULT 1
   );
 `)
+
+/**
+ * Досыпает столбец в уже созданную таблицу.
+ *
+ * `CREATE TABLE IF NOT EXISTS` выше трогает только пустую базу: там, где
+ * таблица уже есть, новый столбец в описании остаётся на бумаге. Для баз,
+ * заведённых до его появления, столбец приходится добавлять отдельно.
+ *
+ * `ADD COLUMN IF NOT EXISTS` в SQLite нет, поэтому сначала спрашиваем состав
+ * таблицы: повторный запуск сервера не должен падать на уже добавленном.
+ */
+async function addColumnIfMissing(table, column, definition) {
+  const { rows } = await db.execute(`PRAGMA table_info(${table})`)
+  if (rows.some((row) => row.name === column)) return
+  await db.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+}
+
+await addColumnIfMissing('users', 'username', 'TEXT')
 
 /**
  * Привычка из базы в тот же вид, что ждёт приложение.

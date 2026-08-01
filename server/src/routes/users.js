@@ -8,9 +8,10 @@ import { db } from '../db.js'
  * сколько всего людей, кто заходил недавно и — главное — кто возвращался
  * повторно (`opens` больше единицы).
  *
- * Имя и язык берём из подписанных данных Telegram, чтобы владелец бота узнавал
- * своих пользователей. Больше ничего не храним: для ответа на вопрос
- * «сколько людей и возвращаются ли они» этого достаточно.
+ * Имя, ник и язык берём из подписанных данных Telegram, чтобы владелец бота
+ * узнавал своих пользователей и мог их найти. Ник в Telegram необязателен —
+ * у кого его нет, столбец остаётся пустым, и опознать человека можно только
+ * по имени.
  */
 export async function userRoutes(app) {
   app.post('/api/visit', async (request) => {
@@ -18,14 +19,22 @@ export async function userRoutes(app) {
     const user = request.telegramUser ?? {}
 
     await db.execute({
-      sql: `INSERT INTO users (user_id, first_name, language, first_seen, last_seen, opens)
-            VALUES (?, ?, ?, ?, ?, 1)
+      sql: `INSERT INTO users (user_id, first_name, username, language, first_seen, last_seen, opens)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
             ON CONFLICT (user_id) DO UPDATE SET
               first_name = excluded.first_name,
+              username   = excluded.username,
               language   = excluded.language,
               last_seen  = excluded.last_seen,
               opens      = users.opens + 1`,
-      args: [request.userId, user.first_name ?? '', user.language_code ?? null, now, now],
+      args: [
+        request.userId,
+        user.first_name ?? '',
+        user.username ?? null,
+        user.language_code ?? null,
+        now,
+        now,
+      ],
     })
 
     return { ok: true }
