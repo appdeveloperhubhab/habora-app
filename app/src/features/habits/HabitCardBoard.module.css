@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
@@ -279,42 +280,53 @@
   }
 }
 
-.flashA {
+/*
+ * Вспышка карточки — на отдельном слое поверх неё, а не на ней самой:
+ * свойство `animation` у карточки уже занято каскадом появления списка
+ * (`cardIn` в HabitsScreen.module.css), и вспышка до него не доходила.
+ */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
+    0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+}
+
+.flashA::after {
   animation: flashA var(--t-check-flash) var(--ease-soft);
 }
 
-.flashB {
+.flashB::after {
   animation: flashB var(--t-check-flash) var(--ease-soft);
 }
 
 @keyframes flashA {
   0%,
   100% {
-    box-shadow:
-      inset 0 0 0 1px var(--card-edge),
-      inset 0 1px 0 var(--card-highlight),
-      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+    opacity: 0;
   }
   35% {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
-      inset 0 1px 0 var(--card-highlight),
-      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.45;
   }
 }
 
 @keyframes flashB {
   0%,
   100% {
-    box-shadow:
-      inset 0 0 0 1px var(--card-edge),
-      inset 0 1px 0 var(--card-highlight),
-      0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
+    opacity: 0;
   }
   35% {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--habit) 50%, transparent),
-      inset 0 1px 0 var(--card-highlight),
-      0 6px 34px -6px color-mix(in srgb, var(--habit) 75%, transparent);
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.45;
   }
 }

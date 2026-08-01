@@ -31,7 +31,9 @@ export function CheckButton({ done, color, size = 44, disabled = false, hint = f
     if (disabled) return
     if (done) hapticUntick()
     else hapticTick()
-    setGlowKey((k) => k + 1)
+    // Свечение только при простановке: заливка и галочка при снятии уходят
+    // сами — это смена состояния, а вспышка вокруг кнопки была бы похвалой.
+    if (!done) setGlowKey((k) => k + 1)
     onToggle()
   }
 

@@ -58,7 +58,11 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
   const handleToggle = () => {
     if (done) hapticUntick()
     else hapticTick()
-    setPulseKey((key) => key + 1)
+    // Всплеск, вспышка карточки и ореол кнопки — подтверждение выполненного.
+    // При снятии отметки они неуместны: отменять привычку не с чем поздравлять.
+    // Тактильный отклик остаётся в обоих случаях — он говорит, что нажатие
+    // засчитано, а не хвалит за него.
+    if (!done) setPulseKey((key) => key + 1)
     onToggle()
   }
 

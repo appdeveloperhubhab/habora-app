@@ -64,7 +64,9 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
   }
 
   const handleToggle = () => {
-    setPulseKey((key) => key + 1)
+    // Только при простановке отметки: волна по неделе и вспышка карточки —
+    // подтверждение выполненного, а снятие отметки праздновать не с чем.
+    if (!done) setPulseKey((key) => key + 1)
     onToggle()
   }
 
