@@ -4,7 +4,6 @@ import type { Dict } from '../../i18n'
 import { activityGrid } from '../../lib/stats'
 import { hapticSelect, hapticTick, hapticUntick } from '../../lib/haptics'
 import { HabitIcon } from '../../ui/habitIcons'
-import { Icon } from '../../ui/Icon'
 import styles from './HabitCardBoard.module.css'
 
 /**
@@ -16,6 +15,16 @@ import styles from './HabitCardBoard.module.css'
  */
 
 const WEEKS = { month: 13, grid: 7 } as const
+
+/**
+ * Шаг задержки на единицу расстояния от сегодняшней клетки.
+ *
+ * В неделе волна идёт слева направо, но здесь сетка двумерная, а отмечаемая
+ * клетка сидит в её правом краю — проход строкой читался бы как движение мимо
+ * места нажатия. Поэтому всплеск расходится кругами от самой клетки: задержка
+ * растёт с расстоянием до неё.
+ */
+const RIPPLE_STEP_MS = 26
 
 interface Props {
   habit: Habit
@@ -55,6 +64,16 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
 
   const flashClass = pulseKey === 0 ? '' : pulseKey % 2 === 1 ? styles.flashA : styles.flashB
 
+  /*
+   * Всплеск перезапускается сменой класса, а не пересозданием клеток по `key`,
+   * как это сделано в неделе: новая клетка появилась бы уже закрашенной, и
+   * плавная заливка цветом пропала бы — осталось бы одно движение без цвета.
+   */
+  const rippleClass = pulseKey === 0 ? '' : pulseKey % 2 === 1 ? styles.rippleA : styles.rippleB
+
+  // Сегодняшняя клетка всегда в последнем столбце — с неё и начинается всплеск.
+  const todayRow = columns[columns.length - 1].findIndex((cell) => cell.isToday)
+
   return (
     <article
       className={[styles.card, styles[size], habit.tinted ? '' : styles.plain, flashClass]
@@ -82,9 +101,9 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
         </span>
 
         <span className={styles.cells}>
-          {columns.map((week) => (
+          {columns.map((week, weekIndex) => (
             <span key={week[0].date} className={styles.week}>
-              {week.map((cell) => (
+              {week.map((cell, dayIndex) => (
                 <span
                   key={cell.date}
                   className={[
@@ -92,9 +111,18 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
                     cell.done ? styles.cellDone : '',
                     cell.isToday ? styles.cellToday : '',
                     cell.isFuture ? styles.cellFuture : '',
+                    rippleClass,
                   ]
                     .filter(Boolean)
                     .join(' ')}
+                  style={{
+                    animationDelay: `${
+                      Math.hypot(
+                        columns.length - 1 - weekIndex,
+                        todayRow < 0 ? 0 : todayRow - dayIndex,
+                      ) * RIPPLE_STEP_MS
+                    }ms`,
+                  }}
                 />
               ))}
             </span>
@@ -109,8 +137,24 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
       </button>
 
       <button className={done ? `${styles.mark} ${styles.markDone}` : styles.mark} onClick={handleToggle}>
-        <span className={styles.markIcon}>{done && <Icon name="check" size={14} strokeWidth={3} />}</span>
-        {done ? t.habits.marked : t.habits.mark}
+        {pulseKey > 0 && <span key={pulseKey} className={styles.glow} />}
+
+        <span className={styles.markIcon}>
+          {/* Та же галочка, что и в кнопке недели: pathLength=1 позволяет
+              прорисовать её штрихом, не завися от геометрии пути. */}
+          <svg className={styles.tick} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M5.5 12.5 10 17 18.5 7.5"
+              pathLength={1}
+              stroke="currentColor"
+              strokeWidth={3.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+
+        <span className={styles.markLabel}>{done ? t.habits.marked : t.habits.mark}</span>
       </button>
     </article>
   )
