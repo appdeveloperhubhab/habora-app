@@ -1,30 +1,32 @@
-import { DatabaseSync } from 'node:sqlite'
+import { createClient } from '@libsql/client'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 /**
- * База данных на SQLite.
+ * База данных на SQLite через libSQL.
  *
- * Используется встроенный в Node модуль `node:sqlite` — он не требует сборки
- * native-расширений, поэтому сервер запускается на любом хостинге без
- * дополнительных инструментов.
+ * Локально (без переменных TURSO_*) libSQL просто пишет в файл на диске —
+ * работает как обычный SQLite, ничего дополнительно настраивать не нужно.
+ * В проде те же переменные указывают на облачную базу Turso: данные живут
+ * не на диске хостинга, а отдельно, и не пропадают при перезапуске сервера.
  *
  * Все данные привязаны к `user_id` — числовому идентификатору пользователя
  * Telegram. Каждый видит только свои строки: запросы всегда фильтруют по нему.
  */
 
 const DB_PATH = process.env.DB_PATH ?? './data/habora.db'
+const TURSO_URL = process.env.TURSO_DATABASE_URL
+const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN
 
-mkdirSync(dirname(DB_PATH), { recursive: true })
+if (!TURSO_URL) {
+  mkdirSync(dirname(DB_PATH), { recursive: true })
+}
 
-export const db = new DatabaseSync(DB_PATH)
+export const db = createClient(
+  TURSO_URL ? { url: TURSO_URL, authToken: TURSO_TOKEN } : { url: `file:${DB_PATH}` },
+)
 
-// WAL позволяет читать во время записи — иначе при нескольких одновременных
-// пользователях запросы выстраивались бы в очередь и подтормаживали.
-db.exec('PRAGMA journal_mode = WAL')
-db.exec('PRAGMA foreign_keys = ON')
-
-db.exec(`
+await db.executeMultiple(`
   CREATE TABLE IF NOT EXISTS habits (
     id           TEXT PRIMARY KEY,
     user_id      INTEGER NOT NULL,

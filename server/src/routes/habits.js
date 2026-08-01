@@ -10,9 +10,10 @@ import { db, rowToHabit } from '../db.js'
  */
 export async function habitRoutes(app) {
   app.get('/api/habits', async (request) => {
-    const rows = db
-      .prepare('SELECT * FROM habits WHERE user_id = ? ORDER BY sort_order, created_at')
-      .all(request.userId)
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM habits WHERE user_id = ? ORDER BY sort_order, created_at',
+      args: [request.userId],
+    })
     return rows.map(rowToHabit)
   })
 
@@ -21,9 +22,11 @@ export async function habitRoutes(app) {
     if (!input.name?.trim()) return reply.code(400).send({ error: 'Название обязательно' })
 
     // Новая привычка встаёт в конец списка.
-    const { next } = db
-      .prepare('SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM habits WHERE user_id = ?')
-      .get(request.userId)
+    const { rows } = await db.execute({
+      sql: 'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM habits WHERE user_id = ?',
+      args: [request.userId],
+    })
+    const next = rows[0].next
 
     const habit = {
       id: randomUUID(),
@@ -39,94 +42,103 @@ export async function habitRoutes(app) {
       createdAt: new Date().toISOString(),
     }
 
-    db.prepare(
-      `INSERT INTO habits (id, user_id, name, description, color, icon, schedule,
+    await db.execute({
+      sql: `INSERT INTO habits (id, user_id, name, description, color, icon, schedule,
                            streak_goal, tinted, duration_sec, sort_order, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      habit.id,
-      request.userId,
-      habit.name,
-      habit.description,
-      habit.color,
-      habit.icon,
-      JSON.stringify(habit.schedule),
-      habit.streakGoal,
-      habit.tinted ? 1 : 0,
-      habit.durationSec,
-      habit.sortOrder,
-      habit.createdAt,
-    )
+      args: [
+        habit.id,
+        request.userId,
+        habit.name,
+        habit.description,
+        habit.color,
+        habit.icon,
+        JSON.stringify(habit.schedule),
+        habit.streakGoal,
+        habit.tinted ? 1 : 0,
+        habit.durationSec,
+        habit.sortOrder,
+        habit.createdAt,
+      ],
+    })
 
     return habit
   })
 
   app.patch('/api/habits/:id', async (request, reply) => {
-    const existing = db
-      .prepare('SELECT * FROM habits WHERE id = ? AND user_id = ?')
-      .get(request.params.id, request.userId)
-    if (!existing) return reply.code(404).send({ error: 'Привычка не найдена' })
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM habits WHERE id = ? AND user_id = ?',
+      args: [request.params.id, request.userId],
+    })
+    if (!rows[0]) return reply.code(404).send({ error: 'Привычка не найдена' })
 
     const patch = request.body ?? {}
-    const merged = { ...rowToHabit(existing), ...patch }
+    const merged = { ...rowToHabit(rows[0]), ...patch }
 
-    db.prepare(
-      `UPDATE habits
+    await db.execute({
+      sql: `UPDATE habits
           SET name = ?, description = ?, color = ?, icon = ?, schedule = ?,
               streak_goal = ?, tinted = ?, duration_sec = ?
         WHERE id = ? AND user_id = ?`,
-    ).run(
-      merged.name,
-      merged.description,
-      merged.color,
-      merged.icon,
-      JSON.stringify(merged.schedule),
-      merged.streakGoal,
-      merged.tinted ? 1 : 0,
-      merged.durationSec,
-      request.params.id,
-      request.userId,
-    )
+      args: [
+        merged.name,
+        merged.description,
+        merged.color,
+        merged.icon,
+        JSON.stringify(merged.schedule),
+        merged.streakGoal,
+        merged.tinted ? 1 : 0,
+        merged.durationSec,
+        request.params.id,
+        request.userId,
+      ],
+    })
 
     return merged
   })
 
   app.delete('/api/habits/:id', async (request) => {
     // Отметки удаляются каскадом — так их не остаётся висеть в базе без привычки.
-    db.prepare('DELETE FROM habits WHERE id = ? AND user_id = ?').run(request.params.id, request.userId)
+    await db.execute({
+      sql: 'DELETE FROM habits WHERE id = ? AND user_id = ?',
+      args: [request.params.id, request.userId],
+    })
     return { ok: true }
   })
 
   app.post('/api/habits/reorder', async (request) => {
     const ids = request.body?.ids ?? []
-    const update = db.prepare('UPDATE habits SET sort_order = ? WHERE id = ? AND user_id = ?')
 
     // Весь новый порядок применяется одной транзакцией: иначе сбой на середине
     // оставил бы список наполовину переставленным.
-    db.exec('BEGIN')
-    try {
-      ids.forEach((id, index) => update.run(index, id, request.userId))
-      db.exec('COMMIT')
-    } catch (error) {
-      db.exec('ROLLBACK')
-      throw error
-    }
+    await db.batch(
+      ids.map((id, index) => ({
+        sql: 'UPDATE habits SET sort_order = ? WHERE id = ? AND user_id = ?',
+        args: [index, id, request.userId],
+      })),
+      'write',
+    )
 
-    return db
-      .prepare('SELECT * FROM habits WHERE user_id = ? ORDER BY sort_order, created_at')
-      .all(request.userId)
-      .map(rowToHabit)
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM habits WHERE user_id = ? ORDER BY sort_order, created_at',
+      args: [request.userId],
+    })
+    return rows.map(rowToHabit)
   })
 
   app.get('/api/entries', async (request) => {
     const { from, to } = request.query ?? {}
 
-    const rows =
+    const { rows } =
       from && to
-        ? db
-            .prepare('SELECT habit_id, date FROM entries WHERE user_id = ? AND date BETWEEN ? AND ?')
-            .all(request.userId, from, to)
-        : db.prepare('SELECT habit_id, date FROM entries WHERE user_id = ?').all(request.userId)
+        ? await db.execute({
+            sql: 'SELECT habit_id, date FROM entries WHERE user_id = ? AND date BETWEEN ? AND ?',
+            args: [request.userId, from, to],
+          })
+        : await db.execute({
+            sql: 'SELECT habit_id, date FROM entries WHERE user_id = ?',
+            args: [request.userId],
+          })
 
     return rows.map((row) => ({ habitId: row.habit_id, date: row.date }))
   })
@@ -136,25 +148,29 @@ export async function habitRoutes(app) {
     if (!habitId || !date) return reply.code(400).send({ error: 'Нужны habitId и date' })
 
     // Проверяем принадлежность привычки: иначе можно было бы отметить чужую.
-    const habit = db
-      .prepare('SELECT id FROM habits WHERE id = ? AND user_id = ?')
-      .get(habitId, request.userId)
-    if (!habit) return reply.code(404).send({ error: 'Привычка не найдена' })
+    const owned = await db.execute({
+      sql: 'SELECT id FROM habits WHERE id = ? AND user_id = ?',
+      args: [habitId, request.userId],
+    })
+    if (!owned.rows[0]) return reply.code(404).send({ error: 'Привычка не найдена' })
 
-    const existing = db
-      .prepare('SELECT 1 FROM entries WHERE habit_id = ? AND date = ?')
-      .get(habitId, date)
+    const existing = await db.execute({
+      sql: 'SELECT 1 FROM entries WHERE habit_id = ? AND date = ?',
+      args: [habitId, date],
+    })
 
-    if (existing) {
-      db.prepare('DELETE FROM entries WHERE habit_id = ? AND date = ?').run(habitId, date)
+    if (existing.rows[0]) {
+      await db.execute({
+        sql: 'DELETE FROM entries WHERE habit_id = ? AND date = ?',
+        args: [habitId, date],
+      })
       return { done: false }
     }
 
-    db.prepare('INSERT INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)').run(
-      request.userId,
-      habitId,
-      date,
-    )
+    await db.execute({
+      sql: 'INSERT INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
+      args: [request.userId, habitId, date],
+    })
     return { done: true }
   })
 }

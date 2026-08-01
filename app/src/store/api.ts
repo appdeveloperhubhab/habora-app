@@ -21,7 +21,9 @@ export class ApiDataSource implements DataSource {
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        // Только когда тело действительно есть: на запрос без тела, но с этим
+        // заголовком сервер отвечает 400 — он ждёт JSON и не находит его.
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
         'X-Telegram-Init-Data': initData(),
         ...init?.headers,
       },
