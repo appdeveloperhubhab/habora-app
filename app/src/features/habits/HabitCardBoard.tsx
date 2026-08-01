@@ -24,7 +24,7 @@ const WEEKS = { month: 13, grid: 7 } as const
  * места нажатия. Поэтому всплеск расходится кругами от самой клетки: задержка
  * растёт с расстоянием до неё.
  */
-const RIPPLE_STEP_MS = 26
+const RIPPLE_STEP_MS = 34
 
 interface Props {
   habit: Habit
