@@ -100,4 +100,8 @@ export class ApiDataSource implements DataSource {
   saveSettings(patch: Partial<Settings>) {
     return this.request<Settings>('/api/settings', { method: 'PATCH', body: JSON.stringify(patch) })
   }
+
+  async recordVisit() {
+    await this.request('/api/visit', { method: 'POST' })
+  }
 }

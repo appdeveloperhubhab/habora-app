@@ -32,6 +32,12 @@ export interface DataSource {
 
   getSettings(): Promise<Settings>
   saveSettings(patch: Partial<Settings>): Promise<Settings>
+
+  /**
+   * Отметить факт открытия приложения. Есть только у серверной реализации:
+   * в localStorage считать заходы не для кого — данные видит один человек.
+   */
+  recordVisit?(): Promise<void>
 }
 
 export const DEFAULT_SETTINGS: Settings = {

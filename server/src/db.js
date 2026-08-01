@@ -71,6 +71,15 @@ await db.executeMultiple(`
     user_id INTEGER PRIMARY KEY,
     data    TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS users (
+    user_id    INTEGER PRIMARY KEY,
+    first_name TEXT    NOT NULL DEFAULT '',
+    language   TEXT,
+    first_seen TEXT    NOT NULL,
+    last_seen  TEXT    NOT NULL,
+    opens      INTEGER NOT NULL DEFAULT 1
+  );
 `)
 
 /**

@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import { verifyInitData } from './telegramAuth.js'
 import { habitRoutes } from './routes/habits.js'
 import { taskRoutes } from './routes/tasks.js'
+import { userRoutes } from './routes/users.js'
 
 const app = Fastify({ logger: true })
 
@@ -28,12 +29,14 @@ app.addHook('preHandler', async (request, reply) => {
   }
 
   request.userId = result.userId
+  request.telegramUser = result.user
 })
 
 app.get('/health', async () => ({ ok: true }))
 
 await app.register(habitRoutes)
 await app.register(taskRoutes)
+await app.register(userRoutes)
 
 const port = Number(process.env.PORT ?? 3000)
 // Слушаем все интерфейсы: внутри контейнера хостинга localhost недоступен снаружи.

@@ -68,6 +68,12 @@ export function StoreProvider({ children, source }: Props) {
     }
 
     void load()
+
+    // Отдельно от загрузки и без ожидания: счётчик заходов — не та вещь,
+    // ради которой пользователь должен ждать открытия приложения или из-за
+    // которой оно вообще не откроется, если запрос не прошёл.
+    void dataSource.recordVisit?.().catch(() => {})
+
     return () => {
       cancelled = true
     }
