@@ -27,7 +27,9 @@
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   flex: none;
-  height: var(--topbar-h);
+  /* Высота вместе с отступом: box-sizing: border-box вычитает отступ из
+     заданной высоты, и на содержимое шапки не осталось бы места. */
+  height: calc(var(--topbar-h) + var(--top-inset));
   padding: 0 var(--sp-4);
   padding-top: var(--top-inset);
 }

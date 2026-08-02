@@ -95,7 +95,16 @@ function syncInsets(): void {
   if (!device && !controls) return
 
   const root = document.documentElement
-  const top = (device?.top ?? 0) + (controls?.top ?? 0)
+
+  /*
+   * Высота кнопок Telegram. Часть клиентов её не сообщает — там остался бы
+   * запас только под вырез экрана, и кнопки легли бы поверх нашей шапки.
+   * Резерв нужен лишь в полноэкранном режиме: в обычном кнопки лежат вне
+   * приложения и ничего не перекрывают.
+   */
+  const controlsTop = controls?.top || (webApp?.isFullscreen ? 48 : 0)
+
+  const top = (device?.top ?? 0) + controlsTop
   const bottom = (device?.bottom ?? 0) + (controls?.bottom ?? 0)
 
   root.style.setProperty('--top-inset', `max(env(safe-area-inset-top), ${top}px)`)
