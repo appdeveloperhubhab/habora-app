@@ -8,7 +8,7 @@
 
 .menu {
   position: absolute;
-  top: calc(var(--topbar-h) + env(safe-area-inset-top) - 4px);
+  top: calc(var(--topbar-h) + var(--top-inset) - 4px);
   left: var(--sp-4);
   min-width: 200px;
   padding: var(--sp-2);

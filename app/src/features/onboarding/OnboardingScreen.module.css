@@ -4,8 +4,8 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  padding: var(--sp-6) var(--sp-4) calc(env(safe-area-inset-bottom) + var(--sp-5));
-  padding-top: calc(env(safe-area-inset-top) + var(--sp-6));
+  padding: var(--sp-6) var(--sp-4) calc(var(--bottom-inset) + var(--sp-5));
+  padding-top: calc(var(--top-inset) + var(--sp-6));
   background: var(--bg);
   animation: screenIn var(--t-screen) var(--ease-screen);
 }

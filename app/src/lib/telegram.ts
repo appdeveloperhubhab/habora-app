@@ -9,6 +9,14 @@
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'
 type NotificationType = 'error' | 'success' | 'warning'
 
+/** Отступы, которые нельзя занимать: вырезы экрана и кнопки самого Telegram. */
+interface Inset {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 interface TelegramWebApp {
   initData: string
   initDataUnsafe: { user?: { id: number; first_name: string; language_code?: string } }
@@ -20,6 +28,15 @@ interface TelegramWebApp {
   disableVerticalSwipes?(): void
   setHeaderColor?(color: string): void
   setBackgroundColor?(color: string): void
+  /** Полноэкранный режим; появился не во всех клиентах. */
+  requestFullscreen?(): void
+  isFullscreen?: boolean
+  /** Вырезы самого устройства: чёлка, полоса жеста. */
+  safeAreaInset?: Inset
+  /** Место, занятое кнопками Telegram поверх приложения в полноэкранном режиме. */
+  contentSafeAreaInset?: Inset
+  onEvent?(event: string, handler: () => void): void
+  offEvent?(event: string, handler: () => void): void
   BackButton: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void }
   HapticFeedback?: {
     impactOccurred(style: HapticStyle): void
@@ -62,13 +79,70 @@ export function safeCall(fn: () => void): boolean {
   }
 }
 
-/** Сообщает Telegram, что интерфейс готов, и разворачивает окно на весь экран. */
-export function initTelegram(): void {
+/**
+ * Переносит отступы Telegram в CSS-переменные `--top-inset` / `--bottom-inset`.
+ *
+ * В полноэкранном режиме приложение занимает весь экран — и место под вырезом
+ * устройства, и место под кнопками «Закрыть» и «...», которые Telegram рисует
+ * поверх. Обе высоты складываются, иначе наша верхняя панель окажется под ними.
+ *
+ * Значение берётся не меньше того, что сообщает сам браузер: на клиентах,
+ * которые отдают нули, отступы должны остаться прежними, а не схлопнуться.
+ */
+function syncInsets(): void {
+  const device = webApp?.safeAreaInset
+  const controls = webApp?.contentSafeAreaInset
+  if (!device && !controls) return
+
+  const root = document.documentElement
+  const top = (device?.top ?? 0) + (controls?.top ?? 0)
+  const bottom = (device?.bottom ?? 0) + (controls?.bottom ?? 0)
+
+  root.style.setProperty('--top-inset', `max(env(safe-area-inset-top), ${top}px)`)
+  root.style.setProperty('--bottom-inset', `max(env(safe-area-inset-bottom), ${bottom}px)`)
+}
+
+/**
+ * Полноэкранный режим: Telegram убирает свою шапку с названием приложения,
+ * а «Закрыть» и «...» превращает в компактные кнопки поверх содержимого.
+ *
+ * Только на телефонах: на компьютере Mini App и так открыт в отдельном окне,
+ * и растягивать его на весь экран незачем.
+ */
+function enterFullscreen(): void {
   if (!webApp) return
+  if (webApp.platform !== 'ios' && webApp.platform !== 'android') return
+  const request = webApp.requestFullscreen
+  if (!request) return
+  safeCall(() => request.call(webApp))
+}
+
+/**
+ * Сообщает Telegram, что интерфейс готов, и настраивает окно.
+ * Возвращает функцию отписки от событий Telegram.
+ */
+export function initTelegram(): () => void {
+  if (!webApp) return () => {}
+
   safeCall(() => webApp.ready())
   safeCall(() => webApp.expand())
   // Свайп вниз внутри Mini App закрывает окно — для списка привычек это мешает.
   safeCall(() => webApp.disableVerticalSwipes?.())
+
+  enterFullscreen()
+  syncInsets()
+
+  // Отступы меняются не сразу: полноэкранный режим включается асинхронно, и
+  // поворот экрана тоже их сдвигает. Пересчитываем по событиям Telegram.
+  const events = ['fullscreenChanged', 'safeAreaChanged', 'contentSafeAreaChanged', 'viewportChanged']
+  const on = webApp.onEvent
+  const off = webApp.offEvent
+  if (!on || !off) return () => {}
+
+  for (const event of events) safeCall(() => on.call(webApp, event, syncInsets))
+  return () => {
+    for (const event of events) safeCall(() => off.call(webApp, event, syncInsets))
+  }
 }
 
 /** Красит системную шапку и фон Telegram под текущую тему приложения. */

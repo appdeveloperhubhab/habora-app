@@ -7,7 +7,7 @@
 .bar,
 .searchBar {
   position: fixed;
-  top: calc(env(safe-area-inset-top) + var(--topbar-gap));
+  top: calc(var(--top-inset) + var(--topbar-gap));
   left: var(--sp-4);
   right: var(--sp-4);
   z-index: 20;

@@ -3,7 +3,7 @@
   left: 0;
   right: 0;
   /* Держится над нижними вкладками, но не прилипает к ним вплотную. */
-  bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + env(safe-area-inset-bottom) + var(--sp-3));
+  bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + var(--bottom-inset) + var(--sp-3));
   z-index: 30;
   display: flex;
   align-items: center;

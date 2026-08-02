@@ -32,12 +32,21 @@ export function ThemeEffect() {
     }
   }, [settings.backgroundKind, settings.gradientFrom, settings.gradientTo])
 
-  // Системная шапка Telegram красится в тот же цвет, что и фон приложения,
-  // иначе на стыке видна чужая полоса.
+  /*
+   * Системная шапка Telegram красится в тот же цвет, что и верх приложения,
+   * иначе на стыке видна чужая полоса.
+   *
+   * При градиенте это не цвет темы, а его верхний цвет: Telegram умеет только
+   * сплошную заливку и про градиент не знает, поэтому шапка, покрашенная в
+   * цвет темы, читалась бы как приклеенная сверху чёрная полоска.
+   */
   useEffect(() => {
-    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
-    if (bg) syncChromeColors(bg)
-  }, [settings.theme])
+    const top =
+      settings.backgroundKind === 'gradient'
+        ? settings.gradientFrom
+        : getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+    if (top) syncChromeColors(top)
+  }, [settings.theme, settings.backgroundKind, settings.gradientFrom])
 
   return null
 }

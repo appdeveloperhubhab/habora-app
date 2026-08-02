@@ -2,7 +2,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom) + var(--tabbar-gap));
+  bottom: calc(var(--bottom-inset) + var(--tabbar-gap));
   z-index: 20;
   display: flex;
   justify-content: center;

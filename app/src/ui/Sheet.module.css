@@ -15,7 +15,7 @@
   /* Окно не на весь экран: сверху остаётся полоска фона, чтобы было понятно,
      что это слой поверх, а не новая страница. */
   max-height: 82vh;
-  padding: var(--sp-2) 0 calc(env(safe-area-inset-bottom) + var(--sp-4));
+  padding: var(--sp-2) 0 calc(var(--bottom-inset) + var(--sp-4));
   border-radius: var(--r-card) var(--r-card) 0 0;
   background: var(--surface-2);
   animation: slideUp var(--t-sheet) var(--ease-screen);

@@ -12,7 +12,7 @@
   align-items: center;
   height: var(--topbar-h);
   padding: 0 var(--sp-4);
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--top-inset);
 }
 
 .back {

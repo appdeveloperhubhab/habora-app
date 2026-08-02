@@ -8,8 +8,8 @@
   flex: 1;
   /* Обе панели плавают поверх списка — оставляем под них место вместе с их
      отступами от краёв, иначе карточки уходят под капсулы. */
-  padding-top: calc(var(--topbar-h) + var(--topbar-gap) + env(safe-area-inset-top) + var(--sp-3));
-  padding-bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + env(safe-area-inset-bottom) + var(--sp-5));
+  padding-top: calc(var(--topbar-h) + var(--topbar-gap) + var(--top-inset) + var(--sp-3));
+  padding-bottom: calc(var(--tabbar-h) + var(--tabbar-gap) + var(--bottom-inset) + var(--sp-5));
 }
 
 .splash {
