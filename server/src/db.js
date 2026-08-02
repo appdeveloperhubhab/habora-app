@@ -101,6 +101,52 @@ async function addColumnIfMissing(table, column, definition) {
 
 await addColumnIfMissing('users', 'username', 'TEXT')
 
+/*
+ * Представления «кто это» — те же таблицы, но с именем и ником Telegram сразу
+ * после user_id. Нужны, чтобы владелец бота, открыв базу, видел живого
+ * человека, а не голый номер.
+ *
+ * Именно представления, а не отдельные столбцы в каждой таблице: имя и ник
+ * лежали бы копией в каждой строке — в отметках это тысячи повторов одного
+ * и того же, — и устаревали бы, стоит человеку сменить ник. Здесь они всегда
+ * подтягиваются из users, то есть всегда свежие.
+ *
+ * Пересоздаются при каждом запуске: SQLite запоминает состав столбцов в момент
+ * создания представления, и после добавления столбца в таблицу старое
+ * представление про него не узнает. Стоит это ничего — за представлением нет
+ * данных, только запрос.
+ */
+await db.executeMultiple(`
+  DROP VIEW IF EXISTS view_habits;
+  CREATE VIEW view_habits AS
+    SELECT h.user_id, u.first_name, u.username,
+           h.name, h.description, h.icon, h.color, h.schedule,
+           h.streak_goal, h.tinted, h.duration_sec, h.sort_order, h.created_at, h.id
+      FROM habits h
+      LEFT JOIN users u ON u.user_id = h.user_id;
+
+  DROP VIEW IF EXISTS view_entries;
+  CREATE VIEW view_entries AS
+    SELECT e.user_id, u.first_name, u.username,
+           h.name AS habit_name, e.date, e.habit_id
+      FROM entries e
+      LEFT JOIN users u ON u.user_id = e.user_id
+      LEFT JOIN habits h ON h.id = e.habit_id;
+
+  DROP VIEW IF EXISTS view_tasks;
+  CREATE VIEW view_tasks AS
+    SELECT t.user_id, u.first_name, u.username,
+           t.title, t.date, t.time, t.priority, t.duration_sec, t.done_at, t.created_at, t.id
+      FROM tasks t
+      LEFT JOIN users u ON u.user_id = t.user_id;
+
+  DROP VIEW IF EXISTS view_settings;
+  CREATE VIEW view_settings AS
+    SELECT s.user_id, u.first_name, u.username, s.data
+      FROM settings s
+      LEFT JOIN users u ON u.user_id = s.user_id;
+`)
+
 /**
  * Привычка из базы в тот же вид, что ждёт приложение.
  * Расписание хранится строкой JSON — в SQLite нет своего типа для объектов.
