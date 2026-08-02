@@ -13,7 +13,15 @@
   z-index: 20;
   align-items: center;
   height: var(--topbar-h);
-  padding: 5px;
+  /*
+   * Отступ равен разнице скруглений: половина высоты панели (28) минус
+   * половина кнопки (20). Только при нём круглая кнопка садится ровно в
+   * центр закругления капсулы и зазор до края одинаков со всех сторон.
+   *
+   * У нижней панели то же правило даёт другое число: там внутри не круги,
+   * а капсулы вкладок со своим скруглением, и разница выходит меньше.
+   */
+  padding: 8px;
   border-radius: var(--r-pill);
 
   background: color-mix(in srgb, var(--surface-2) 78%, transparent);
@@ -149,10 +157,12 @@
   display: none;
 }
 
+/* Рост как у «+»: кнопка встаёт на его место, и при входе в режим «Порядок»
+   правый край панели не должен меняться. */
 .doneButton {
   flex: none;
   padding: 0 var(--sp-3);
-  height: 36px;
+  height: 40px;
   border-radius: var(--r-pill);
   font-size: var(--fs-label);
   font-weight: var(--fw-bold);
