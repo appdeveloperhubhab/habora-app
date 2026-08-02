@@ -1,5 +1,5 @@
 import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
-import { DEFAULT_SETTINGS, type DataSource } from './datasource'
+import { DEFAULT_SETTINGS, normalizeSettings, type DataSource } from './datasource'
 
 /**
  * Хранилище на localStorage. Работает до подключения бэкенда (M7) и остаётся
@@ -161,7 +161,7 @@ export class LocalDataSource implements DataSource {
   async getSettings(): Promise<Settings> {
     // Раскладываем поверх значений по умолчанию: если в новой версии
     // приложения появилась настройка, старая сохранённая запись не сломается.
-    return { ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS, {}) }
+    return normalizeSettings({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS, {}) })
   }
 
   async saveSettings(patch: Partial<Settings>): Promise<Settings> {

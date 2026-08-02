@@ -105,10 +105,13 @@ export type Lang = 'ru' | 'en'
 export type CardView = 'month' | 'grid' | 'week'
 
 /**
- * Фон приложения: чистый цвет темы, тот же цвет с подсветкой акцентом,
- * градиент из двух выбранных цветов или пользовательская фотография.
+ * Фон приложения: чистый цвет темы или градиент из двух выбранных цветов.
+ *
+ * Были ещё подсветка акцентом и своя фотография — убраны как лишний выбор:
+ * подсветка почти не отличалась от чистого фона, а фотография спорила с
+ * карточками и мешала их читать.
  */
-export type BackgroundKind = 'none' | 'accent' | 'gradient' | 'photo'
+export type BackgroundKind = 'none' | 'gradient'
 
 export interface Settings {
   theme: ThemeMode
@@ -118,8 +121,6 @@ export interface Settings {
   backgroundKind: BackgroundKind
   gradientFrom: string
   gradientTo: string
-  /** Пользовательское фото фона как data URL; null — не задано. */
-  backgroundImage: string | null
   /** Пройден ли онбординг первого запуска. */
   onboarded: boolean
   /** Запущенный таймер; null — ничего не идёт. Одновременно может быть только один. */

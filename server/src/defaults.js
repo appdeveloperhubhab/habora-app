@@ -12,7 +12,6 @@ export const DEFAULT_SETTINGS = {
   backgroundKind: 'none',
   gradientFrom: '#2b1055',
   gradientTo: '#7597de',
-  backgroundImage: null,
   onboarded: false,
   celebrated: [],
   hintSeen: false,

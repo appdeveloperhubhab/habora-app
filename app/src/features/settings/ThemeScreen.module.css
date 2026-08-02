@@ -251,34 +251,6 @@
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 }
 
-.photoButton,
-.photoRemove {
-  padding: var(--sp-4);
-  border-radius: var(--r-lg);
-  font-size: var(--fs-label);
-  font-weight: var(--fw-medium);
-  transition: transform var(--t-fast) var(--ease-spring);
-}
-
-.photoButton {
-  color: #fff;
-  background: var(--accent);
-}
-
-.photoRemove {
-  color: #ff6b5a;
-  background: color-mix(in srgb, #ff6b5a 12%, transparent);
-}
-
-.photoButton:active,
-.photoRemove:active {
-  transform: scale(0.97);
-}
-
-.fileInput {
-  display: none;
-}
-
 @keyframes screenIn {
   from {
     opacity: 0;

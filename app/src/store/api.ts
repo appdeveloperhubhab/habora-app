@@ -1,6 +1,6 @@
 import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
 import { initData } from '../lib/telegram'
-import type { DataSource } from './datasource'
+import { normalizeSettings, type DataSource } from './datasource'
 
 /**
  * Хранилище на сервере. Подключается, когда приложение открыто внутри Telegram
@@ -93,8 +93,8 @@ export class ApiDataSource implements DataSource {
     return this.request<Task>(`/api/tasks/${id}/toggle`, { method: 'POST' })
   }
 
-  getSettings() {
-    return this.request<Settings>('/api/settings')
+  async getSettings() {
+    return normalizeSettings(await this.request<Settings>('/api/settings'))
   }
 
   saveSettings(patch: Partial<Settings>) {

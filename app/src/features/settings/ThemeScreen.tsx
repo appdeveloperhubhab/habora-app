@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { BackgroundKind, ThemeMode } from '../../types'
 import { useStore } from '../../store/context'
 import { dict } from '../../i18n'
-import { hapticSelect, hapticWarning } from '../../lib/haptics'
+import { hapticSelect } from '../../lib/haptics'
 import { ColorPicker } from '../../ui/ColorPicker'
 import { ColorStrip } from '../../ui/ColorStrip'
 import { Sheet } from '../../ui/Sheet'
@@ -29,14 +29,10 @@ const GRADIENT_PRESETS: [string, string][] = [
   ['#232526', '#414345'],
 ]
 
-/** Максимальная ширина сохраняемого фото. */
-const MAX_PHOTO_WIDTH = 1080
-
 export function ThemeScreen({ onBack }: { onBack(): void }) {
   const { settings, saveSettings } = useStore()
   const t = dict(settings.lang)
 
-  const fileInput = useRef<HTMLInputElement>(null)
   const [paletteFor, setPaletteFor] = useState<'accent' | 'from' | 'to' | null>(null)
 
   const setTheme = (theme: ThemeMode) => {
@@ -51,52 +47,10 @@ export function ThemeScreen({ onBack }: { onBack(): void }) {
     void saveSettings({ backgroundKind })
   }
 
-  /**
-   * Фото уменьшаем перед сохранением: оригинал с камеры телефона весит
-   * несколько мегабайт и не помещается в хранилище браузера целиком.
-   */
-  const handlePhoto = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const image = new Image()
-      image.onload = () => {
-        const scale = Math.min(1, MAX_PHOTO_WIDTH / image.width)
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(image.width * scale)
-        canvas.height = Math.round(image.height * scale)
-
-        const context = canvas.getContext('2d')
-        if (!context) return
-        context.drawImage(image, 0, 0, canvas.width, canvas.height)
-
-        try {
-          void saveSettings({
-            backgroundImage: canvas.toDataURL('image/jpeg', 0.72),
-            backgroundKind: 'photo',
-          })
-        } catch {
-          hapticWarning()
-        }
-      }
-      image.src = String(reader.result)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const previewStyle: React.CSSProperties = (() => {
-    if (settings.backgroundKind === 'gradient') {
-      return { backgroundImage: `linear-gradient(160deg, ${settings.gradientFrom}, ${settings.gradientTo})` }
-    }
-    if (settings.backgroundKind === 'photo' && settings.backgroundImage) {
-      return { backgroundImage: `url(${settings.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    }
-    if (settings.backgroundKind === 'accent') {
-      return {
-        backgroundImage: `radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, ${settings.accentColor} 42%, transparent), transparent 70%)`,
-      }
-    }
-    return {}
-  })()
+  const previewStyle: React.CSSProperties =
+    settings.backgroundKind === 'gradient'
+      ? { backgroundImage: `linear-gradient(160deg, ${settings.gradientFrom}, ${settings.gradientTo})` }
+      : {}
 
   return (
     <div className={styles.screen}>
@@ -160,22 +114,10 @@ export function ThemeScreen({ onBack }: { onBack(): void }) {
               onSelect={() => setKind('none')}
             />
             <BackgroundOption
-              active={settings.backgroundKind === 'accent'}
-              title={t.settings.bgAccent}
-              hint={t.settings.bgAccentHint}
-              onSelect={() => setKind('accent')}
-            />
-            <BackgroundOption
               active={settings.backgroundKind === 'gradient'}
               title={t.settings.bgGradient}
               hint={t.settings.bgGradientHint}
               onSelect={() => setKind('gradient')}
-            />
-            <BackgroundOption
-              active={settings.backgroundKind === 'photo'}
-              title={t.settings.bgPhoto}
-              hint={t.settings.bgPhotoHint}
-              onSelect={() => setKind('photo')}
             />
           </div>
         </section>
@@ -221,32 +163,6 @@ export function ThemeScreen({ onBack }: { onBack(): void }) {
           </section>
         )}
 
-        {settings.backgroundKind === 'photo' && (
-          <section className={styles.group}>
-            <button className={styles.photoButton} onClick={() => fileInput.current?.click()}>
-              {t.settings.choosePhoto}
-            </button>
-            {settings.backgroundImage && (
-              <button
-                className={styles.photoRemove}
-                onClick={() => void saveSettings({ backgroundImage: null, backgroundKind: 'none' })}
-              >
-                {t.settings.removePhoto}
-              </button>
-            )}
-            <input
-              ref={fileInput}
-              className={styles.fileInput}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handlePhoto(file)
-                e.target.value = ''
-              }}
-            />
-          </section>
-        )}
       </div>
 
       <Sheet open={paletteFor !== null} title={t.settings.accent} onClose={() => setPaletteFor(null)}>

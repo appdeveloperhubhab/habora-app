@@ -26,27 +26,11 @@ export function ThemeEffect() {
       body.style.backgroundImage = `linear-gradient(160deg, ${settings.gradientFrom}, ${settings.gradientTo})`
       body.style.backgroundSize = 'cover'
       body.style.backgroundAttachment = 'fixed'
-    } else if (settings.backgroundKind === 'photo' && settings.backgroundImage) {
-      body.style.backgroundImage = `url(${settings.backgroundImage})`
-      body.style.backgroundSize = 'cover'
-      body.style.backgroundPosition = 'center'
-      body.style.backgroundAttachment = 'fixed'
-    } else if (settings.backgroundKind === 'accent') {
-      // Подсветка идёт сверху и быстро сходит на нет: она должна задавать
-      // настроение, но не мешать читать карточки в середине списка.
-      body.style.backgroundImage = `radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, ${settings.accentColor} 32%, transparent), transparent 70%)`
-      body.style.backgroundAttachment = 'fixed'
     } else {
       body.style.backgroundImage = ''
       body.style.backgroundAttachment = ''
     }
-  }, [
-    settings.backgroundKind,
-    settings.gradientFrom,
-    settings.gradientTo,
-    settings.backgroundImage,
-    settings.accentColor,
-  ])
+  }, [settings.backgroundKind, settings.gradientFrom, settings.gradientTo])
 
   // Системная шапка Telegram красится в тот же цвет, что и фон приложения,
   // иначе на стыке видна чужая полоса.

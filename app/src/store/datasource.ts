@@ -48,9 +48,21 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundKind: 'none',
   gradientFrom: '#2b1055',
   gradientTo: '#7597de',
-  backgroundImage: null,
   onboarded: false,
   celebrated: [],
   hintSeen: false,
   timer: null,
+}
+
+/**
+ * Приводит прочитанные настройки к тому, что приложение умеет показывать.
+ *
+ * У тех, кто успел выбрать подсветку акцентом или фотографию, в хранилище
+ * остался вид фона, которого больше нет. Без приведения такой человек увидел
+ * бы в настройках список, где не выбрано ничего.
+ */
+export function normalizeSettings(settings: Settings): Settings {
+  const known: Settings['backgroundKind'][] = ['none', 'gradient']
+  if (known.includes(settings.backgroundKind)) return settings
+  return { ...settings, backgroundKind: 'none' }
 }
