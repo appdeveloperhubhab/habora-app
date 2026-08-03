@@ -102,6 +102,12 @@ export class ApiDataSource implements DataSource {
   }
 
   async recordVisit() {
-    await this.request('/api/visit', { method: 'POST' })
+    // Часовой пояс телефона: сервер живёт по всемирному времени и без этой
+    // поправки прислал бы вечернее напоминание кому-то среди ночи. Знает его
+    // только само приложение — в данных Telegram часового пояса нет.
+    await this.request('/api/visit', {
+      method: 'POST',
+      body: JSON.stringify({ tzOffset: -new Date().getTimezoneOffset() }),
+    })
   }
 }

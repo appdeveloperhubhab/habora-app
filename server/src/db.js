@@ -73,13 +73,16 @@ await db.executeMultiple(`
   );
 
   CREATE TABLE IF NOT EXISTS users (
-    user_id    INTEGER PRIMARY KEY,
-    first_name TEXT    NOT NULL DEFAULT '',
-    username   TEXT,
-    language   TEXT,
-    first_seen TEXT    NOT NULL,
-    last_seen  TEXT    NOT NULL,
-    opens      INTEGER NOT NULL DEFAULT 1
+    user_id      INTEGER PRIMARY KEY,
+    first_name   TEXT    NOT NULL DEFAULT '',
+    username     TEXT,
+    language     TEXT,
+    first_seen   TEXT    NOT NULL,
+    last_seen    TEXT    NOT NULL,
+    opens        INTEGER NOT NULL DEFAULT 1,
+    chat_started INTEGER NOT NULL DEFAULT 0,
+    tz_offset    INTEGER,
+    reminded_on  TEXT
   );
 `)
 
@@ -100,6 +103,26 @@ async function addColumnIfMissing(table, column, definition) {
 }
 
 await addColumnIfMissing('users', 'username', 'TEXT')
+
+/*
+ * Столбцы для бота.
+ *
+ * `chat_started` — нажимал ли человек «Старт». Telegram запрещает боту писать
+ * первым, и без этой отметки напоминание просто не дойдёт: рассылать всем
+ * подряд — значит получать ошибку на каждом втором.
+ *
+ * `tz_offset` — на сколько минут его время впереди всемирного. Сервер живёт по
+ * UTC, а «вечер» у каждого свой: без поправки напоминание приходило бы кому-то
+ * среди ночи. Значение присылает само приложение — только оно знает часовой
+ * пояс телефона.
+ *
+ * `reminded_on` — дата последнего напоминания по местному времени человека.
+ * Будильник дёргает сервер каждые несколько минут, и без этой отметки один и
+ * тот же вечер рассылался бы десятки раз.
+ */
+await addColumnIfMissing('users', 'chat_started', 'INTEGER NOT NULL DEFAULT 0')
+await addColumnIfMissing('users', 'tz_offset', 'INTEGER')
+await addColumnIfMissing('users', 'reminded_on', 'TEXT')
 
 /*
  * Представления «кто это» — те же таблицы, но с именем и ником Telegram сразу

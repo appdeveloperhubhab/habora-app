@@ -18,15 +18,22 @@ export async function userRoutes(app) {
     const now = new Date().toISOString()
     const user = request.telegramUser ?? {}
 
+    // Часовой пояс приходит от приложения: в данных Telegram его нет, а без
+    // него неизвестно, когда у человека вечер.
+    const tzOffset = Number(request.body?.tzOffset)
+
     await db.execute({
-      sql: `INSERT INTO users (user_id, first_name, username, language, first_seen, last_seen, opens)
-            VALUES (?, ?, ?, ?, ?, ?, 1)
+      sql: `INSERT INTO users (user_id, first_name, username, language, first_seen, last_seen, opens, tz_offset)
+            VALUES (?, ?, ?, ?, ?, ?, 1, ?)
             ON CONFLICT (user_id) DO UPDATE SET
               first_name = excluded.first_name,
               username   = excluded.username,
               language   = excluded.language,
               last_seen  = excluded.last_seen,
-              opens      = users.opens + 1`,
+              opens      = users.opens + 1,
+              -- Прежнее значение сохраняем, если приложение не прислало новое:
+              -- старая версия на телефоне не должна стирать уже известный пояс.
+              tz_offset  = COALESCE(excluded.tz_offset, users.tz_offset)`,
       args: [
         request.userId,
         user.first_name ?? '',
@@ -34,6 +41,7 @@ export async function userRoutes(app) {
         user.language_code ?? null,
         now,
         now,
+        Number.isFinite(tzOffset) ? tzOffset : null,
       ],
     })
 

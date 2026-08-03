@@ -4,6 +4,8 @@ import { verifyInitData } from './telegramAuth.js'
 import { habitRoutes } from './routes/habits.js'
 import { taskRoutes } from './routes/tasks.js'
 import { userRoutes } from './routes/users.js'
+import { botRoutes } from './routes/bot.js'
+import { setWebhook, webhookSecret } from './telegram/api.js'
 
 const app = Fastify({ logger: true })
 
@@ -37,7 +39,25 @@ app.get('/health', async () => ({ ok: true }))
 await app.register(habitRoutes)
 await app.register(taskRoutes)
 await app.register(userRoutes)
+await app.register(botRoutes)
 
 const port = Number(process.env.PORT ?? 3000)
 // Слушаем все интерфейсы: внутри контейнера хостинга localhost недоступен снаружи.
 await app.listen({ port, host: '0.0.0.0' })
+
+/*
+ * Подписка на события Telegram — при каждом запуске.
+ *
+ * Бесплатный хостинг засыпает и поднимается заново по первому запросу, адрес
+ * при этом может смениться. Разовая настройка руками однажды указала бы в
+ * никуда, а этот вызов сам возвращает всё на место; повторный с тем же адресом
+ * Telegram просто принимает.
+ */
+const publicUrl = process.env.PUBLIC_URL ?? process.env.RENDER_EXTERNAL_URL
+if (publicUrl && process.env.BOT_TOKEN) {
+  const result = await setWebhook(
+    `${publicUrl.replace(/\/$/, '')}/bot/webhook`,
+    webhookSecret(process.env.BOT_TOKEN),
+  )
+  app.log.info({ result }, 'подписка на события Telegram')
+}
