@@ -8,7 +8,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-3);
   padding: 0 var(--sp-4);
 }
 
@@ -32,36 +31,13 @@
   animation: capsuleIn var(--t-sheet) var(--ease-screen) backwards;
 }
 
-.close {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-pill);
-  color: var(--text-dim);
-  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
-  backdrop-filter: blur(18px);
-  box-shadow:
-    inset 0 0 0 1px var(--card-edge),
-    0 10px 30px -10px rgba(0, 0, 0, 0.7);
-  /* Крестик приходит чуть позже капсулы — взгляд успевает зацепиться
-     за главное, а потом за вспомогательное. */
-  animation: capsuleIn var(--t-sheet) var(--ease-screen) var(--t-stagger) backwards;
-  transition: transform var(--t-fast) var(--ease-spring);
-}
-
-.close:active {
-  transform: scale(0.9);
-}
-
 /* Подсветка выбранного вида. Ширина ровно на одну кнопку, поэтому
    translateX в процентах переносит её к соседней позиции. */
 .thumb {
   position: absolute;
   top: 6px;
   left: 6px;
-  width: 52px;
+  width: 72px;
   height: 44px;
   border-radius: var(--r-pill);
   background: var(--surface-3);
@@ -69,11 +45,16 @@
   transition: transform var(--t-screen) var(--ease-screen);
 }
 
+/*
+ * Кнопки шире прежнего: место, которое занимал крестик, отдано им.
+ * Высота осталась — вместе с отступами капсулы она даёт ровно рост нижних
+ * вкладок, над которыми капсула висит, и две панели читаются как пара.
+ */
 .item {
   position: relative;
   display: grid;
   place-items: center;
-  width: 52px;
+  width: 72px;
   height: 44px;
   border-radius: var(--r-pill);
   color: var(--text-faint);

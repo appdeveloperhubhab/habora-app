@@ -4,8 +4,11 @@ import { Icon, type IconName } from '../ui/Icon'
 import styles from './OrderBar.module.css'
 
 /**
- * Плавающая капсула режима «Порядок»: три вида карточек и крестик,
- * закрывающий саму капсулу.
+ * Плавающая капсула режима «Порядок»: три вида карточек.
+ *
+ * Выхода отсюда нет — из режима выводит «Готово» в шапке. Крестик рядом с
+ * капсулой делал то же самое, и две кнопки на одно действие заставляли
+ * выбирать там, где выбора нет.
  *
  * Выбор применяется сразу ко всем привычкам, а не по одной — иначе список
  * превратился бы в лоскутное одеяло из разных карточек.
@@ -23,17 +26,10 @@ export function OrderBar({
   value,
   labels,
   onChange,
-  onClose,
 }: {
   value: CardView
   labels: Record<CardView, string>
   onChange(view: CardView): void
-  /**
-   * Крестик закрывает режим настройки целиком, как и «Готово» в шапке.
-   * Прятать одну капсулу нельзя: «Готово» осталось бы висеть наверху без
-   * видимой причины, и было бы непонятно, как из этого состояния выйти.
-   */
-  onClose(): void
 }) {
   const activeIndex = Math.max(0, VIEWS.findIndex((view) => view.id === value))
 
@@ -64,14 +60,10 @@ export function OrderBar({
               onChange(view.id)
             }}
           >
-            <Icon name={view.icon} size={22} />
+            <Icon name={view.icon} size={25} />
           </button>
         ))}
       </div>
-
-      <button className={styles.close} onClick={onClose} aria-label="Close">
-        <Icon name="close" size={18} />
-      </button>
     </div>
   )
 }

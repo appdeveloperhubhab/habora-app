@@ -105,7 +105,6 @@ export function AppShell() {
           value={settings.cardView}
           labels={{ month: t.habits.viewMonth, grid: t.habits.viewGrid, week: t.habits.viewWeek }}
           onChange={(cardView) => void saveSettings({ cardView })}
-          onClose={() => setOrderMode(false)}
         />
       )}
 
