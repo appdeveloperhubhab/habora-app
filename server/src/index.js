@@ -55,9 +55,14 @@ await app.listen({ port, host: '0.0.0.0' })
  */
 const publicUrl = process.env.PUBLIC_URL ?? process.env.RENDER_EXTERNAL_URL
 if (publicUrl && process.env.BOT_TOKEN) {
-  const result = await setWebhook(
-    `${publicUrl.replace(/\/$/, '')}/bot/webhook`,
-    webhookSecret(process.env.BOT_TOKEN),
-  )
+  const base = publicUrl.replace(/\/$/, '')
+  const secret = webhookSecret(process.env.BOT_TOKEN)
+
+  const result = await setWebhook(`${base}/bot/webhook`, secret)
   app.log.info({ result }, 'подписка на события Telegram')
+
+  // Адрес будильника выводится из токена бота, и подсмотреть его больше негде:
+  // в журнал он печатается один раз при запуске, чтобы вставить в сервис,
+  // который будет дёргать сервер по расписанию.
+  app.log.info(`Адрес для будильника рассылки: ${base}/bot/tick/${secret}`)
 }
