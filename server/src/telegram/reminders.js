@@ -51,14 +51,20 @@ export function isScheduled(weekday, schedule) {
   return Array.isArray(schedule?.days) && schedule.days.includes(weekday)
 }
 
-/** Привычки, которые сегодня по расписанию и ещё не отмечены. */
+/**
+ * Привычки, которые сегодня по расписанию и ещё не отмечены.
+ * Отбор идёт по участию, а не по создательству: в совместной привычке
+ * напоминание нужно каждому, а не только заведшему её.
+ */
 export async function pendingHabits(userId, date, weekday) {
   const { rows } = await db.execute({
     sql: `SELECT h.id, h.name, h.schedule
-            FROM habits h
-            LEFT JOIN entries e ON e.habit_id = h.id AND e.date = ?
-           WHERE h.user_id = ? AND e.habit_id IS NULL
-           ORDER BY h.sort_order, h.created_at`,
+            FROM habit_members m
+            JOIN habits h ON h.id = m.habit_id
+            LEFT JOIN entries e
+                   ON e.habit_id = h.id AND e.user_id = m.user_id AND e.date = ?
+           WHERE m.user_id = ? AND e.habit_id IS NULL
+           ORDER BY m.sort_order, h.created_at`,
     args: [date, userId],
   })
 

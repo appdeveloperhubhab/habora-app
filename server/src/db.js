@@ -44,11 +44,30 @@ await db.executeMultiple(`
 
   CREATE INDEX IF NOT EXISTS idx_habits_user ON habits (user_id, sort_order);
 
+  /*
+   * Участники привычки. У обычной привычки участник один — тот, кто её завёл;
+   * у совместной их несколько, и каждый отмечается за себя.
+   *
+   * Столбец habits.user_id остаётся: это создатель. Он решает судьбу привычки —
+   * переименовать и удалить может только он, иначе двое правили бы одно и то же.
+   */
+  CREATE TABLE IF NOT EXISTS habit_members (
+    habit_id   TEXT    NOT NULL REFERENCES habits (id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL,
+    -- Порядок в списке личный: друг переставил карточки у себя — у вас ничего
+    -- не сдвинулось.
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    joined_at  TEXT    NOT NULL,
+    PRIMARY KEY (habit_id, user_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_members_user ON habit_members (user_id);
+
   CREATE TABLE IF NOT EXISTS entries (
     user_id  INTEGER NOT NULL,
     habit_id TEXT    NOT NULL REFERENCES habits (id) ON DELETE CASCADE,
     date     TEXT    NOT NULL,
-    PRIMARY KEY (habit_id, date)
+    PRIMARY KEY (habit_id, user_id, date)
   );
 
   CREATE INDEX IF NOT EXISTS idx_entries_user ON entries (user_id, date);
@@ -124,6 +143,96 @@ await addColumnIfMissing('users', 'chat_started', 'INTEGER NOT NULL DEFAULT 0')
 await addColumnIfMissing('users', 'tz_offset', 'INTEGER')
 await addColumnIfMissing('users', 'reminded_on', 'TEXT')
 
+/** Аватарка из Telegram — чтобы на общей привычке было видно лица, а не имена. */
+await addColumnIfMissing('users', 'photo_url', 'TEXT')
+
+/*
+ * Представления снимаются перед переездами таблиц и создаются заново в конце.
+ *
+ * Представление хранит запрос, а не данные, и продолжает ссылаться на таблицу,
+ * которую переезд пересоздаёт. Оставленное на месте, оно ломает саму миграцию:
+ * SQLite отказывается менять схему, пока на неё смотрит нерабочий запрос.
+ */
+await db.executeMultiple(`
+  DROP VIEW IF EXISTS view_habits;
+  DROP VIEW IF EXISTS view_entries;
+  DROP VIEW IF EXISTS view_tasks;
+  DROP VIEW IF EXISTS view_settings;
+  DROP VIEW IF EXISTS view_members;
+`)
+
+/*
+ * Переезд отметок на ключ с участником.
+ *
+ * Прежний ключ — привычка и дата — допускал одну отметку на привычку в день.
+ * Для личной привычки это незаметно, а в общей второй участник просто не смог
+ * бы отметиться: его запись считалась бы повторной.
+ *
+ * Ключ таблицы в SQLite не меняется на месте, поэтому таблица пересоздаётся,
+ * а данные переливаются. Проверка перед этим обязательна: без неё перезапуск
+ * сервера каждый раз гонял бы все отметки туда-обратно.
+ */
+/*
+ * Подбор за прерванным переездом.
+ *
+ * Между удалением старой таблицы и переименованием новой есть миг, когда
+ * отметки лежат только под временным именем. Обрыв здесь однажды уже стоил
+ * данных: следующий запуск создавал пустую таблицу и считал дело сделанным.
+ * Теперь остатки временной таблицы возвращаются на место, а сам переезд идёт
+ * одной транзакцией и оборваться посередине не может.
+ */
+const leftovers = await db.execute(
+  "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'entries_new'",
+)
+if (leftovers.rows.length > 0) {
+  await db.batch(
+    [
+      {
+        sql: `INSERT OR IGNORE INTO entries (user_id, habit_id, date)
+                SELECT user_id, habit_id, date FROM entries_new
+                 WHERE habit_id IN (SELECT id FROM habits)`,
+        args: [],
+      },
+      { sql: 'DROP TABLE entries_new', args: [] },
+    ],
+    'write',
+  )
+}
+
+const entriesInfo = await db.execute('PRAGMA table_info(entries)')
+const entriesKey = entriesInfo.rows.filter((row) => row.pk > 0).map((row) => row.name)
+
+if (entriesKey.length > 0 && !entriesKey.includes('user_id')) {
+  await db.batch(
+    [
+      {
+        sql: `CREATE TABLE entries_new (
+                user_id  INTEGER NOT NULL,
+                habit_id TEXT    NOT NULL REFERENCES habits (id) ON DELETE CASCADE,
+                date     TEXT    NOT NULL,
+                PRIMARY KEY (habit_id, user_id, date)
+              )`,
+        args: [],
+      },
+      { sql: 'INSERT INTO entries_new (user_id, habit_id, date) SELECT user_id, habit_id, date FROM entries', args: [] },
+      { sql: 'DROP TABLE entries', args: [] },
+      { sql: 'ALTER TABLE entries_new RENAME TO entries', args: [] },
+      { sql: 'CREATE INDEX IF NOT EXISTS idx_entries_user ON entries (user_id, date)', args: [] },
+    ],
+    'write',
+  )
+}
+
+/*
+ * Каждая уже заведённая привычка получает своего создателя участником.
+ * Без этого после перехода на участников старые привычки пропали бы из
+ * списка у их же хозяев — в новой картине мира они ничьи.
+ */
+await db.execute(`
+  INSERT OR IGNORE INTO habit_members (habit_id, user_id, sort_order, joined_at)
+    SELECT id, user_id, sort_order, created_at FROM habits
+`)
+
 /*
  * Представления «кто это» — те же таблицы, но с именем и ником Telegram сразу
  * после user_id. Нужны, чтобы владелец бота, открыв базу, видел живого
@@ -155,6 +264,19 @@ await db.executeMultiple(`
       FROM entries e
       LEFT JOIN users u ON u.user_id = e.user_id
       LEFT JOIN habits h ON h.id = e.habit_id;
+
+  -- Кто с кем в общих привычках: сразу видно, прижилась ли совместность.
+  DROP VIEW IF EXISTS view_members;
+  CREATE VIEW view_members AS
+    SELECT m.user_id, u.first_name, u.username,
+           h.name AS habit_name,
+           CASE WHEN h.user_id = m.user_id THEN 'создатель' ELSE 'участник' END AS role,
+           (SELECT COUNT(*) FROM habit_members x WHERE x.habit_id = m.habit_id) AS members_total,
+           m.joined_at, m.habit_id
+      FROM habit_members m
+      JOIN habits h ON h.id = m.habit_id
+      LEFT JOIN users u ON u.user_id = m.user_id
+     ORDER BY m.habit_id, m.joined_at;
 
   DROP VIEW IF EXISTS view_tasks;
   CREATE VIEW view_tasks AS

@@ -93,10 +93,13 @@ async function handleCallback(query, webAppUrl) {
     return
   }
 
-  // Привычка обязана принадлежать нажавшему: данные кнопки приходят от клиента
+  // Нажавший обязан быть участником привычки: данные кнопки приходят от клиента
   // и подделываются, а `from.id` заверен самим Telegram.
   const { rows } = await db.execute({
-    sql: 'SELECT id, name FROM habits WHERE id = ? AND user_id = ?',
+    sql: `SELECT h.id, h.name
+            FROM habit_members m
+            JOIN habits h ON h.id = m.habit_id
+           WHERE h.id = ? AND m.user_id = ?`,
     args: [habitId, query.from.id],
   })
   const habit = rows[0]
@@ -111,6 +114,7 @@ async function handleCallback(query, webAppUrl) {
     sql: 'INSERT OR IGNORE INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
     args: [query.from.id, habitId, date],
   })
+
 
   await answerCallback(query.id, t.markedToast)
 
