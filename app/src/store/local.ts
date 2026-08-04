@@ -1,4 +1,4 @@
-import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
+import type { Entry, Habit, HabitInput, IsoDate, Settings } from '../types'
 import { DEFAULT_SETTINGS, normalizeSettings, type DataSource } from './datasource'
 
 /**
@@ -9,7 +9,6 @@ import { DEFAULT_SETTINGS, normalizeSettings, type DataSource } from './datasour
 const PREFIX = 'habora.v1.'
 const KEY_HABITS = `${PREFIX}habits`
 const KEY_ENTRIES = `${PREFIX}entries`
-const KEY_TASKS = `${PREFIX}tasks`
 const KEY_SETTINGS = `${PREFIX}settings`
 
 function read<T>(key: string, fallback: T): T {
@@ -111,51 +110,6 @@ export class LocalDataSource implements DataSource {
     entries.splice(index, 1)
     write(KEY_ENTRIES, entries)
     return false
-  }
-
-  async getTasks(): Promise<Task[]> {
-    return read<Task[]>(KEY_TASKS, []).map((task) => ({ ...task, durationSec: task.durationSec ?? null }))
-  }
-
-  async createTask(input: TaskInput): Promise<Task> {
-    const tasks = read<Task[]>(KEY_TASKS, [])
-    const task: Task = {
-      ...input,
-      id: newId(),
-      doneAt: null,
-      createdAt: new Date().toISOString(),
-    }
-    write(KEY_TASKS, [...tasks, task])
-    return task
-  }
-
-  async updateTask(id: string, patch: Partial<TaskInput>): Promise<Task> {
-    const tasks = read<Task[]>(KEY_TASKS, [])
-    const index = tasks.findIndex((t) => t.id === id)
-    if (index === -1) throw new Error(`Task ${id} not found`)
-
-    const updated = { ...tasks[index], ...patch }
-    tasks[index] = updated
-    write(KEY_TASKS, tasks)
-    return updated
-  }
-
-  async deleteTask(id: string): Promise<void> {
-    write(
-      KEY_TASKS,
-      read<Task[]>(KEY_TASKS, []).filter((t) => t.id !== id),
-    )
-  }
-
-  async toggleTask(id: string): Promise<Task> {
-    const tasks = read<Task[]>(KEY_TASKS, [])
-    const index = tasks.findIndex((t) => t.id === id)
-    if (index === -1) throw new Error(`Task ${id} not found`)
-
-    const updated = { ...tasks[index], doneAt: tasks[index].doneAt ? null : new Date().toISOString() }
-    tasks[index] = updated
-    write(KEY_TASKS, tasks)
-    return updated
   }
 
   async getSettings(): Promise<Settings> {

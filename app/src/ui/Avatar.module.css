@@ -1,0 +1,25 @@
+/*
+ * Буква лежит под фотографией, а не вместо неё: пока фото грузится, на месте
+ * аватарки уже что-то есть, и список не дёргается, когда картинка появится.
+ */
+.avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: var(--tone);
+  box-shadow: inset 0 0 0 1px var(--card-edge);
+  user-select: none;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

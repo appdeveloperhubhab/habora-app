@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
+import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import { telegramLang } from '../lib/telegram'
-import { toIso } from '../lib/dates'
 import { detectMilestone, type Milestone } from '../lib/milestones'
 import { DEFAULT_SETTINGS, type DataSource } from './datasource'
 import { pickDataSource } from './pickDataSource'
@@ -31,8 +30,8 @@ export function StoreProvider({ children, source }: Props) {
   const [ready, setReady] = useState(false)
   const [habits, setHabits] = useState<Habit[]>([])
   const [entries, setEntries] = useState<Entry[]>([])
-  const [tasks, setTasks] = useState<Task[]>([])
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
+  const [friends, setFriends] = useState<Friend[]>([])
   const [celebration, setCelebration] = useState<Milestone | null>(null)
 
   // `saveSettings` объявлена ниже, а нужна уже в `toggleEntry`. Ссылка
@@ -43,10 +42,9 @@ export function StoreProvider({ children, source }: Props) {
     let cancelled = false
 
     async function load() {
-      const [loadedHabits, loadedEntries, loadedTasks, loadedSettings] = await Promise.all([
+      const [loadedHabits, loadedEntries, loadedSettings] = await Promise.all([
         dataSource.getHabits(),
         dataSource.getEntries(),
-        dataSource.getTasks(),
         dataSource.getSettings(),
       ])
       if (cancelled) return
@@ -62,7 +60,6 @@ export function StoreProvider({ children, source }: Props) {
 
       setHabits(loadedHabits)
       setEntries(loadedEntries)
-      setTasks(loadedTasks)
       setSettings(initial)
       setReady(true)
     }
@@ -99,18 +96,8 @@ export function StoreProvider({ children, source }: Props) {
 
   const datesOf = useCallback((habitId: string) => datesByHabit.get(habitId) ?? [], [datesByHabit])
 
-  /**
-   * Дни с любой активностью — для общей серии приложения.
-   * У задачи берём день, когда её реально закрыли, а не на который она была
-   * назначена: просроченная задача, выполненная сегодня, — это сегодняшняя активность.
-   */
-  const activeDates = useMemo(() => {
-    const days = new Set(entries.map((entry) => entry.date))
-    for (const task of tasks) {
-      if (task.doneAt) days.add(toIso(new Date(task.doneAt)))
-    }
-    return [...days]
-  }, [entries, tasks])
+  /** Дни с любой активностью — для общей серии приложения. */
+  const activeDates = useMemo(() => [...new Set(entries.map((entry) => entry.date))], [entries])
 
   const toggleEntry = useCallback(
     async (habitId: string, date: IsoDate) => {
@@ -190,44 +177,6 @@ export function StoreProvider({ children, source }: Props) {
     [dataSource],
   )
 
-  const createTask = useCallback(
-    async (input: TaskInput) => {
-      const task = await dataSource.createTask(input)
-      setTasks((prev) => [...prev, task])
-      return task
-    },
-    [dataSource],
-  )
-
-  const updateTask = useCallback(
-    async (id: string, patch: Partial<TaskInput>) => {
-      const updated = await dataSource.updateTask(id, patch)
-      setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
-    },
-    [dataSource],
-  )
-
-  const deleteTask = useCallback(
-    async (id: string) => {
-      await dataSource.deleteTask(id)
-      setTasks((prev) => prev.filter((t) => t.id !== id))
-    },
-    [dataSource],
-  )
-
-  const toggleTask = useCallback(
-    async (id: string) => {
-      const now = new Date().toISOString()
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, doneAt: t.doneAt ? null : now } : t)))
-      try {
-        await dataSource.toggleTask(id)
-      } catch {
-        setTasks(await dataSource.getTasks())
-      }
-    },
-    [dataSource],
-  )
-
   const saveSettings = useCallback(
     async (patch: Partial<Settings>) => {
       setSettings((prev) => ({ ...prev, ...patch }))
@@ -238,6 +187,20 @@ export function StoreProvider({ children, source }: Props) {
 
   saveSettingsRef.current = saveSettings
 
+  /**
+   * Отметки друзей приходят только по запросу: они ставятся на чужих
+   * телефонах, и узнать о них можно, лишь спросив заново. Ошибку не
+   * поднимаем — пустой список друзей не повод ломать экран.
+   */
+  const refreshFriends = useCallback(async () => {
+    if (!dataSource.getFriends) return
+    try {
+      setFriends(await dataSource.getFriends())
+    } catch {
+      setFriends([])
+    }
+  }, [dataSource])
+
   const dismissCelebration = useCallback(() => setCelebration(null), [])
 
   const value: StoreValue = useMemo(
@@ -245,8 +208,9 @@ export function StoreProvider({ children, source }: Props) {
       ready,
       habits,
       entries,
-      tasks,
       settings,
+      friends,
+      refreshFriends,
       isDone,
       datesOf,
       activeDates,
@@ -255,19 +219,14 @@ export function StoreProvider({ children, source }: Props) {
       updateHabit,
       deleteHabit,
       reorderHabits,
-      createTask,
-      updateTask,
-      deleteTask,
-      toggleTask,
       saveSettings,
       celebration,
       dismissCelebration,
     }),
     [
-      ready, habits, entries, tasks, settings,
+      ready, habits, entries, settings, friends, refreshFriends,
       isDone, datesOf, activeDates, toggleEntry,
       createHabit, updateHabit, deleteHabit, reorderHabits,
-      createTask, updateTask, deleteTask, toggleTask,
       saveSettings, celebration, dismissCelebration,
     ],
   )

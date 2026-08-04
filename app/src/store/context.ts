@@ -1,13 +1,16 @@
 import { createContext, useContext } from 'react'
-import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
+import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import type { Milestone } from '../lib/milestones'
 
 export interface StoreValue {
   ready: boolean
   habits: Habit[]
   entries: Entry[]
-  tasks: Task[]
   settings: Settings
+  /** Люди, с которыми есть общие привычки. Вне Telegram список всегда пуст. */
+  friends: Friend[]
+  /** Перечитать друзей: их отметки меняются на их стороне, сами собой не придут. */
+  refreshFriends(): Promise<void>
 
   /** Быстрая проверка «день отмечен» без перебора массива отметок. */
   isDone(habitId: string, date: IsoDate): boolean
@@ -21,11 +24,6 @@ export interface StoreValue {
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<void>
   deleteHabit(id: string): Promise<void>
   reorderHabits(ids: string[]): Promise<void>
-
-  createTask(input: TaskInput): Promise<Task>
-  updateTask(id: string, patch: Partial<TaskInput>): Promise<void>
-  deleteTask(id: string): Promise<void>
-  toggleTask(id: string): Promise<void>
 
   saveSettings(patch: Partial<Settings>): Promise<void>
 

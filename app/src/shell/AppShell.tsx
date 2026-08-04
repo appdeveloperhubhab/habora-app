@@ -7,8 +7,7 @@ import { startTimer } from '../lib/timer'
 import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { HabitEditor } from '../features/habits/HabitEditor'
 import { HabitScreen } from '../features/habits/detail/HabitScreen'
-import { TasksScreen } from '../features/tasks/TasksScreen'
-import { TaskEditor } from '../features/tasks/TaskEditor'
+import { FriendsScreen } from '../features/friends/FriendsScreen'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { ThemeScreen } from '../features/settings/ThemeScreen'
 import { TimerScreen } from '../features/timer/TimerScreen'
@@ -49,7 +48,7 @@ export function AppShell() {
       label: t.menu.order,
       icon: 'viewWeek',
       onSelect: () => {
-        // Режим настройки вида есть только у привычек: у задач карточка одна.
+        // Режим настройки вида есть только у привычек: у друзей карточка одна.
         nav.setTab('habits')
         setOrderMode(true)
       },
@@ -67,12 +66,15 @@ export function AppShell() {
         title={t.tabs[nav.tab]}
         date={formatDayMonth(todayIso(), settings.lang)}
         onMenu={() => setMenuOpen(true)}
-        onAdd={() =>
-          nav.push(nav.tab === 'habits' ? { name: 'habitEditor', habitId: null } : { name: 'taskEditor', taskId: null })
-        }
+        onAdd={() => {
+          // Друзей не «добавляют» кнопкой: человек появляется в списке,
+          // когда присоединяется к общей привычке.
+          nav.setTab('habits')
+          nav.push({ name: 'habitEditor', habitId: null })
+        }}
         searching={searching}
         query={query}
-        searchPlaceholder={nav.tab === 'habits' ? t.habits.searchPlaceholder : t.tasks.searchPlaceholder}
+        searchPlaceholder={nav.tab === 'habits' ? t.habits.searchPlaceholder : t.friends.searchPlaceholder}
         onSearchOpen={() => setSearching(true)}
         onSearchClose={closeSearch}
         onQueryChange={setQuery}
@@ -85,16 +87,16 @@ export function AppShell() {
         {nav.tab === 'habits' ? (
           <HabitsScreen query={query} orderMode={orderMode} />
         ) : (
-          <TasksScreen query={query} />
+          <FriendsScreen query={query} />
         )}
       </main>
 
       <BottomTabs
         tab={nav.tab}
-        labels={{ habits: t.tabs.habits, tasks: t.tabs.tasks }}
+        labels={{ habits: t.tabs.habits, friends: t.tabs.friends }}
         onChange={(tab) => {
           // Поиск привязан к разделу: запрос по привычкам не имеет смысла
-          // в списке задач.
+          // в списке друзей.
           closeSearch()
           nav.setTab(tab)
         }}
@@ -120,7 +122,7 @@ export function AppShell() {
 /** Экраны поверх главного. */
 function Overlay() {
   const nav = useNav()
-  const { habits, tasks, settings, saveSettings } = useStore()
+  const { habits, settings, saveSettings } = useStore()
   const t = dict(settings.lang)
 
   const note =
@@ -141,10 +143,6 @@ function Overlay() {
     }
     case 'settings':
       return <SettingsScreen onBack={nav.pop} />
-    case 'taskEditor': {
-      const task = tasks.find((item) => item.id === screen.taskId) ?? null
-      return <TaskEditor task={task} onClose={nav.pop} />
-    }
     case 'habit': {
       const habit = habits.find((item) => item.id === screen.habitId)
       // Привычку могли удалить, пока её экран открыт, — тогда просто выходим.

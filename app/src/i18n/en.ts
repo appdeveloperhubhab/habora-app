@@ -3,7 +3,7 @@ import type { Dict } from './ru'
 export const en: Dict = {
   tabs: {
     habits: 'Habits',
-    tasks: 'Tasks',
+    friends: 'Friends',
   },
   topbar: {
     menu: 'Menu',
@@ -79,28 +79,11 @@ export const en: Dict = {
     viewGrid: 'Tiles',
     viewWeek: 'Week',
   },
-  tasks: {
-    empty: 'Nothing planned for today',
-    emptyHint: 'Tap “+” to add a task',
-    newTitle: 'New task',
-    editTitle: 'Edit task',
-    name: 'What needs doing',
-    namePlaceholder: 'Call the bank, for example',
-    date: 'Day',
-    time: 'Time',
-    timeOff: 'No time set',
-    priority: 'Priority',
-    priorityNormal: 'Normal',
-    priorityImportant: 'Important',
-    overdue: 'Overdue',
-    overdueGroup: 'Overdue',
-    todayGroup: 'Today',
-    upcomingGroup: 'Later',
-    doneGroup: 'Done',
-    deleteTitle: 'Delete this task?',
-    deleteText: 'It will disappear from the list for good.',
-    nameRequired: 'Enter a name',
-    searchPlaceholder: 'Find a task',
+  friends: {
+    empty: 'Nobody here yet',
+    emptyHint: 'Invite a friend to a habit and they will show up here',
+    searchPlaceholder: 'Find a friend',
+    noStreak: 'streak broken',
   },
   actions: {
     title: 'What would you like to do?',

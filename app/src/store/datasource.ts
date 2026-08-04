@@ -1,4 +1,4 @@
-import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
+import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 
 /**
  * Единственный способ, которым интерфейс общается с хранилищем.
@@ -24,12 +24,6 @@ export interface DataSource {
   /** Переключает отметку за день. Возвращает новое состояние: true — выполнено. */
   toggleEntry(habitId: string, date: IsoDate): Promise<boolean>
 
-  getTasks(): Promise<Task[]>
-  createTask(input: TaskInput): Promise<Task>
-  updateTask(id: string, patch: Partial<TaskInput>): Promise<Task>
-  deleteTask(id: string): Promise<void>
-  toggleTask(id: string): Promise<Task>
-
   getSettings(): Promise<Settings>
   saveSettings(patch: Partial<Settings>): Promise<Settings>
 
@@ -38,6 +32,15 @@ export interface DataSource {
    * в localStorage считать заходы не для кого — данные видит один человек.
    */
   recordVisit?(): Promise<void>
+
+  /**
+   * Люди, с которыми есть общие привычки. Тоже только на сервере: в локальном
+   * хранилище других людей не бывает по устройству.
+   */
+  getFriends?(): Promise<Friend[]>
+
+  /** Присоединиться к привычке по приглашению. */
+  joinHabit?(habitId: string): Promise<void>
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -63,6 +66,12 @@ export const DEFAULT_SETTINGS: Settings = {
  */
 export function normalizeSettings(settings: Settings): Settings {
   const known: Settings['backgroundKind'][] = ['none', 'gradient']
-  if (known.includes(settings.backgroundKind)) return settings
-  return { ...settings, backgroundKind: 'none' }
+  const next = known.includes(settings.backgroundKind)
+    ? settings
+    : { ...settings, backgroundKind: 'none' as const }
+
+  // Таймер задачи мог остаться запущенным с тех пор, когда задачи ещё были:
+  // экран отсчёта не нашёл бы, что именно идёт, и показал бы пустое имя.
+  if (next.timer && next.timer.kind !== 'habit') return { ...next, timer: null }
+  return next
 }

@@ -41,9 +41,42 @@ export interface Habit {
   durationSec: number | null
   sortOrder: number
   createdAt: string
+  /** Кто завёл привычку. Менять и удалять её у всех вправе только он. */
+  ownerId?: number
+  /** Участники совместной привычки; у обычной — один создатель. */
+  members?: HabitMember[]
 }
 
-export type HabitInput = Omit<Habit, 'id' | 'createdAt' | 'sortOrder'>
+export type HabitInput = Omit<Habit, 'id' | 'createdAt' | 'sortOrder' | 'ownerId' | 'members'>
+
+/**
+ * Участник привычки. У обычной привычки он один — тот, кто её завёл;
+ * у совместной их несколько, и каждый отмечается за себя.
+ */
+export interface HabitMember {
+  userId: number
+  firstName: string
+  username: string | null
+  photoUrl: string | null
+  /** Завёл привычку: только он вправе её менять и удалять у всех. */
+  isOwner: boolean
+  doneToday: boolean
+}
+
+/**
+ * Друг — человек, с которым есть хотя бы одна общая привычка.
+ *
+ * Отдельного списка друзей нет: связь возникает от участия в привычке и
+ * исчезает вместе с ним. Отметки приходят только по общим привычкам —
+ * делятся привычкой, а не аккаунтом.
+ */
+export interface Friend {
+  userId: number
+  firstName: string
+  username: string | null
+  photoUrl: string | null
+  habits: { habitId: string; dates: IsoDate[] }[]
+}
 
 /**
  * Отметка выполнения за конкретный день. Хранится как факт: строка есть —
@@ -52,23 +85,6 @@ export type HabitInput = Omit<Habit, 'id' | 'createdAt' | 'sortOrder'>
 export interface Entry {
   habitId: string
   date: IsoDate
-}
-
-export type TaskPriority = 'normal' | 'important'
-
-export interface Task {
-  id: string
-  title: string
-  /** День, на который назначена задача. */
-  date: IsoDate
-  /** Время в формате `HH:MM`; null — задача без привязки ко времени. */
-  time: string | null
-  priority: TaskPriority
-  /** Длительность в секундах; null — таймера нет. */
-  durationSec: number | null
-  /** Момент выполнения (ISO datetime); null — не выполнена. */
-  doneAt: string | null
-  createdAt: string
 }
 
 /**
@@ -80,7 +96,8 @@ export interface Task {
  * пересчитать заново.
  */
 export interface ActiveTimer {
-  kind: 'habit' | 'task'
+  /** Осталось от времён, когда таймер запускался и у задач. */
+  kind: 'habit'
   id: string
   startedAt: string
   durationSec: number
@@ -89,8 +106,6 @@ export interface ActiveTimer {
   /** Сколько миллисекунд суммарно провели на паузе. */
   pausedMs: number
 }
-
-export type TaskInput = Omit<Task, 'id' | 'createdAt' | 'doneAt'>
 
 export type ThemeMode = 'dark' | 'light'
 export type Lang = 'ru' | 'en'

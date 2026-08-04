@@ -1,5 +1,6 @@
-import type { Entry, Habit, HabitInput, IsoDate, Settings, Task, TaskInput } from '../types'
+import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import { initData } from '../lib/telegram'
+import { todayIso } from '../lib/dates'
 import { normalizeSettings, type DataSource } from './datasource'
 
 /**
@@ -38,7 +39,17 @@ export class ApiDataSource implements DataSource {
   }
 
   getHabits() {
-    return this.request<Habit[]>('/api/habits')
+    // Сегодняшний день считает телефон, а не сервер: он живёт по всемирному
+    // времени, и вечером его «сегодня» уже завтрашнее.
+    return this.request<Habit[]>(`/api/habits?today=${todayIso()}`)
+  }
+
+  getFriends() {
+    return this.request<Friend[]>('/api/friends')
+  }
+
+  async joinHabit(habitId: string) {
+    await this.request(`/api/habits/${habitId}/join`, { method: 'POST' })
   }
 
   createHabit(input: HabitInput) {
@@ -71,26 +82,6 @@ export class ApiDataSource implements DataSource {
       body: JSON.stringify({ habitId, date }),
     })
     return result.done
-  }
-
-  getTasks() {
-    return this.request<Task[]>('/api/tasks')
-  }
-
-  createTask(input: TaskInput) {
-    return this.request<Task>('/api/tasks', { method: 'POST', body: JSON.stringify(input) })
-  }
-
-  updateTask(id: string, patch: Partial<TaskInput>) {
-    return this.request<Task>(`/api/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
-  }
-
-  async deleteTask(id: string) {
-    await this.request(`/api/tasks/${id}`, { method: 'DELETE' })
-  }
-
-  toggleTask(id: string) {
-    return this.request<Task>(`/api/tasks/${id}/toggle`, { method: 'POST' })
   }
 
   async getSettings() {

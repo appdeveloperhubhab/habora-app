@@ -17,7 +17,7 @@ import styles from './TimerScreen.module.css'
  * время, а не то, на котором всё замерло.
  */
 export function TimerScreen({ onClose }: { onClose(): void }) {
-  const { settings, habits, tasks, saveSettings, toggleEntry, toggleTask } = useStore()
+  const { settings, habits, saveSettings, toggleEntry } = useStore()
   const t = dict(settings.lang)
   const timer = settings.timer
 
@@ -26,14 +26,10 @@ export function TimerScreen({ onClose }: { onClose(): void }) {
   // отработать несколько раз подряд.
   const finishing = useRef(false)
 
-  const target = timer
-    ? timer.kind === 'habit'
-      ? habits.find((h) => h.id === timer.id)
-      : tasks.find((task) => task.id === timer.id)
-    : undefined
+  const target = timer ? habits.find((habit) => habit.id === timer.id) : undefined
 
-  const color = timer && target && 'color' in target ? target.color : settings.accentColor
-  const name = target ? ('name' in target ? target.name : target.title) : ''
+  const color = target?.color ?? settings.accentColor
+  const name = target?.name ?? ''
 
   const finish = useCallback(async () => {
     if (!timer || finishing.current) return
@@ -41,13 +37,12 @@ export function TimerScreen({ onClose }: { onClose(): void }) {
 
     // Отмечаем тем же способом, что и обычное нажатие: срабатывают те же
     // анимация, вибрация и проверка вех.
-    if (timer.kind === 'habit') await toggleEntry(timer.id, todayIso())
-    else await toggleTask(timer.id)
+    await toggleEntry(timer.id, todayIso())
 
     hapticSuccess()
     await saveSettings({ timer: null })
     onClose()
-  }, [timer, toggleEntry, toggleTask, saveSettings, onClose])
+  }, [timer, toggleEntry, saveSettings, onClose])
 
   /*
    * Проверка завершения живёт внутри тика, а не в отдельном эффекте.

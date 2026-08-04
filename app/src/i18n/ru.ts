@@ -5,7 +5,7 @@
 export const ru = {
   tabs: {
     habits: 'Привычки',
-    tasks: 'Задачи',
+    friends: 'Друзья',
   },
   topbar: {
     menu: 'Меню',
@@ -81,28 +81,11 @@ export const ru = {
     viewGrid: 'Плитка',
     viewWeek: 'Неделя',
   },
-  tasks: {
-    empty: 'На сегодня задач нет',
-    emptyHint: 'Нажмите «+», чтобы добавить задачу',
-    newTitle: 'Новая задача',
-    editTitle: 'Редактирование',
-    name: 'Что нужно сделать',
-    namePlaceholder: 'Например, позвонить в банк',
-    date: 'День',
-    time: 'Время',
-    timeOff: 'Без времени',
-    priority: 'Приоритет',
-    priorityNormal: 'Обычная',
-    priorityImportant: 'Важная',
-    overdue: 'Просрочено',
-    overdueGroup: 'Просроченные',
-    todayGroup: 'Сегодня',
-    upcomingGroup: 'Дальше',
-    doneGroup: 'Выполнено',
-    deleteTitle: 'Удалить задачу?',
-    deleteText: 'Задача исчезнет из списка без возможности вернуть.',
-    nameRequired: 'Введите название',
-    searchPlaceholder: 'Найти задачу',
+  friends: {
+    empty: 'Пока никого',
+    emptyHint: 'Пригласите друга в привычку — и он появится здесь',
+    searchPlaceholder: 'Найти друга',
+    noStreak: 'серия прервана',
   },
   actions: {
     title: 'Что сделать?',

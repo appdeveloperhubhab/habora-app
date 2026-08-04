@@ -2,8 +2,9 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { verifyInitData } from './telegramAuth.js'
 import { habitRoutes } from './routes/habits.js'
-import { taskRoutes } from './routes/tasks.js'
+import { settingsRoutes } from './routes/settings.js'
 import { userRoutes } from './routes/users.js'
+import { friendRoutes } from './routes/friends.js'
 import { botRoutes } from './routes/bot.js'
 import { setWebhook, webhookSecret } from './telegram/api.js'
 
@@ -37,8 +38,9 @@ app.addHook('preHandler', async (request, reply) => {
 app.get('/health', async () => ({ ok: true }))
 
 await app.register(habitRoutes)
-await app.register(taskRoutes)
+await app.register(settingsRoutes)
 await app.register(userRoutes)
+await app.register(friendRoutes)
 await app.register(botRoutes)
 
 const port = Number(process.env.PORT ?? 3000)

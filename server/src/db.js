@@ -72,6 +72,11 @@ await db.executeMultiple(`
 
   CREATE INDEX IF NOT EXISTS idx_entries_user ON entries (user_id, date);
 
+  /*
+   * Задачи. Раздел убран из приложения — им не пользовались, а место в нижней
+   * навигации нужнее друзьям. Таблица и данные оставлены нетронутыми: удалять
+   * чужие записи заодно с кодом нельзя, вернуть их будет неоткуда.
+   */
   CREATE TABLE IF NOT EXISTS tasks (
     id           TEXT PRIMARY KEY,
     user_id      INTEGER NOT NULL,
@@ -313,15 +318,3 @@ export function rowToHabit(row) {
   }
 }
 
-export function rowToTask(row) {
-  return {
-    id: row.id,
-    title: row.title,
-    date: row.date,
-    time: row.time,
-    priority: row.priority,
-    durationSec: row.duration_sec,
-    doneAt: row.done_at,
-    createdAt: row.created_at,
-  }
-}

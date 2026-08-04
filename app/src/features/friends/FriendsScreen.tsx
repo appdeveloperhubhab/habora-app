@@ -1,0 +1,119 @@
+import { useEffect } from 'react'
+import { useStore } from '../../store/context'
+import { dict } from '../../i18n'
+import { todayIso } from '../../lib/dates'
+import { currentStreak, weekProgress } from '../../lib/streak'
+import { HabitIcon } from '../../ui/habitIcons'
+import { EmptyState } from '../../ui/EmptyState'
+import { Avatar } from '../../ui/Avatar'
+import styles from './FriendsScreen.module.css'
+
+/**
+ * Друзья — люди, с которыми есть общие привычки.
+ *
+ * Не лента событий: с двумя-тремя друзьями лента почти всегда пуста и
+ * выглядит сломанной. Список людей с их сегодняшним состоянием читается
+ * живым, даже когда друг один.
+ *
+ * Отдельного списка друзей нет и заводить его не нужно: человек попадает
+ * сюда, потому что вы с ним в одной привычке.
+ */
+export function FriendsScreen({ query = '' }: { query?: string }) {
+  const { friends, habits, settings, refreshFriends } = useStore()
+  const t = dict(settings.lang)
+  const today = todayIso()
+
+  // Отметки друзей ставятся на их телефонах — узнать о них можно только
+  // спросив заново, каждый раз при открытии вкладки.
+  useEffect(() => {
+    void refreshFriends()
+  }, [refreshFriends])
+
+  const needle = query.trim().toLowerCase()
+  const visible = needle
+    ? friends.filter(
+        (friend) =>
+          friend.firstName.toLowerCase().includes(needle) ||
+          (friend.username ?? '').toLowerCase().includes(needle),
+      )
+    : friends
+
+  if (friends.length === 0) {
+    return <EmptyState title={t.friends.empty} hint={t.friends.emptyHint} />
+  }
+
+  if (visible.length === 0) {
+    return <EmptyState title={t.common.notFound} hint={t.common.notFoundHint} />
+  }
+
+  return (
+    <div className={styles.screen}>
+      <div className={styles.list}>
+        {visible.map((friend) => (
+          <article key={friend.userId} className={styles.card}>
+            <header className={styles.head}>
+              <Avatar name={friend.firstName} photoUrl={friend.photoUrl} size={44} />
+              <span className={styles.who}>
+                <span className={styles.name}>{friend.firstName}</span>
+                {friend.username && <span className={styles.username}>@{friend.username}</span>}
+              </span>
+            </header>
+
+            <div className={styles.habits}>
+              {friend.habits.map((shared) => {
+                const habit = habits.find((item) => item.id === shared.habitId)
+                if (!habit) return null
+
+                const doneToday = shared.dates.includes(today)
+                const streak = currentStreak(shared.dates, habit.schedule, today)
+                const week = weekProgress(shared.dates, today)
+
+                return (
+                  <div
+                    key={shared.habitId}
+                    className={styles.habit}
+                    style={{ '--habit': habit.color } as React.CSSProperties}
+                  >
+                    <span className={styles.habitIcon}>
+                      <HabitIcon icon={habit.icon} size={17} />
+                    </span>
+
+                    <span className={styles.habitBody}>
+                      <span className={styles.habitName}>{habit.name}</span>
+                      <span className={styles.habitNote}>
+                        {/* Серия — та же цифра и по тому же расчёту, что человек
+                            видит у себя: другой ответ на тот же вопрос сбивал бы. */}
+                        {streak.value > 0
+                          ? `${streak.value} ${streak.unit === 'weeks' ? t.common.weeks : t.common.days} ${t.common.inARow}`
+                          : t.friends.noStreak}
+                      </span>
+                    </span>
+
+                    {/* Неделя точками: видно не только сегодня, но и как шло дело. */}
+                    <span className={styles.week}>
+                      {week.map((day) => (
+                        <span
+                          key={day.date}
+                          className={[
+                            styles.dot,
+                            day.done ? styles.dotDone : '',
+                            day.isToday ? styles.dotToday : '',
+                            day.isFuture ? styles.dotFuture : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                        />
+                      ))}
+                    </span>
+
+                    <span className={doneToday ? `${styles.mark} ${styles.markDone}` : styles.mark} />
+                  </div>
+                )
+              })}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}

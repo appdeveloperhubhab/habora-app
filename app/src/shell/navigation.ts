@@ -13,12 +13,11 @@ export type Screen =
   | { name: 'home' }
   | { name: 'habit'; habitId: string }
   | { name: 'habitEditor'; habitId: string | null }
-  | { name: 'taskEditor'; taskId: string | null }
   | { name: 'settings' }
   | { name: 'themeSettings' }
   | { name: 'timer' }
 
-export type Tab = 'habits' | 'tasks'
+export type Tab = 'habits' | 'friends'
 
 export interface NavValue {
   /** Текущий стек; первый элемент всегда `home`. */

@@ -19,7 +19,7 @@ export type IconName =
   | 'flame'
   | 'play'
   | 'habits'
-  | 'tasks'
+  | 'friends'
   | 'chevronLeft'
   | 'chevronRight'
   | 'chart'
@@ -75,11 +75,14 @@ const PATHS: Record<IconName, ReactNode> = {
       <rect x="13.5" y="13.5" width="7" height="7" rx="2.2" />
     </>
   ),
-  tasks: (
+  /* Двое: один ближе и крупнее, второй чуть позади — так пара читается
+     людьми, а не двумя одинаковыми кружками. */
+  friends: (
     <>
-      <path d="M4 7.5l2 2 3.5-3.5" />
-      <path d="M4 17l2 2 3.5-3.5" />
-      <path d="M13 7.5h7M13 17h7" />
+      <circle cx="9.5" cy="8.5" r="3.5" />
+      <path d="M3.5 19.5a6 6 0 0 1 12 0" />
+      <path d="M16.5 5.6a3.5 3.5 0 0 1 0 6.8" />
+      <path d="M18 14.4a6 6 0 0 1 2.5 5.1" />
     </>
   ),
   chart: (
