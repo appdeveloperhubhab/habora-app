@@ -76,8 +76,15 @@ export const en: Dict = {
     marked: 'Marked',
     totalMarks: 'check-ins',
     viewMonth: 'Month',
-    viewGrid: 'Tiles',
+    viewYear: 'Year',
     viewWeek: 'Week',
+  },
+  loading: {
+    title: 'Loading…',
+    slow: 'The server is waking up after being idle — it takes up to half a minute. It will be quick after that.',
+    failed: 'Cannot reach the server',
+    failedHint: 'No answer from the server. Trying again in a few seconds usually helps.',
+    retry: 'Try again',
   },
   friends: {
     empty: 'Nobody here yet',

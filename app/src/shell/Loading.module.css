@@ -1,0 +1,77 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  text-align: center;
+  background: var(--bg);
+}
+
+/*
+ * Кольцо, а не точки: вращение читается как «идёт работа» даже краем глаза,
+ * и не создаёт ощущения обратного отсчёта, у которого есть конец.
+ */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  border: 2.5px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-top-color: var(--accent);
+  animation: spin 900ms linear infinite;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-pill);
+  color: #ff6b5a;
+  background: color-mix(in srgb, #ff6b5a 14%, transparent);
+}
+
+.title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+}
+
+.hint,
+.hintHidden {
+  max-width: 280px;
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  color: var(--text-faint);
+  transition: opacity var(--t-slow) var(--ease-soft);
+}
+
+/* Скрыто прозрачностью, а не отсутствием: место остаётся занятым, и
+   появившаяся надпись не сдвигает то, что выше. */
+.hintHidden {
+  opacity: 0;
+}
+
+.retry {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: var(--accent);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.retry:active {
+  transform: scale(0.94);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

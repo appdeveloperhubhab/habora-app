@@ -28,6 +28,15 @@ export function StoreProvider({ children, source }: Props) {
   const dataSource = useRef(source ?? pickDataSource()).current
 
   const [ready, setReady] = useState(false)
+  /**
+   * Сорвалась ли загрузка. Бесплатный сервер засыпает без посетителей и
+   * просыпается до полуминуты — всё это время он не отвечает вовсе. Молчащий
+   * чёрный экран человек читает как поломку, поэтому неудачу надо показать
+   * и дать возможность повторить.
+   */
+  const [failed, setFailed] = useState(false)
+  /** Счётчик попыток: его смена перезапускает загрузку. */
+  const [attempt, setAttempt] = useState(0)
   const [habits, setHabits] = useState<Habit[]>([])
   const [entries, setEntries] = useState<Entry[]>([])
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
@@ -42,28 +51,34 @@ export function StoreProvider({ children, source }: Props) {
     let cancelled = false
 
     async function load() {
-      const [loadedHabits, loadedEntries, loadedSettings] = await Promise.all([
-        dataSource.getHabits(),
-        dataSource.getEntries(),
-        dataSource.getSettings(),
-      ])
-      if (cancelled) return
+      try {
+        const [loadedHabits, loadedEntries, loadedSettings] = await Promise.all([
+          dataSource.getHabits(),
+          dataSource.getEntries(),
+          dataSource.getSettings(),
+        ])
+        if (cancelled) return
 
-      // При самом первом запуске подхватываем из Telegram язык — но не тему:
-      // стартовая тема Habora по ТЗ тёмная, и светлый клиент Telegram не должен
-      // её переопределять. Дальше и то и другое решает пользователь.
-      let initial = loadedSettings
-      if (!loadedSettings.onboarded) {
-        const lang = telegramLang()
-        if (lang) initial = { ...loadedSettings, lang }
+        // При самом первом запуске подхватываем из Telegram язык — но не тему:
+        // стартовая тема Habora по ТЗ тёмная, и светлый клиент Telegram не должен
+        // её переопределять. Дальше и то и другое решает пользователь.
+        let initial = loadedSettings
+        if (!loadedSettings.onboarded) {
+          const lang = telegramLang()
+          if (lang) initial = { ...loadedSettings, lang }
+        }
+
+        setHabits(loadedHabits)
+        setEntries(loadedEntries)
+        setSettings(initial)
+        setFailed(false)
+        setReady(true)
+      } catch {
+        if (!cancelled) setFailed(true)
       }
-
-      setHabits(loadedHabits)
-      setEntries(loadedEntries)
-      setSettings(initial)
-      setReady(true)
     }
 
+    setFailed(false)
     void load()
 
     // Отдельно от загрузки и без ожидания: счётчик заходов — не та вещь,
@@ -74,7 +89,7 @@ export function StoreProvider({ children, source }: Props) {
     return () => {
       cancelled = true
     }
-  }, [dataSource])
+  }, [dataSource, attempt])
 
   const doneKeys = useMemo(() => new Set(entries.map((e) => entryKey(e.habitId, e.date))), [entries])
 
@@ -213,11 +228,15 @@ export function StoreProvider({ children, source }: Props) {
     [dataSource],
   )
 
+  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+
   const dismissCelebration = useCallback(() => setCelebration(null), [])
 
   const value: StoreValue = useMemo(
     () => ({
       ready,
+      failed,
+      retry,
       habits,
       entries,
       settings,
@@ -237,7 +256,7 @@ export function StoreProvider({ children, source }: Props) {
       dismissCelebration,
     }),
     [
-      ready, habits, entries, settings, friends, refreshFriends, inviteLink,
+      ready, failed, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
       isDone, datesOf, activeDates, toggleEntry,
       createHabit, updateHabit, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,

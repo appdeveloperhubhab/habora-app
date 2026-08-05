@@ -184,6 +184,17 @@ export function setBackButton(handler: (() => void) | null): () => void {
   }
 }
 
+/**
+ * Идентификатор текущего человека в Telegram; null вне Telegram.
+ *
+ * Берётся из непроверенной части данных и годится только для показа — решить,
+ * чей аватар не рисовать на своей же карточке. Всё, что касается прав и
+ * доступа, решает сервер по подписи.
+ */
+export function currentUserId(): number | null {
+  return webApp?.initDataUnsafe?.user?.id ?? null
+}
+
 /** Язык интерфейса Telegram — используется как значение по умолчанию при первом запуске. */
 export function telegramLang(): 'ru' | 'en' | null {
   const code = webApp?.initDataUnsafe?.user?.language_code

@@ -69,9 +69,15 @@ export const DEFAULT_SETTINGS: Settings = {
  */
 export function normalizeSettings(settings: Settings): Settings {
   const known: Settings['backgroundKind'][] = ['none', 'gradient']
-  const next = known.includes(settings.backgroundKind)
+  let next = known.includes(settings.backgroundKind)
     ? settings
     : { ...settings, backgroundKind: 'none' as const }
+
+  // Вид «плитка» заменён на «год». У тех, кто успел его выбрать, в хранилище
+  // остался вид, которого больше нет: без замены список привычек не отрисовался
+  // бы вовсе — показывать нечем.
+  const views: Settings['cardView'][] = ['week', 'month', 'year']
+  if (!views.includes(next.cardView)) next = { ...next, cardView: 'month' }
 
   // Таймер задачи мог остаться запущенным с тех пор, когда задачи ещё были:
   // экран отсчёта не нашёл бы, что именно идёт, и показал бы пустое имя.

@@ -4,17 +4,28 @@ import type { Dict } from '../../i18n'
 import { activityGrid } from '../../lib/stats'
 import { hapticSelect, hapticTick, hapticUntick } from '../../lib/haptics'
 import { HabitIcon } from '../../ui/habitIcons'
+import { HabitMembers } from './HabitMembers'
 import styles from './HabitCardBoard.module.css'
 
 /**
  * Крупная карточка привычки: иконка с названием сверху, сетка выполнения
  * посередине, широкая кнопка «Отметить» внизу.
  *
- * Один компонент на два вида — во всю ширину и плиткой по две в ряд:
- * они отличаются только размерами и глубиной истории, а не устройством.
+ * Один компонент на два вида — месяц и год: они отличаются только глубиной
+ * показанной истории, а не устройством.
  */
 
-const WEEKS = { month: 13, grid: 7 } as const
+/**
+ * Сколько недель видно.
+ *
+ * Месяц — пять недель: столько их помещается в календарный месяц, и клетки
+ * остаются достаточно крупными, чтобы попасть пальцем.
+ *
+ * Год — все 53: клетки становятся мелкими, зато год виден целиком, без
+ * прокрутки. Ради этого вид и нужен — прокручиваемый год ничем не отличался
+ * бы от месяца.
+ */
+const WEEKS = { month: 5, year: 53 } as const
 
 /**
  * Шаг задержки на единицу расстояния от сегодняшней клетки.
@@ -30,7 +41,7 @@ interface Props {
   habit: Habit
   dates: string[]
   done: boolean
-  size: 'month' | 'grid'
+  size: 'month' | 'year'
   t: Dict
   onToggle(): void
   onOpen(): void
@@ -99,9 +110,12 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
       >
         <span className={styles.header}>
           <span className={styles.icon}>
-            <HabitIcon icon={habit.icon} size={size === 'month' ? 18 : 16} />
+            <HabitIcon icon={habit.icon} size={18} />
           </span>
           <span className={styles.name}>{habit.name}</span>
+          {/* Здесь места больше, чем в узкой карточке, — аватарки встают
+              у правого края, где их не перекрывает длинное название. */}
+          <HabitMembers habit={habit} size={20} />
         </span>
 
         <span className={styles.cells}>

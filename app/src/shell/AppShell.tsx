@@ -19,6 +19,7 @@ import { OrderBar } from './OrderBar'
 import { BottomTabs } from './BottomTabs'
 import { DotsMenu, type MenuItem } from './DotsMenu'
 import { Placeholder } from './Placeholder'
+import { Loading } from './Loading'
 import styles from './AppShell.module.css'
 
 /**
@@ -27,7 +28,7 @@ import styles from './AppShell.module.css'
  * список привычек не пересобирается и не теряет позицию скролла.
  */
 export function AppShell() {
-  const { ready, settings, celebration, dismissCelebration, saveSettings } = useStore()
+  const { ready, failed, retry, settings, celebration, dismissCelebration, saveSettings } = useStore()
   const nav = useNav()
   const t = dict(settings.lang)
 
@@ -37,7 +38,7 @@ export function AppShell() {
   const [orderMode, setOrderMode] = useState(false)
   const [inviting, setInviting] = useState(false)
 
-  if (!ready) return <div className={styles.splash} />
+  if (!ready) return <Loading failed={failed} onRetry={retry} t={t} />
 
   // Первый запуск: вместо пустого списка человек видит приветствие
   // и выбор готовых привычек.
@@ -114,7 +115,7 @@ export function AppShell() {
       {orderMode && (
         <OrderBar
           value={settings.cardView}
-          labels={{ month: t.habits.viewMonth, grid: t.habits.viewGrid, week: t.habits.viewWeek }}
+          labels={{ week: t.habits.viewWeek, month: t.habits.viewMonth, year: t.habits.viewYear }}
           onChange={(cardView) => void saveSettings({ cardView })}
         />
       )}

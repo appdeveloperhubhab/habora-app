@@ -140,6 +140,15 @@
 }
 
 .subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+/* Обрезается именно текст, а не вся строка: аватарки должны остаться
+   видимыми даже у привычки с длинным расписанием. */
+.subtitleText {
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
   color: color-mix(in srgb, var(--habit) 70%, var(--text-dim));

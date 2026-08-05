@@ -24,12 +24,6 @@
     inset 0 1px 0 var(--card-highlight);
 }
 
-.grid {
-  /* Плитка теснее: две карточки в ряд, значит всё внутри мельче. */
-  padding: var(--sp-3);
-  gap: var(--sp-2);
-}
-
 .body {
   display: flex;
   flex-direction: column;
@@ -58,6 +52,10 @@
 }
 
 .name {
+  /* Занимает всё, что осталось между иконкой и аватарками, и обрезается
+     сам — иначе длинное название вытолкнуло бы лица за край карточки. */
+  flex: 1;
+  min-width: 0;
   font-size: var(--fs-label);
   font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
@@ -66,29 +64,63 @@
   text-overflow: ellipsis;
 }
 
-.grid .name {
-  font-size: var(--fs-caption);
-}
-
-/* Сетка выполнения: столбцы — недели, строки — дни. Клетки тянутся,
-   поэтому одна и та же разметка работает и во всю ширину, и в плитке. */
+/*
+ * Сетка выполнения: столбцы — недели, строки — дни. Клетки тянутся, поэтому
+ * одна и та же разметка держит и пять недель месяца, и все 53 недели года.
+ *
+ * Зазор и скругление заданы переменными: в годе клетки втрое мельче, и те же
+ * три пикселя между ними съели бы половину ширины, а скругление превратило
+ * бы квадратики в точки.
+ */
 .cells {
   display: flex;
-  gap: 3px;
+  gap: var(--cell-gap, 3px);
   width: 100%;
+}
+
+/* Год: 53 столбца на ширину телефона — зазор и скругление уменьшены,
+   иначе от самих клеток почти ничего не остаётся. */
+.year .cells {
+  --cell-gap: 1.5px;
+  --cell-radius: 1.5px;
+}
+
+/*
+ * Месяц разворачивается календарём: дни недели по горизонтали, недели —
+ * строками. В том же порядке, что и год (недели столбцами), пять столбцов
+ * растянулись бы на всю ширину, и клетки стали бы с палец величиной, а
+ * карточка заняла бы экран целиком.
+ */
+.month .cells {
+  flex-direction: column;
+}
+
+/*
+ * После разворота ширину делят уже клетки, а не недели: в исходной раскладке
+ * тянулся столбец недели, а клетка получала ширину от него. Без переноса
+ * `flex` на клетку сетка схлопывается в ничто.
+ */
+.month .week {
+  flex: none;
+  flex-direction: row;
+}
+
+.month .cell {
+  flex: 1;
+  min-width: 0;
 }
 
 .week {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--cell-gap, 3px);
   flex: 1;
   min-width: 0;
 }
 
 .cell {
   aspect-ratio: 1;
-  border-radius: 3px;
+  border-radius: var(--cell-radius, 3px);
   background: color-mix(in srgb, var(--habit) 12%, var(--cell-empty));
   transition: background var(--t-check-fill) var(--ease-soft);
 }
@@ -176,11 +208,6 @@
   color: color-mix(in srgb, var(--habit) 85%, #000 30%);
   background: color-mix(in srgb, var(--habit) 22%, #fff);
   transition: transform var(--t-check-press) var(--ease-spring), background var(--t-check-fill) var(--ease-soft);
-}
-
-.grid .mark {
-  padding: var(--sp-2);
-  font-size: var(--fs-caption);
 }
 
 .mark:active {

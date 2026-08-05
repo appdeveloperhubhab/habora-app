@@ -7,6 +7,7 @@ import { HabitIcon } from '../../ui/habitIcons'
 import { weekProgress } from '../../lib/streak'
 import { scheduleLabel } from './scheduleLabel'
 import { DayBars } from './DayBars'
+import { HabitMembers } from './HabitMembers'
 import { CheckButton } from './CheckButton'
 import styles from './HabitCard.module.css'
 
@@ -100,7 +101,13 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
 
         <span className={styles.body}>
           <span className={styles.name}>{habit.name}</span>
-          <span className={styles.subtitle}>{subtitle}</span>
+          {/* Аватарки встают в строку подписи: свободного места на узкой
+              карточке больше нигде нет, а расписание и так не первое,
+              что нужно знать о совместной привычке. */}
+          <span className={styles.subtitle}>
+            <HabitMembers habit={habit} size={16} />
+            <span className={styles.subtitleText}>{subtitle}</span>
+          </span>
         </span>
       </button>
 

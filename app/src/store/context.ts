@@ -4,6 +4,10 @@ import type { Milestone } from '../lib/milestones'
 
 export interface StoreValue {
   ready: boolean
+  /** Загрузка сорвалась — сервер не ответил. Показывается вместо пустого экрана. */
+  failed: boolean
+  /** Повторить загрузку после неудачи. */
+  retry(): void
   habits: Habit[]
   entries: Entry[]
   settings: Settings

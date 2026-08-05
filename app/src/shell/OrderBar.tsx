@@ -18,8 +18,8 @@ import styles from './OrderBar.module.css'
  */
 const VIEWS: { id: CardView; icon: IconName }[] = [
   { id: 'week', icon: 'viewCompact' },
-  { id: 'grid', icon: 'habits' },
-  { id: 'month', icon: 'viewTable' },
+  { id: 'month', icon: 'viewMonth' },
+  { id: 'year', icon: 'viewTable' },
 ]
 
 export function OrderBar({
