@@ -22,7 +22,7 @@ import styles from './HabitsScreen.module.css'
  *
  * Вид карточек общий для всех привычек и переключается в режиме «Порядок».
  */
-export function HabitsScreen({ query = '', orderMode = false }: { query?: string; orderMode?: boolean }) {
+export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
   const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink } =
     useStore()
   const nav = useNav()
@@ -33,27 +33,13 @@ export function HabitsScreen({ query = '', orderMode = false }: { query?: string
   const [menuFor, setMenuFor] = useState<Habit | null>(null)
   const [deleting, setDeleting] = useState<Habit | null>(null)
 
-  // Ищем и по названию, и по описанию: человек может помнить не заголовок,
-  // а уточнение вроде «2 литра».
-  const needle = query.trim().toLowerCase()
-  const visible = needle
-    ? habits.filter(
-        (habit) =>
-          habit.name.toLowerCase().includes(needle) || habit.description.toLowerCase().includes(needle),
-      )
-    : habits
-
   if (habits.length === 0) {
     return <EmptyState title={t.habits.empty} hint={t.habits.emptyHint} />
   }
 
-  if (visible.length === 0) {
-    return <EmptyState title={t.common.notFound} hint={t.common.notFoundHint} />
-  }
-
   // Единственное действие, которое стоит объяснить новичку. Подсказка живёт
   // до первой отметки — не по таймеру и не по числу показов.
-  const showHint = !settings.hintSeen && !needle && !orderMode
+  const showHint = !settings.hintSeen && !orderMode
 
   const handleToggle = (habitId: string) => {
     void toggleEntry(habitId, today)
@@ -95,7 +81,7 @@ export function HabitsScreen({ query = '', orderMode = false }: { query?: string
           .filter(Boolean)
           .join(' ')}
       >
-        {visible.map((habit, index) =>
+        {habits.map((habit, index) =>
           view === 'week' ? (
             <HabitCard
               key={habit.id}

@@ -1,93 +1,51 @@
-import { useEffect, useRef } from 'react'
 import { Icon } from '../ui/Icon'
 import styles from './TopBar.module.css'
 
 /**
- * Верхняя панель главного экрана: три точки и поиск слева, название текущей
+ * Верхняя панель главного экрана: настройки и порядок слева, название текущей
  * вкладки с сегодняшней датой по центру, «+» справа. Название приложения здесь
  * намеренно не показывается — по центру всегда видно, в каком разделе находишься.
  *
- * Поиск нарочно тише остальных кнопок: он нужен изредка. «+» наоборот выделен
- * акцентным цветом — это главное действие экрана.
+ * Обе левые кнопки открыты, а не спрятаны за «три точки»: их всего две, и
+ * лишний тап по меню ради выбора из двух пунктов ничего не экономил.
  *
- * В режиме поиска панель перестраивается: вместо заголовка поле ввода,
- * вместо «три точки» — кнопка выхода из поиска.
+ * «+» выделен акцентным цветом — это главное действие экрана.
  */
 
 interface Props {
   title: string
   date: string
-  onMenu(): void
+  settingsLabel: string
+  orderLabel: string
+  onSettings(): void
+  onOrder(): void
   onAdd(): void
   /** В режиме «Порядок» кнопка «+» временно заменяется на «Готово». */
   orderMode?: boolean
   doneLabel?: string
   onDone?(): void
-
-  searching: boolean
-  query: string
-  searchPlaceholder: string
-  onSearchOpen(): void
-  onSearchClose(): void
-  onQueryChange(value: string): void
 }
 
 export function TopBar({
   title,
   date,
-  onMenu,
+  settingsLabel,
+  orderLabel,
+  onSettings,
+  onOrder,
   onAdd,
   orderMode = false,
   doneLabel,
   onDone,
-  searching,
-  query,
-  searchPlaceholder,
-  onSearchOpen,
-  onSearchClose,
-  onQueryChange,
 }: Props) {
-  const input = useRef<HTMLInputElement>(null)
-
-  // Клавиатура должна появляться сразу — иначе после тапа по лупе нужен
-  // второй тап по полю.
-  useEffect(() => {
-    if (searching) input.current?.focus()
-  }, [searching])
-
-  if (searching) {
-    return (
-      <header className={styles.searchBar}>
-        <button className={styles.iconButton} onClick={onSearchClose} aria-label="Close search">
-          <Icon name="back" size={22} />
-        </button>
-
-        <input
-          ref={input}
-          className={styles.searchInput}
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder={searchPlaceholder}
-          type="search"
-        />
-
-        {query !== '' && (
-          <button className={styles.iconButton} onClick={() => onQueryChange('')} aria-label="Clear">
-            <Icon name="close" size={20} />
-          </button>
-        )}
-      </header>
-    )
-  }
-
   return (
     <header className={styles.bar}>
       <div className={styles.side}>
-        <button className={styles.iconButton} onClick={onMenu} aria-label="Menu">
-          <Icon name="dots" size={22} />
+        <button className={styles.iconButton} onClick={onSettings} aria-label={settingsLabel}>
+          <Icon name="settings" size={21} />
         </button>
-        <button className={styles.quietButton} onClick={onSearchOpen} aria-label="Search">
-          <Icon name="search" size={19} strokeWidth={1.7} />
+        <button className={styles.iconButton} onClick={onOrder} aria-label={orderLabel}>
+          <Icon name="viewWeek" size={21} />
         </button>
       </div>
 

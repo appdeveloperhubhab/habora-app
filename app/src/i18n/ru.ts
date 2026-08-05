@@ -8,7 +8,6 @@ export const ru = {
     friends: 'Друзья',
   },
   topbar: {
-    menu: 'Меню',
     add: 'Добавить',
     done: 'Готово',
   },
@@ -25,9 +24,6 @@ export const ru = {
     close: 'Закрыть',
     days: 'дн.',
     weeks: 'нед.',
-    search: 'Поиск',
-    notFound: 'Ничего не найдено',
-    notFoundHint: 'Попробуйте другое слово',
     inARow: 'подряд',
   },
   onboarding: {
@@ -73,7 +69,6 @@ export const ru = {
     everyday: 'Каждый день',
     timesAWeek: 'раз в неделю',
     timesAWeekFew: 'раза в неделю',
-    searchPlaceholder: 'Найти привычку',
     mark: 'Отметить',
     marked: 'Отмечено',
     viewMonth: 'Месяц',
@@ -93,7 +88,6 @@ export const ru = {
     emptyNoHabits: 'Звать пока некуда: заведите привычку, и позовёте в неё друга',
     createFirst: 'Создать привычку',
     invite: 'Пригласить друга',
-    searchPlaceholder: 'Найти друга',
     noStreak: 'серия прервана',
   },
   actions: {

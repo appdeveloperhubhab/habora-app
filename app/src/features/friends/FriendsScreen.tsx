@@ -20,11 +20,9 @@ import styles from './FriendsScreen.module.css'
  * сюда, потому что вы с ним в одной привычке.
  */
 export function FriendsScreen({
-  query = '',
   onInvite,
   onCreateHabit,
 }: {
-  query?: string
   onInvite(): void
   /** Звать некуда, пока нет ни одной привычки, — ведём заводить первую. */
   onCreateHabit(): void
@@ -38,15 +36,6 @@ export function FriendsScreen({
   useEffect(() => {
     void refreshFriends()
   }, [refreshFriends])
-
-  const needle = query.trim().toLowerCase()
-  const visible = needle
-    ? friends.filter(
-        (friend) =>
-          friend.firstName.toLowerCase().includes(needle) ||
-          (friend.username ?? '').toLowerCase().includes(needle),
-      )
-    : friends
 
   if (friends.length === 0) {
     /*
@@ -73,14 +62,10 @@ export function FriendsScreen({
     )
   }
 
-  if (visible.length === 0) {
-    return <EmptyState title={t.common.notFound} hint={t.common.notFoundHint} />
-  }
-
   return (
     <div className={styles.screen}>
       <div className={styles.list}>
-        {visible.map((friend) => (
+        {friends.map((friend) => (
           <article key={friend.userId} className={styles.card}>
             <header className={styles.head}>
               <Avatar name={friend.firstName} photoUrl={friend.photoUrl} size={44} />

@@ -6,7 +6,6 @@ export const en: Dict = {
     friends: 'Friends',
   },
   topbar: {
-    menu: 'Menu',
     add: 'Add',
     done: 'Done',
   },
@@ -23,9 +22,6 @@ export const en: Dict = {
     close: 'Close',
     days: 'd',
     weeks: 'w',
-    search: 'Search',
-    notFound: 'Nothing found',
-    notFoundHint: 'Try another word',
     inARow: 'in a row',
   },
   onboarding: {
@@ -71,7 +67,6 @@ export const en: Dict = {
     everyday: 'Every day',
     timesAWeek: 'time a week',
     timesAWeekFew: 'times a week',
-    searchPlaceholder: 'Find a habit',
     mark: 'Mark',
     marked: 'Marked',
     viewMonth: 'Month',
@@ -91,7 +86,6 @@ export const en: Dict = {
     emptyNoHabits: 'Nowhere to invite yet: create a habit first, then bring a friend in',
     createFirst: 'Create a habit',
     invite: 'Invite a friend',
-    searchPlaceholder: 'Find a friend',
     noStreak: 'streak broken',
   },
   actions: {

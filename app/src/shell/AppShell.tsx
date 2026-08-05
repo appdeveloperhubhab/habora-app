@@ -17,7 +17,6 @@ import { Celebration } from '../ui/Celebration'
 import { TopBar } from './TopBar'
 import { OrderBar } from './OrderBar'
 import { BottomTabs } from './BottomTabs'
-import { DotsMenu, type MenuItem } from './DotsMenu'
 import { Placeholder } from './Placeholder'
 import { Loading } from './Loading'
 import styles from './AppShell.module.css'
@@ -32,9 +31,6 @@ export function AppShell() {
   const nav = useNav()
   const t = dict(settings.lang)
 
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [searching, setSearching] = useState(false)
-  const [query, setQuery] = useState('')
   const [orderMode, setOrderMode] = useState(false)
   const [inviting, setInviting] = useState(false)
 
@@ -44,43 +40,25 @@ export function AppShell() {
   // и выбор готовых привычек.
   if (!settings.onboarded) return <OnboardingScreen />
 
-  const menuItems: MenuItem[] = [
-    { id: 'settings', label: t.menu.settings, icon: 'settings', onSelect: () => nav.push({ name: 'settings' }) },
-    {
-      id: 'order',
-      label: t.menu.order,
-      icon: 'viewWeek',
-      onSelect: () => {
-        // Режим настройки вида есть только у привычек: у друзей карточка одна.
-        nav.setTab('habits')
-        setOrderMode(true)
-      },
-    },
-  ]
-
-  const closeSearch = () => {
-    setSearching(false)
-    setQuery('')
-  }
-
   return (
     <div className={styles.app}>
       <TopBar
         title={t.tabs[nav.tab]}
         date={formatDayMonth(todayIso(), settings.lang)}
-        onMenu={() => setMenuOpen(true)}
+        settingsLabel={t.menu.settings}
+        orderLabel={t.menu.order}
+        onSettings={() => nav.push({ name: 'settings' })}
+        onOrder={() => {
+          // Режим настройки вида есть только у привычек: у друзей карточка одна.
+          nav.setTab('habits')
+          setOrderMode(true)
+        }}
         onAdd={() => {
           // «Плюс» означает главное действие раздела: на привычках — завести
           // привычку, на друзьях — позвать друга.
           if (nav.tab === 'friends') setInviting(true)
           else nav.push({ name: 'habitEditor', habitId: null })
         }}
-        searching={searching}
-        query={query}
-        searchPlaceholder={nav.tab === 'habits' ? t.habits.searchPlaceholder : t.friends.searchPlaceholder}
-        onSearchOpen={() => setSearching(true)}
-        onSearchClose={closeSearch}
-        onQueryChange={setQuery}
         orderMode={orderMode}
         doneLabel={t.topbar.done}
         onDone={() => setOrderMode(false)}
@@ -88,10 +66,9 @@ export function AppShell() {
 
       <main className={styles.content}>
         {nav.tab === 'habits' ? (
-          <HabitsScreen query={query} orderMode={orderMode} />
+          <HabitsScreen orderMode={orderMode} />
         ) : (
           <FriendsScreen
-            query={query}
             onInvite={() => setInviting(true)}
             onCreateHabit={() => {
               nav.setTab('habits')
@@ -104,12 +81,7 @@ export function AppShell() {
       <BottomTabs
         tab={nav.tab}
         labels={{ habits: t.tabs.habits, friends: t.tabs.friends }}
-        onChange={(tab) => {
-          // Поиск привязан к разделу: запрос по привычкам не имеет смысла
-          // в списке друзей.
-          closeSearch()
-          nav.setTab(tab)
-        }}
+        onChange={nav.setTab}
       />
 
       {orderMode && (
@@ -121,8 +93,6 @@ export function AppShell() {
       )}
 
       <InviteSheet open={inviting} onClose={() => setInviting(false)} />
-
-      <DotsMenu open={menuOpen} items={menuItems} onClose={() => setMenuOpen(false)} />
 
       <Overlay />
 

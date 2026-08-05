@@ -21,10 +21,21 @@ import styles from './HabitCardBoard.module.css'
  * Месяц — пять недель: столько их помещается в календарный месяц, и в половине
  * ширины экрана они укладываются целиком, без прокрутки.
  *
- * Год — все 53: клетки становятся мелкими, зато год виден целиком. Ради этого
- * вид и нужен — прокручиваемый год ничем не отличался бы от месяца.
+ * Год — 54: это чуть больше года, зато делится ровно пополам на две полосы по
+ * полугодию (см. `HALF_YEAR`). При 53 в одной полосе была бы лишняя неделя,
+ * клетки в полосах вышли бы разной ширины, и столбцы перестали бы совпадать.
  */
-const WEEKS = { month: 5, year: 53 } as const
+const WEEKS = { month: 5, year: 54 } as const
+
+/**
+ * Сколько недель в одной полосе года.
+ *
+ * Год показан двумя полосами по полугодию, а не одной строкой на 54 недели:
+ * в строку ширина экрана делится на 54, и от клетки остаётся булавочная
+ * головка. На полугодие делителей вдвое меньше — клетка вырастает вдвое,
+ * а год по-прежнему виден целиком, без прокрутки.
+ */
+const HALF_YEAR = 27
 
 /**
  * Шаг задержки на единицу расстояния от сегодняшней клетки.
@@ -35,6 +46,16 @@ const WEEKS = { month: 5, year: 53 } as const
  * растёт с расстоянием до неё.
  */
 const RIPPLE_STEP_MS = 34
+
+/**
+ * Докуда всплеск ещё расходится. Дальние клетки трогаются все разом, вместе
+ * с последней волной.
+ *
+ * Без предела круги шли бы до самого края года — это полторы секунды после
+ * нажатия, и волна докатывалась бы до противоположного угла, когда о ней уже
+ * забыли. Отклик должен закончиться, пока палец не убран.
+ */
+const RIPPLE_REACH = 12
 
 interface Props {
   habit: Habit
@@ -55,6 +76,11 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
   const longPressFired = useRef(false)
 
   const columns = activityGrid(dates, WEEKS[size])
+
+  // Год идёт двумя полосами, месяц — одной. Ранняя половина сверху, недавняя
+  // снизу: читается сверху вниз, и сегодняшний день оказывается в конце.
+  const bands =
+    size === 'year' ? [columns.slice(0, HALF_YEAR), columns.slice(HALF_YEAR)] : [columns]
 
   const startLongPress = () => {
     longPressFired.current = false
@@ -117,31 +143,45 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
           <HabitMembers habit={habit} size={size === 'month' ? 16 : 20} />
         </span>
 
-        <span className={styles.cells}>
-          {columns.map((week, weekIndex) => (
-            <span key={week[0].date} className={styles.week}>
-              {week.map((cell, dayIndex) => (
-                <span
-                  key={cell.date}
-                  className={[
-                    styles.cell,
-                    cell.done ? styles.cellDone : '',
-                    cell.isToday ? styles.cellToday : '',
-                    cell.isFuture ? styles.cellFuture : '',
-                    rippleClass,
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  style={{
-                    animationDelay: `${
-                      Math.hypot(
-                        columns.length - 1 - weekIndex,
-                        todayRow < 0 ? 0 : todayRow - dayIndex,
-                      ) * RIPPLE_STEP_MS
-                    }ms`,
-                  }}
-                />
-              ))}
+        <span className={styles.bands}>
+          {bands.map((band, bandIndex) => (
+            <span key={band[0][0].date} className={styles.cells}>
+              {band.map((week, weekInBand) => {
+                // Расстояние до сегодняшней клетки считается по всей истории,
+                // а не внутри полосы: иначе волна начиналась бы заново
+                // в каждой из них, и вместо одного всплеска их было бы два.
+                const weekIndex = bandIndex * HALF_YEAR + weekInBand
+
+                return (
+                  <span key={week[0].date} className={styles.week}>
+                    {week.map((cell, dayIndex) => (
+                      <span
+                        key={cell.date}
+                        className={[
+                          styles.cell,
+                          cell.done ? styles.cellDone : '',
+                          cell.isToday ? styles.cellToday : '',
+                          cell.isFuture ? styles.cellFuture : '',
+                          rippleClass,
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        style={{
+                          animationDelay: `${
+                            Math.min(
+                              Math.hypot(
+                                columns.length - 1 - weekIndex,
+                                todayRow < 0 ? 0 : todayRow - dayIndex,
+                              ),
+                              RIPPLE_REACH,
+                            ) * RIPPLE_STEP_MS
+                          }ms`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )
+              })}
             </span>
           ))}
         </span>

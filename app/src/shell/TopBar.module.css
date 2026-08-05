@@ -4,8 +4,7 @@
  * и тенью. Сплошная полоса во всю ширину отрезала верх экрана и выбивалась
  * из общего стиля.
  */
-.bar,
-.searchBar {
+.bar {
   position: fixed;
   top: calc(var(--top-inset) + var(--topbar-gap));
   left: var(--sp-4);
@@ -24,6 +23,12 @@
   padding: 8px;
   border-radius: var(--r-pill);
 
+  /* Боковые колонки равной ширины: только так заголовок стоит ровно по центру,
+     хотя слева две кнопки, а справа одна. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--sp-2);
+
   background: color-mix(in srgb, var(--surface-2) 78%, transparent);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -31,19 +36,6 @@
     inset 0 0 0 1px var(--card-edge),
     inset 0 1px 0 var(--card-highlight),
     0 12px 32px -14px rgba(0, 0, 0, 0.7);
-}
-
-/* Боковые колонки равной ширины: только так заголовок стоит ровно по центру,
-   хотя слева две кнопки, а справа одна. */
-.bar {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: var(--sp-2);
-}
-
-.searchBar {
-  display: flex;
-  gap: var(--sp-2);
 }
 
 .side {
@@ -101,24 +93,6 @@
   background: var(--surface);
 }
 
-/* Поиск нужен изредка — у него нет подложки и приглушённый цвет,
-   чтобы не спорить с основными действиями. */
-.quietButton {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-pill);
-  color: var(--text-faint);
-  transition: transform var(--t-fast) var(--ease-spring), color var(--t-fast) linear;
-}
-
-.quietButton:active {
-  transform: scale(0.86);
-  color: var(--text);
-}
-
 /* Добавление — главное действие экрана, поэтому единственная кнопка в цвете. */
 .addButton {
   display: grid;
@@ -135,26 +109,6 @@
 
 .addButton:active {
   transform: scale(0.88);
-}
-
-.searchInput {
-  flex: 1;
-  min-width: 0;
-  height: 40px;
-  padding: 0 var(--sp-3);
-  border: none;
-  background: transparent;
-  font-size: var(--fs-body);
-  outline: none;
-}
-
-.searchInput::placeholder {
-  color: var(--text-faint);
-}
-
-/* Системный крестик поля поиска убираем — у нас своя кнопка очистки. */
-.searchInput::-webkit-search-cancel-button {
-  display: none;
 }
 
 /* Рост как у «+»: кнопка встаёт на его место, и при входе в режим «Порядок»
