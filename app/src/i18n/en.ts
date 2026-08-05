@@ -81,13 +81,17 @@ export const en: Dict = {
   },
   friends: {
     empty: 'Nobody here yet',
-    emptyHint: 'Invite a friend to a habit and they will show up here',
+    emptyHint: 'Invite a friend to a shared habit — you will see each other’s check-ins',
+    emptyNoHabits: 'Nowhere to invite yet: create a habit first, then bring a friend in',
+    createFirst: 'Create a habit',
+    invite: 'Invite a friend',
     searchPlaceholder: 'Find a friend',
     noStreak: 'streak broken',
   },
   actions: {
     title: 'What would you like to do?',
     invite: 'Invite a friend',
+    inviteWhich: 'Which habit are we sharing?',
     inviteText: 'Let us do “{habit}” together. We each mark it off and see how the other is doing.',
     edit: 'Edit',
     delete: 'Delete',

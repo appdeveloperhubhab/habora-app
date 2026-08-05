@@ -8,6 +8,7 @@ import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { HabitEditor } from '../features/habits/HabitEditor'
 import { HabitScreen } from '../features/habits/detail/HabitScreen'
 import { FriendsScreen } from '../features/friends/FriendsScreen'
+import { InviteSheet } from '../features/friends/InviteSheet'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { ThemeScreen } from '../features/settings/ThemeScreen'
 import { TimerScreen } from '../features/timer/TimerScreen'
@@ -34,6 +35,7 @@ export function AppShell() {
   const [searching, setSearching] = useState(false)
   const [query, setQuery] = useState('')
   const [orderMode, setOrderMode] = useState(false)
+  const [inviting, setInviting] = useState(false)
 
   if (!ready) return <div className={styles.splash} />
 
@@ -67,10 +69,10 @@ export function AppShell() {
         date={formatDayMonth(todayIso(), settings.lang)}
         onMenu={() => setMenuOpen(true)}
         onAdd={() => {
-          // Друзей не «добавляют» кнопкой: человек появляется в списке,
-          // когда присоединяется к общей привычке.
-          nav.setTab('habits')
-          nav.push({ name: 'habitEditor', habitId: null })
+          // «Плюс» означает главное действие раздела: на привычках — завести
+          // привычку, на друзьях — позвать друга.
+          if (nav.tab === 'friends') setInviting(true)
+          else nav.push({ name: 'habitEditor', habitId: null })
         }}
         searching={searching}
         query={query}
@@ -87,7 +89,14 @@ export function AppShell() {
         {nav.tab === 'habits' ? (
           <HabitsScreen query={query} orderMode={orderMode} />
         ) : (
-          <FriendsScreen query={query} />
+          <FriendsScreen
+            query={query}
+            onInvite={() => setInviting(true)}
+            onCreateHabit={() => {
+              nav.setTab('habits')
+              nav.push({ name: 'habitEditor', habitId: null })
+            }}
+          />
         )}
       </main>
 
@@ -109,6 +118,8 @@ export function AppShell() {
           onChange={(cardView) => void saveSettings({ cardView })}
         />
       )}
+
+      <InviteSheet open={inviting} onClose={() => setInviting(false)} />
 
       <DotsMenu open={menuOpen} items={menuItems} onClose={() => setMenuOpen(false)} />
 

@@ -17,3 +17,24 @@
   font-size: var(--fs-label);
   color: var(--text-faint);
 }
+
+/* Кнопка отделена от подсказки заметным отступом: она — следующий шаг,
+   а не часть объяснения. */
+.action {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.action:active {
+  transform: scale(0.94);
+}

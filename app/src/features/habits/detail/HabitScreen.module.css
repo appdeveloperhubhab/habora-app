@@ -68,6 +68,48 @@
   background: color-mix(in srgb, var(--habit) 18%, var(--surface));
 }
 
+/*
+ * Участники и приглашение в одной строке: у одиночной привычки это просто
+ * кнопка «позвать», у совместной рядом с ней сразу видно, кто уже внутри.
+ */
+.people {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* Аватарки заходят друг на друга: так видно, что это одна компания,
+   а не набор отдельных значков. */
+.avatars {
+  display: flex;
+  flex: none;
+}
+
+.avatars > * + * {
+  margin-left: -10px;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+.inviteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  flex: 1;
+  padding: var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--habit);
+  background: color-mix(in srgb, var(--habit) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 24%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.inviteButton:active {
+  transform: scale(0.96);
+}
+
 .content {
   flex: 1;
   overflow-y: auto;

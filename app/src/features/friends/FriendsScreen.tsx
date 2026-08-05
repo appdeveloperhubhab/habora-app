@@ -4,6 +4,7 @@ import { dict } from '../../i18n'
 import { todayIso } from '../../lib/dates'
 import { currentStreak, weekProgress } from '../../lib/streak'
 import { HabitIcon } from '../../ui/habitIcons'
+import { Icon } from '../../ui/Icon'
 import { EmptyState } from '../../ui/EmptyState'
 import { Avatar } from '../../ui/Avatar'
 import styles from './FriendsScreen.module.css'
@@ -18,7 +19,16 @@ import styles from './FriendsScreen.module.css'
  * Отдельного списка друзей нет и заводить его не нужно: человек попадает
  * сюда, потому что вы с ним в одной привычке.
  */
-export function FriendsScreen({ query = '' }: { query?: string }) {
+export function FriendsScreen({
+  query = '',
+  onInvite,
+  onCreateHabit,
+}: {
+  query?: string
+  onInvite(): void
+  /** Звать некуда, пока нет ни одной привычки, — ведём заводить первую. */
+  onCreateHabit(): void
+}) {
   const { friends, habits, settings, refreshFriends } = useStore()
   const t = dict(settings.lang)
   const today = todayIso()
@@ -39,7 +49,28 @@ export function FriendsScreen({ query = '' }: { query?: string }) {
     : friends
 
   if (friends.length === 0) {
-    return <EmptyState title={t.friends.empty} hint={t.friends.emptyHint} />
+    /*
+     * Пригласить можно только в привычку — значит, у кого её ещё нет, зовём
+     * сначала завести. Кнопка «пригласить» без единой привычки вела бы в
+     * пустоту, и человек упёрся бы в неё, не поняв почему.
+     */
+    return habits.length === 0 ? (
+      <EmptyState
+        title={t.friends.empty}
+        hint={t.friends.emptyNoHabits}
+        actionLabel={t.friends.createFirst}
+        actionIcon="plus"
+        onAction={onCreateHabit}
+      />
+    ) : (
+      <EmptyState
+        title={t.friends.empty}
+        hint={t.friends.emptyHint}
+        actionLabel={t.friends.invite}
+        actionIcon="friends"
+        onAction={onInvite}
+      />
+    )
   }
 
   if (visible.length === 0) {
@@ -114,6 +145,13 @@ export function FriendsScreen({ query = '' }: { query?: string }) {
           </article>
         ))}
       </div>
+
+      {/* Позвать ещё одного — не прячем в меню: это главное действие раздела,
+          и оно должно быть на виду, а не находиться наощупь. */}
+      <button className={styles.invite} onClick={onInvite}>
+        <Icon name="friends" size={18} />
+        {t.friends.invite}
+      </button>
     </div>
   )
 }

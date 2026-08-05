@@ -2,6 +2,8 @@ import type { Habit } from '../../../types'
 import { useStore } from '../../../store/context'
 import { dict } from '../../../i18n'
 import { Icon } from '../../../ui/Icon'
+import { Avatar } from '../../../ui/Avatar'
+import { shareLink } from '../../../lib/telegram'
 import { formatDuration } from '../../../lib/timer'
 import { ActivityGrid } from './ActivityGrid'
 import { MetricCards } from './MetricCards'
@@ -30,9 +32,17 @@ export function HabitScreen({
   onEdit(): void
   onOpenTimer(): void
 }) {
-  const { settings, datesOf, toggleEntry } = useStore()
+  const { settings, datesOf, toggleEntry, inviteLink } = useStore()
   const t = dict(settings.lang)
   const dates = datesOf(habit.id)
+
+  const invite = async () => {
+    const url = await inviteLink(habit.id)
+    if (!url) return
+    shareLink(url, t.actions.inviteText.replace('{habit}', habit.name))
+  }
+
+  const members = habit.members ?? []
 
   return (
     <div className={styles.screen} style={{ '--habit': habit.color } as React.CSSProperties}>
@@ -52,6 +62,29 @@ export function HabitScreen({
       </header>
 
       <div className={styles.content}>
+        {/*
+          Участники и приглашение — сразу под шапкой, до всей аналитики:
+          совместность привычки это первое, что о ней стоит знать, а звать
+          друга удобнее оттуда, где на привычку и смотришь.
+        */}
+        <div className={styles.people}>
+          <span className={styles.avatars}>
+            {members.map((member) => (
+              <Avatar
+                key={member.userId}
+                name={member.firstName}
+                photoUrl={member.photoUrl}
+                size={30}
+              />
+            ))}
+          </span>
+
+          <button className={styles.inviteButton} onClick={() => void invite()}>
+            <Icon name="friends" size={17} />
+            {members.length > 1 ? t.friends.invite : t.actions.invite}
+          </button>
+        </div>
+
         {/* Таймер живёт здесь, а не на карточке в списке: там он мешал
             полоскам недели и был лишним для большинства привычек. */}
         {habit.durationSec !== null && (
