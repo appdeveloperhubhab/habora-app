@@ -76,7 +76,6 @@ export const ru = {
     searchPlaceholder: 'Найти привычку',
     mark: 'Отметить',
     marked: 'Отмечено',
-    totalMarks: 'отметок',
     viewMonth: 'Месяц',
     viewYear: 'Год',
     viewWeek: 'Неделя',

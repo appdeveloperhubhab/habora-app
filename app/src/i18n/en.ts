@@ -74,7 +74,6 @@ export const en: Dict = {
     searchPlaceholder: 'Find a habit',
     mark: 'Mark',
     marked: 'Marked',
-    totalMarks: 'check-ins',
     viewMonth: 'Month',
     viewYear: 'Year',
     viewWeek: 'Week',

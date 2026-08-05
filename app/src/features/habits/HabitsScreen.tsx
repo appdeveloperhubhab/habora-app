@@ -87,7 +87,13 @@ export function HabitsScreen({ query = '', orderMode = false }: { query?: string
       */}
       <div
         key={view}
-        className={[styles.list, orderMode ? styles.orderMode : ''].filter(Boolean).join(' ')}
+        className={[
+          styles.list,
+          view === 'month' ? styles.tiles : '',
+          orderMode ? styles.orderMode : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         {visible.map((habit, index) =>
           view === 'week' ? (
