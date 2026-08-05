@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db, rowToHabit } from '../db.js'
+import { botUsername } from '../telegram/api.js'
 
 /**
  * Привычки, участники и отметки выполнения.
@@ -209,6 +210,29 @@ export async function habitRoutes(app) {
       'write',
     )
     return { ok: true, deleted: false }
+  })
+
+  /**
+   * Ссылка-приглашение в привычку.
+   *
+   * Ведёт в чат с ботом, а не сразу в приложение: прямая ссылка работает
+   * только при включённом «главном мини-приложении», а эта — всегда. Заодно
+   * приглашённый нажимает «Старт», без чего Telegram не даст слать ему
+   * напоминания.
+   *
+   * Опознаётся привычка своим же идентификатором: он случайный и не
+   * угадывается, а отдельный код приглашения пришлось бы где-то хранить,
+   * отзывать и чистить — ради того же результата.
+   */
+  app.get('/api/habits/:id/invite', async (request, reply) => {
+    if (!(await isMember(request.params.id, request.userId))) {
+      return reply.code(404).send({ error: 'Привычка не найдена' })
+    }
+
+    const username = await botUsername()
+    if (!username) return reply.code(503).send({ error: 'Бот недоступен' })
+
+    return { url: `https://t.me/${username}?start=join_${request.params.id}` }
   })
 
   /** Присоединиться к привычке по приглашению. */

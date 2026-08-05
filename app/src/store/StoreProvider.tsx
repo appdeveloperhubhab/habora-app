@@ -201,6 +201,18 @@ export function StoreProvider({ children, source }: Props) {
     }
   }, [dataSource])
 
+  const inviteLink = useCallback(
+    async (habitId: string) => {
+      if (!dataSource.getInviteLink) return null
+      try {
+        return await dataSource.getInviteLink(habitId)
+      } catch {
+        return null
+      }
+    },
+    [dataSource],
+  )
+
   const dismissCelebration = useCallback(() => setCelebration(null), [])
 
   const value: StoreValue = useMemo(
@@ -211,6 +223,7 @@ export function StoreProvider({ children, source }: Props) {
       settings,
       friends,
       refreshFriends,
+      inviteLink,
       isDone,
       datesOf,
       activeDates,
@@ -224,7 +237,7 @@ export function StoreProvider({ children, source }: Props) {
       dismissCelebration,
     }),
     [
-      ready, habits, entries, settings, friends, refreshFriends,
+      ready, habits, entries, settings, friends, refreshFriends, inviteLink,
       isDone, datesOf, activeDates, toggleEntry,
       createHabit, updateHabit, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,

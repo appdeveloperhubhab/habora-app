@@ -87,6 +87,8 @@ export const en: Dict = {
   },
   actions: {
     title: 'What would you like to do?',
+    invite: 'Invite a friend',
+    inviteText: 'Let us do “{habit}” together. We each mark it off and see how the other is doing.',
     edit: 'Edit',
     delete: 'Delete',
   },

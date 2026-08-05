@@ -37,6 +37,8 @@ interface TelegramWebApp {
   contentSafeAreaInset?: Inset
   onEvent?(event: string, handler: () => void): void
   offEvent?(event: string, handler: () => void): void
+  /** Открывает ссылку t.me внутри Telegram, не выбрасывая в браузер. */
+  openTelegramLink?(url: string): void
   BackButton: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void }
   HapticFeedback?: {
     impactOccurred(style: HapticStyle): void
@@ -197,4 +199,18 @@ export function telegramTheme(): 'dark' | 'light' | null {
 /** Подписанные Telegram данные для авторизации запросов к бэкенду (M7). */
 export function initData(): string {
   return webApp?.initData ?? ''
+}
+
+/**
+ * Отдаёт ссылку-приглашение в системное окно «кому переслать».
+ *
+ * Выбор друга делает сам Telegram — своего списка контактов у приложения нет
+ * и быть не должно. Вне Telegram (при разработке) открываем ссылку обычным
+ * способом, чтобы кнопка не выглядела сломанной.
+ */
+export function shareLink(url: string, text: string): void {
+  const share = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
+
+  if (webApp?.openTelegramLink && safeCall(() => webApp.openTelegramLink!(share))) return
+  window.open(share, '_blank')
 }

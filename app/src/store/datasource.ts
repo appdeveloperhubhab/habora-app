@@ -41,6 +41,9 @@ export interface DataSource {
 
   /** Присоединиться к привычке по приглашению. */
   joinHabit?(habitId: string): Promise<void>
+
+  /** Ссылка-приглашение в привычку; строит её сервер — он знает имя бота. */
+  getInviteLink?(habitId: string): Promise<string>
 }
 
 export const DEFAULT_SETTINGS: Settings = {

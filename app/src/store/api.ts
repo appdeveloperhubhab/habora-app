@@ -52,6 +52,11 @@ export class ApiDataSource implements DataSource {
     await this.request(`/api/habits/${habitId}/join`, { method: 'POST' })
   }
 
+  async getInviteLink(habitId: string) {
+    const { url } = await this.request<{ url: string }>(`/api/habits/${habitId}/invite`)
+    return url
+  }
+
   createHabit(input: HabitInput) {
     return this.request<Habit>('/api/habits', { method: 'POST', body: JSON.stringify(input) })
   }

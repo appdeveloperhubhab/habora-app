@@ -11,6 +11,11 @@ export interface StoreValue {
   friends: Friend[]
   /** Перечитать друзей: их отметки меняются на их стороне, сами собой не придут. */
   refreshFriends(): Promise<void>
+  /**
+   * Ссылка-приглашение в привычку; null — приглашать некуда, приложение
+   * работает без сервера.
+   */
+  inviteLink(habitId: string): Promise<string | null>
 
   /** Быстрая проверка «день отмечен» без перебора массива отметок. */
   isDone(habitId: string, date: IsoDate): boolean

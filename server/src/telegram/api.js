@@ -46,6 +46,25 @@ async function call(method, payload) {
   }
 }
 
+/**
+ * Имя бота — из него строятся ссылки-приглашения.
+ *
+ * Спрашивается у самого Telegram, а не задаётся переменной окружения: имя
+ * выводится из того же токена, что уже настроен, и лишняя настройка была бы
+ * ещё одним местом, где можно ошибиться и получить ссылку в никуда.
+ *
+ * Запоминается после первого ответа: имя меняется раз в жизни, а спрашивать
+ * его при каждом приглашении — лишний поход в сеть.
+ */
+let cachedUsername = null
+
+export async function botUsername() {
+  if (cachedUsername) return cachedUsername
+  const result = await call('getMe', {})
+  cachedUsername = result?.result?.username ?? null
+  return cachedUsername
+}
+
 /** Кнопка, открывающая мини-приложение прямо в Telegram. */
 export function webAppButton(text, url) {
   return [[{ text, web_app: { url } }]]

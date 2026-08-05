@@ -5,6 +5,7 @@ import { useNav } from '../../shell/navigation'
 import { dict } from '../../i18n'
 import { todayIso } from '../../lib/dates'
 import { hapticWarning } from '../../lib/haptics'
+import { shareLink } from '../../lib/telegram'
 import { EmptyState } from '../../ui/EmptyState'
 import { ActionSheet } from '../../ui/ActionSheet'
 import { ConfirmDialog } from '../../ui/ConfirmDialog'
@@ -22,7 +23,8 @@ import styles from './HabitsScreen.module.css'
  * Вид карточек общий для всех привычек и переключается в режиме «Порядок».
  */
 export function HabitsScreen({ query = '', orderMode = false }: { query?: string; orderMode?: boolean }) {
-  const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings } = useStore()
+  const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink } =
+    useStore()
   const nav = useNav()
   const t = dict(settings.lang)
   const today = todayIso()
@@ -56,6 +58,22 @@ export function HabitsScreen({ query = '', orderMode = false }: { query?: string
   const handleToggle = (habitId: string) => {
     void toggleEntry(habitId, today)
     if (!settings.hintSeen) void saveSettings({ hintSeen: true })
+  }
+
+  /**
+   * Приглашение: спрашиваем у сервера ссылку и отдаём её Telegram — кому
+   * переслать, человек выбирает там же, где у него и лежат друзья.
+   *
+   * Ссылки нет, когда приложение открыто без сервера: приглашать в этом
+   * случае некуда, и молчание честнее неработающей кнопки.
+   */
+  const invite = async (habit: Habit) => {
+    const url = await inviteLink(habit.id)
+    if (!url) {
+      hapticWarning()
+      return
+    }
+    shareLink(url, t.actions.inviteText.replace('{habit}', habit.name))
   }
 
   return (
@@ -107,6 +125,12 @@ export function HabitsScreen({ query = '', orderMode = false }: { query?: string
         cancelLabel={t.common.cancel}
         onClose={() => setMenuFor(null)}
         actions={[
+          {
+            id: 'invite',
+            label: t.actions.invite,
+            icon: 'friends',
+            onSelect: () => menuFor && void invite(menuFor),
+          },
           {
             id: 'edit',
             label: t.actions.edit,

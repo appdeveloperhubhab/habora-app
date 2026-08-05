@@ -73,11 +73,90 @@ async function handleMessage(message, webAppUrl) {
 
   const text = message.text ?? ''
   if (text.startsWith('/start')) {
+    // «/start join_<привычка>» — переход по ссылке-приглашению. Telegram
+    // отдаёт то, что было в ссылке, вторым словом команды.
+    const payload = text.slice('/start'.length).trim()
+    if (payload.startsWith('join_')) {
+      await handleJoin(from, payload.slice('join_'.length), webAppUrl)
+      return
+    }
+
     await sendMessage(from.id, t.welcome(escapeHtml(from.first_name ?? '')), webAppButton(t.open, webAppUrl))
     return
   }
 
   await sendMessage(from.id, t.unknown, webAppButton(t.open, webAppUrl))
+}
+
+/**
+ * Переход по ссылке-приглашению.
+ *
+ * Присоединяем сразу, без экрана «принять или отклонить»: переход по ссылке
+ * и есть согласие, а лишний шаг между желанием и результатом ничего не
+ * защищает — выйти из привычки можно одним касанием.
+ */
+async function handleJoin(from, habitId, webAppUrl) {
+  const t = texts(from.language_code)
+
+  const { rows } = await db.execute({
+    sql: `SELECT h.name, h.user_id AS owner_id, u.first_name AS owner_name
+            FROM habits h
+            LEFT JOIN users u ON u.user_id = h.user_id
+           WHERE h.id = ?`,
+    args: [habitId],
+  })
+  const habit = rows[0]
+  if (!habit) {
+    await sendMessage(from.id, t.joinGone, webAppButton(t.open, webAppUrl))
+    return
+  }
+
+  const already = await db.execute({
+    sql: 'SELECT 1 FROM habit_members WHERE habit_id = ? AND user_id = ?',
+    args: [habitId, from.id],
+  })
+  if (already.rows[0]) {
+    await sendMessage(from.id, t.joinedAlready(escapeHtml(habit.name)), webAppButton(t.open, webAppUrl))
+    return
+  }
+
+  // Привычка встаёт в конец его собственного списка.
+  const { rows: order } = await db.execute({
+    sql: 'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM habit_members WHERE user_id = ?',
+    args: [from.id],
+  })
+
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO habit_members (habit_id, user_id, sort_order, joined_at)
+          VALUES (?, ?, ?, ?)`,
+    args: [habitId, from.id, order[0].next, new Date().toISOString()],
+  })
+
+  await sendMessage(
+    from.id,
+    t.joined(escapeHtml(habit.name), escapeHtml(habit.owner_name ?? '')),
+    webAppButton(t.open, webAppUrl),
+  )
+
+  /*
+   * Хозяину — весть о том, что его позвали не зря. Это и есть тот момент,
+   * ради которого совместные привычки затевались: пока никто не узнал, что
+   * друг присоединился, совместность существует только в базе.
+   */
+  if (Number(habit.owner_id) !== Number(from.id)) {
+    const owner = await db.execute({
+      sql: 'SELECT language, chat_started FROM users WHERE user_id = ?',
+      args: [habit.owner_id],
+    })
+    if (owner.rows[0]?.chat_started === 1) {
+      const ownerTexts = texts(owner.rows[0].language)
+      await sendMessage(
+        habit.owner_id,
+        ownerTexts.someoneJoined(escapeHtml(from.first_name ?? ''), escapeHtml(habit.name)),
+        webAppButton(ownerTexts.open, webAppUrl),
+      )
+    }
+  }
 }
 
 /**
