@@ -11,6 +11,7 @@ import { ActionSheet } from '../../ui/ActionSheet'
 import { ConfirmDialog } from '../../ui/ConfirmDialog'
 import { HabitCard } from './HabitCard'
 import { HabitCardBoard } from './HabitCardBoard'
+import { ReorderList } from './ReorderList'
 import styles from './HabitsScreen.module.css'
 
 /**
@@ -23,7 +24,7 @@ import styles from './HabitsScreen.module.css'
  * Вид карточек общий для всех привычек и переключается в режиме «Порядок».
  */
 export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
-  const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink } =
+  const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink, reorderHabits } =
     useStore()
   const nav = useNav()
   const t = dict(settings.lang)
@@ -71,8 +72,10 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
         и карточки появляются заново — иначе смена вида происходила бы
         мгновенной подменой, без всякого движения.
       */}
-      <div
+      <ReorderList
         key={view}
+        ids={habits.map((habit) => habit.id)}
+        enabled={orderMode}
         className={[
           styles.list,
           view === 'month' ? styles.tiles : '',
@@ -80,11 +83,14 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
         ]
           .filter(Boolean)
           .join(' ')}
-      >
-        {habits.map((habit, index) =>
-          view === 'week' ? (
+        onReorder={(ids) => void reorderHabits(ids)}
+        renderItem={(id) => {
+          const habit = habits.find((item) => item.id === id)
+          if (!habit) return null
+          const index = habits.indexOf(habit)
+
+          return view === 'week' ? (
             <HabitCard
-              key={habit.id}
               habit={habit}
               dates={datesOf(habit.id)}
               done={isDone(habit.id, today)}
@@ -95,7 +101,6 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
             />
           ) : (
             <HabitCardBoard
-              key={habit.id}
               habit={habit}
               dates={datesOf(habit.id)}
               done={isDone(habit.id, today)}
@@ -105,9 +110,9 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
               onOpen={() => nav.push({ name: 'habit', habitId: habit.id })}
               onLongPress={() => setMenuFor(habit)}
             />
-          ),
-        )}
-      </div>
+          )
+        }}
+      />
 
       <ActionSheet
         open={menuFor !== null}
