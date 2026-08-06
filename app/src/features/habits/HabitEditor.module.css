@@ -197,6 +197,38 @@
   color: var(--text-faint);
 }
 
+/*
+ * Позвать друга: строка во всю ширину, как поля формы рядом, а не яркая
+ * кнопка. Это не главное действие экрана — главное здесь «сохранить», и
+ * спорить с ним за внимание приглашение не должно. Цвет привычки берёт
+ * только знак «плюс»: по нему строка и читается как действие.
+ */
+.inviteButton {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  color: var(--habit);
+  background: var(--surface-2);
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.inviteButton:active {
+  transform: scale(0.98);
+}
+
+/* Подпись обычного цвета: в цвет привычки окрашен только «плюс»,
+   иначе строка кричала бы громче заголовка раздела над ней. */
+.inviteLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
 .days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

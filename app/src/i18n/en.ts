@@ -111,6 +111,7 @@ export const en: Dict = {
     color: 'Colour',
     schedule: 'Schedule',
     scheduleHint: 'Which days of the week to do it',
+    inviteHint: 'The habit will be saved, then you pick who to send it to',
     goal: 'Streak goal',
     goalHint: 'How many days in a row you aim for',
     goalOff: 'No goal',

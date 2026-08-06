@@ -4,9 +4,11 @@ import { useStore } from '../../store/context'
 import { dict } from '../../i18n'
 import { weekdayShort } from '../../lib/dates'
 import { hapticSelect, hapticSuccess, hapticWarning } from '../../lib/haptics'
+import { shareLink } from '../../lib/telegram'
 import { nearestHabitColor, nextDefaultColor } from '../../theme/palette'
 import { DEFAULT_HABIT_ICON } from '../../ui/habitIconSet'
 import { HabitIcon } from '../../ui/habitIcons'
+import { HabitMembers } from './HabitMembers'
 import { ColorStrip } from '../../ui/ColorStrip'
 import { IconPicker } from '../../ui/IconPicker'
 import { Sheet } from '../../ui/Sheet'
@@ -28,7 +30,7 @@ import styles from './HabitEditor.module.css'
 const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6]
 
 export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose(): void }) {
-  const { habits, settings, datesOf, createHabit, updateHabit, deleteHabit } = useStore()
+  const { habits, settings, datesOf, createHabit, updateHabit, deleteHabit, inviteLink } = useStore()
   const t = dict(settings.lang)
 
   const [name, setName] = useState(habit?.name ?? '')
@@ -67,17 +69,24 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
     setDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()))
   }
 
-  const handleSave = async () => {
+  /**
+   * Записывает привычку и возвращает её id; null — форма не заполнена.
+   *
+   * Выделено из обработчика кнопки, потому что сохранить нужно ещё и по
+   * «Пригласить друга»: ссылка ведёт в конкретную привычку, и у новой,
+   * ещё не записанной, вести приглашению некуда.
+   */
+  const persist = async (): Promise<string | null> => {
     const trimmed = name.trim()
     if (!trimmed) {
       hapticWarning()
       setError(t.editor.nameRequired)
-      return
+      return null
     }
     if (days.length === 0) {
       hapticWarning()
       setError(t.editor.daysRequired)
-      return
+      return null
     }
 
     const input: HabitInput = {
@@ -94,10 +103,43 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
       durationSec,
     }
 
-    if (habit) await updateHabit(habit.id, input)
-    else await createHabit(input)
+    if (habit) {
+      await updateHabit(habit.id, input)
+      return habit.id
+    }
+    return (await createHabit(input)).id
+  }
 
+  const handleSave = async () => {
+    if ((await persist()) === null) return
     hapticSuccess()
+    onClose()
+  }
+
+  /**
+   * Позвать друга прямо из редактора.
+   *
+   * Привычка сохраняется до пересылки — и новая, и открытая на правку.
+   * Иначе друг перешёл бы по ссылке в привычку под старым названием или
+   * вовсе не нашёл бы её, если она ещё не заведена.
+   *
+   * Редактор после этого закрывается: привычка уже записана, и оставлять
+   * форму открытой значило бы завести её вторую копию следующим сохранением.
+   */
+  const handleInvite = async () => {
+    const habitId = await persist()
+    if (habitId === null) return
+
+    const url = await inviteLink(habitId)
+    if (!url) {
+      // Ссылки нет, когда приложение открыто без сервера: приглашать некуда,
+      // и молчание честнее кнопки, которая делает вид, что сработала.
+      hapticWarning()
+      onClose()
+      return
+    }
+
+    shareLink(url, t.actions.inviteText.replace('{habit}', name.trim()))
     onClose()
   }
 
@@ -167,6 +209,24 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
             placeholder={t.editor.descriptionPlaceholder}
             maxLength={120}
           />
+        </section>
+
+        {/*
+          Позвать друга можно прямо отсюда, а не только из готовой привычки.
+          Совместная привычка чаще всего и задумывается вдвоём — решение
+          «делаем вместе» принимается в тот же момент, что и «заводим», и
+          отправлять человека за этим на другой экран значит терять его там.
+        */}
+        <section className={styles.block}>
+          <h3 className={styles.heading}>{t.tabs.friends}</h3>
+          {!habit && <p className={styles.hint}>{t.editor.inviteHint}</p>}
+
+          <button className={styles.inviteButton} onClick={() => void handleInvite()}>
+            <Icon name="plus" size={18} />
+            <span className={styles.inviteLabel}>{t.actions.invite}</span>
+            {/* Кто уже внутри — сразу видно, звать ли ещё. */}
+            {habit && <HabitMembers habit={habit} size={24} />}
+          </button>
         </section>
 
         {/* Только дни недели. Прежний второй режим — «N раз в неделю» —
