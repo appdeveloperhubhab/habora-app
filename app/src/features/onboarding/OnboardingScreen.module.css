@@ -62,13 +62,49 @@
   animation: fadeUp var(--t-screen) var(--ease-screen) calc(var(--t-stagger) * 2) backwards;
 }
 
-.intro {
-  max-width: 300px;
-  margin-top: var(--sp-2);
+/*
+ * Три строки о том, что здесь делают. Выровнены по левому краю, хотя всё
+ * остальное на экране по центру: строки разной длины, и по центру их начала
+ * разъезжались бы лесенкой — глазу не за что зацепиться, и список читался бы
+ * как три отдельные надписи, а не как перечисление.
+ */
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+  text-align: left;
+}
+
+.point {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
   font-size: var(--fs-body);
-  line-height: 1.45;
+  line-height: 1.35;
   color: var(--text-dim);
-  animation: fadeUp var(--t-screen) var(--ease-screen) calc(var(--t-stagger) * 3) backwards;
+  animation: fadeUp var(--t-screen) var(--ease-screen) backwards;
+}
+
+.point:nth-child(1) {
+  animation-delay: calc(var(--t-stagger) * 3);
+}
+.point:nth-child(2) {
+  animation-delay: calc(var(--t-stagger) * 4);
+}
+.point:nth-child(3) {
+  animation-delay: calc(var(--t-stagger) * 5);
+}
+
+.pointIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-pill);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .pickHeader {

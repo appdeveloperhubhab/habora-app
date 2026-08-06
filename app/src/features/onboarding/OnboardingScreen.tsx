@@ -132,7 +132,30 @@ export function OnboardingScreen() {
           </span>
           <h1 className={styles.appName}>Habora</h1>
           <p className={styles.tagline}>{t.onboarding.tagline}</p>
-          <p className={styles.intro}>{t.onboarding.intro}</p>
+
+          {/*
+            Три строки вместо прежнего абзаца. Абзац читался целиком или никак,
+            и совместные привычки — то, ради чего приложение и затевалось, —
+            оставались в нём последним придаточным. Списком видно с одного
+            взгляда, что здесь делают, а «вместе с друзьями» стоит отдельным
+            пунктом наравне с остальными, а не примечанием к ним.
+          */}
+          <ul className={styles.points}>
+            {(
+              [
+                ['check', t.onboarding.pointMark],
+                ['viewTable', t.onboarding.pointYear],
+                ['friends', t.onboarding.pointFriends],
+              ] as const
+            ).map(([icon, text]) => (
+              <li key={icon} className={styles.point}>
+                <span className={styles.pointIcon}>
+                  <Icon name={icon} size={18} strokeWidth={2} />
+                </span>
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <button

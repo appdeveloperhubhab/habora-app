@@ -26,7 +26,9 @@ export const en: Dict = {
   },
   onboarding: {
     tagline: 'Habits you can see',
-    intro: 'Check things off with one tap, keep your streaks alive and watch your year fill up.',
+    pointMark: 'Check off with one tap',
+    pointYear: 'Watch your year fill up',
+    pointFriends: 'Keep habits with friends',
     start: 'Get started',
     pickTitle: 'Where do we start?',
     pickHint: 'Pick what you want to track. You can change this or add your own later.',
