@@ -4,7 +4,7 @@ import { useStore } from '../../store/context'
 import { dict } from '../../i18n'
 import { weekdayShort } from '../../lib/dates'
 import { hapticSelect, hapticSuccess, hapticWarning } from '../../lib/haptics'
-import { nextDefaultColor } from '../../theme/palette'
+import { nearestHabitColor, nextDefaultColor } from '../../theme/palette'
 import { DEFAULT_HABIT_ICON } from '../../ui/habitIconSet'
 import { HabitIcon } from '../../ui/habitIcons'
 import { ColorStrip } from '../../ui/ColorStrip'
@@ -34,7 +34,17 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
   const [name, setName] = useState(habit?.name ?? '')
   const [description, setDescription] = useState(habit?.description ?? '')
   const [icon, setIcon] = useState(habit?.icon ?? DEFAULT_HABIT_ICON)
-  const [color, setColor] = useState(habit?.color ?? nextDefaultColor(habits.length))
+  /*
+   * Цвет привычки, заведённой до сокращения палитры, подменяем ближайшим из
+   * набора. Иначе в редакторе не было бы выделено ни одной плитки — а показать
+   * одиннадцатую, свою, значит сломать ровный ряд пять на пять.
+   *
+   * Подмена видна сразу: превью сверху перекрашивается при открытии, и человек
+   * замечает её до сохранения, а не постфактум.
+   */
+  const [color, setColor] = useState(
+    habit ? nearestHabitColor(habit.color) : nextDefaultColor(habits.length),
+  )
   const [tinted, setTinted] = useState(habit?.tinted ?? true)
   /*
    * У привычки, заведённой по старому расписанию «N раз в неделю», сохранённый

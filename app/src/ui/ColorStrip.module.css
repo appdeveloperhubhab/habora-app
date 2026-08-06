@@ -3,8 +3,7 @@
  *
  * Число колонок задано жёстко, а не подгонкой под ширину: при auto-fill
  * последний ряд получал другое число плиток, и сетка переставала читаться
- * ровной. Одиннадцатая плитка (старый цвет давней привычки) уезжает в третий
- * ряд одна — это редкий случай, и он должен бросаться в глаза.
+ * ровной.
  */
 .grid {
   display: grid;
@@ -16,13 +15,26 @@
 }
 
 /*
- * Плитка — скруглённый квадрат, а не круг: квадрат при той же ширине даёт
- * заметно больше цветного пятна, и оттенки сравниваются между собой легче.
+ * Плитка — скруглённый квадрат с градиентом по диагонали.
+ *
+ * Плоская заливка на крупной плитке читается как незакрашенный прямоугольник
+ * из макета: на таком размере глазу нужен переход, иначе цвет выглядит
+ * технической подложкой, а не материалом. Отсюда же блик по верхней кромке и
+ * тонкая тёмная обводка — вместе они дают ту же выпуклость, что у карточек
+ * привычек, и палитра перестаёт выпадать из остального приложения.
+ *
+ * Угол 145° — не 90°: по диагонали переход занимает больше пути, и на плитке
+ * в полсотни пикселей его видно, тогда как вертикальный сливается в один тон.
  */
 .swatch {
+  position: relative;
   aspect-ratio: 1;
   border-radius: var(--r-md);
-  background: var(--swatch);
+  background: linear-gradient(145deg, var(--from), var(--to));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #000 14%, transparent),
+    0 2px 8px -3px color-mix(in srgb, var(--swatch) 60%, transparent);
   transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast) linear;
 }
 
@@ -30,10 +42,18 @@
   transform: scale(0.9);
 }
 
+/*
+ * Выбранная плитка обведена собственным цветом через зазор цвета фона.
+ * Белая обводка спорила бы со светлыми оттенками, а обводка вплотную
+ * читалась бы как часть самой плитки.
+ */
 .selected {
-  /* Обводка идёт цветом фона, а не белым: иначе на светлой теме
-     выделение спорит со светлыми оттенками палитры. */
-  box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px var(--swatch);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #000 14%, transparent),
+    0 0 0 2px var(--surface-2),
+    0 0 0 4px var(--swatch),
+    0 3px 12px -3px color-mix(in srgb, var(--swatch) 75%, transparent);
 }
 
 /* Выход в полную палитру — только у акцента приложения. Радуга вместо
@@ -42,16 +62,21 @@
   aspect-ratio: 1;
   border-radius: var(--r-md);
   background: conic-gradient(
-    #ff453a,
-    #ff9f0a,
-    #ffd60a,
-    #32d74b,
-    #40c8e0,
-    #0a84ff,
-    #bf5af2,
-    #ff6482,
-    #ff453a
+    from 145deg,
+    #f2554a,
+    #f79a3e,
+    #f7c846,
+    #4fc98d,
+    #42c0bb,
+    #4796f0,
+    #6f79ec,
+    #a166ec,
+    #f072ac,
+    #f2554a
   );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #000 14%, transparent);
   transition: transform var(--t-fast) var(--ease-spring);
 }
 

@@ -10,9 +10,8 @@ import styles from './ColorStrip.module.css'
  *
  * Полная палитра на полсотни оттенков открывается только там, где передан
  * `onOpenPalette`, — у акцента приложения. У привычки её нет намеренно: цвет
- * там выбирают при каждом заведении, карточек на экране несколько, и важно не
- * «какой оттенок красивее», а чтобы соседние не путались. Девять почти
- * одинаковых красных этому только мешали.
+ * там выбирают при каждом её заведении, карточек на экране несколько, и важно
+ * не «какой оттенок красивее», а чтобы соседние не путались.
  */
 export function ColorStrip({
   value,
@@ -24,26 +23,47 @@ export function ColorStrip({
   onOpenPalette?(): void
 }) {
   /*
-   * Цвет, выбранный до сокращения палитры, добавляем первой плиткой: иначе
-   * у давней привычки в редакторе не было бы выделено ничего, и любое
-   * прикосновение к другому полю выглядело бы как потеря её цвета.
+   * Ряд всегда ровно из десяти плиток. Показать одиннадцатой чужой цвет —
+   * значит сломать сетку пять на пять ради редкого случая; вместо этого
+   * привычке со старым оттенком его подменяет ближайший из набора, и делает
+   * это редактор, а не этот компонент (см. `nearestHabitColor`).
+   *
+   * У акцента приложения свой цвет законен: там есть полная палитра, и
+   * выбранное в ней должно оставаться видимым.
    */
-  const colors = HABIT_COLORS.includes(value) ? HABIT_COLORS : [value, ...HABIT_COLORS]
+  const extra = onOpenPalette && !HABIT_COLORS.some((color) => color.value === value)
 
   return (
     <div className={styles.grid}>
-      {colors.map((color) => (
+      {extra && (
         <button
-          key={color}
           type="button"
-          className={color === value ? `${styles.swatch} ${styles.selected}` : styles.swatch}
-          style={{ '--swatch': color } as React.CSSProperties}
+          className={`${styles.swatch} ${styles.selected}`}
+          style={{ '--from': value, '--to': value, '--swatch': value } as React.CSSProperties}
+          onClick={() => hapticSelect()}
+          aria-label={value}
+          aria-pressed
+        />
+      )}
+
+      {HABIT_COLORS.map((color) => (
+        <button
+          key={color.value}
+          type="button"
+          className={color.value === value ? `${styles.swatch} ${styles.selected}` : styles.swatch}
+          style={
+            {
+              '--from': color.from,
+              '--to': color.to,
+              '--swatch': color.value,
+            } as React.CSSProperties
+          }
           onClick={() => {
             hapticSelect()
-            onChange(color)
+            onChange(color.value)
           }}
-          aria-label={color}
-          aria-pressed={color === value}
+          aria-label={color.value}
+          aria-pressed={color.value === value}
         />
       ))}
 
