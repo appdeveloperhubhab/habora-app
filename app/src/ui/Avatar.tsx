@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { personColor } from '../lib/personColor'
 import styles from './Avatar.module.css'
 
 /**
@@ -23,7 +24,6 @@ export function Avatar({
   const [broken, setBroken] = useState(false)
 
   const letter = [...name.trim()][0]?.toUpperCase() ?? '?'
-  const hue = [...name].reduce((sum, char) => sum + char.codePointAt(0)!, 0) % 360
 
   return (
     <span
@@ -33,7 +33,7 @@ export function Avatar({
           width: size,
           height: size,
           fontSize: Math.round(size * 0.42),
-          '--tone': `hsl(${hue} 52% 46%)`,
+          '--tone': personColor(name),
         } as React.CSSProperties
       }
     >

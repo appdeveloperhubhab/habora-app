@@ -99,15 +99,26 @@
   gap: var(--sp-2);
 }
 
-/* Строка общей привычки: иконка, название с серией, неделя точками
-   и отметка за сегодня у самого края. */
+/*
+ * Строка общей привычки: иконка, название с серией, неделя точками
+ * и отметка за сегодня у самого края. Сама строка — кнопка, ведущая на общую
+ * сетку вдвоём; текст выровнен влево и ширина растянута, иначе кнопка
+ * не унаследовала бы вид обычной строки.
+ */
 .habit {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  width: 100%;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--habit) 12%, var(--surface-2));
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.habit:active {
+  transform: scale(0.98);
 }
 
 .habitIcon {

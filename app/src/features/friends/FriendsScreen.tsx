@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useStore } from '../../store/context'
+import { useNav } from '../../shell/navigation'
 import { dict } from '../../i18n'
 import { todayIso } from '../../lib/dates'
 import { currentStreak, weekProgress } from '../../lib/streak'
@@ -28,6 +29,7 @@ export function FriendsScreen({
   onCreateHabit(): void
 }) {
   const { friends, habits, settings, refreshFriends } = useStore()
+  const nav = useNav()
   const t = dict(settings.lang)
   const today = todayIso()
 
@@ -85,10 +87,15 @@ export function FriendsScreen({
                 const week = weekProgress(shared.dates, today)
 
                 return (
-                  <div
+                  <button
                     key={shared.habitId}
                     className={styles.habit}
                     style={{ '--habit': habit.color } as React.CSSProperties}
+                    // Открывает общую сетку на двоих — конкретную привычку, а не
+                    // всю карточку человека: у него их может быть несколько.
+                    onClick={() =>
+                      nav.push({ name: 'sharedHabit', habitId: habit.id, friendUserId: friend.userId })
+                    }
                   >
                     <span className={styles.habitIcon}>
                       <HabitIcon icon={habit.icon} size={17} />
@@ -123,7 +130,7 @@ export function FriendsScreen({
                     </span>
 
                     <span className={doneToday ? `${styles.mark} ${styles.markDone}` : styles.mark} />
-                  </div>
+                  </button>
                 )
               })}
             </div>

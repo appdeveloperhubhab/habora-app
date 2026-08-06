@@ -89,6 +89,10 @@ export const ru = {
     createFirst: 'Создать привычку',
     invite: 'Пригласить друга',
     noStreak: 'серия прервана',
+    you: 'Вы',
+    activityTogether: 'Активность вдвоём',
+    bothDone: 'оба отметились',
+    yourStreak: 'Ваша серия',
   },
   actions: {
     title: 'Что сделать?',

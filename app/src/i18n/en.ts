@@ -87,6 +87,10 @@ export const en: Dict = {
     createFirst: 'Create a habit',
     invite: 'Invite a friend',
     noStreak: 'streak broken',
+    you: 'You',
+    activityTogether: 'Activity together',
+    bothDone: 'both checked in',
+    yourStreak: 'Your streak',
   },
   actions: {
     title: 'What would you like to do?',

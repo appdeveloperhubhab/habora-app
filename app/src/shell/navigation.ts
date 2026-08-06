@@ -13,6 +13,7 @@ export type Screen =
   | { name: 'home' }
   | { name: 'habit'; habitId: string }
   | { name: 'habitEditor'; habitId: string | null }
+  | { name: 'sharedHabit'; habitId: string; friendUserId: number }
   | { name: 'settings' }
   | { name: 'themeSettings' }
   | { name: 'timer' }

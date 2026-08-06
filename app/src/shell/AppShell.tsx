@@ -8,6 +8,7 @@ import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { HabitEditor } from '../features/habits/HabitEditor'
 import { HabitScreen } from '../features/habits/detail/HabitScreen'
 import { FriendsScreen } from '../features/friends/FriendsScreen'
+import { SharedHabitScreen } from '../features/friends/SharedHabitScreen'
 import { InviteSheet } from '../features/friends/InviteSheet'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { ThemeScreen } from '../features/settings/ThemeScreen'
@@ -104,7 +105,7 @@ export function AppShell() {
 /** Экраны поверх главного. */
 function Overlay() {
   const nav = useNav()
-  const { habits, settings, saveSettings } = useStore()
+  const { habits, friends, settings, saveSettings, datesOf, toggleEntry } = useStore()
   const t = dict(settings.lang)
 
   const note =
@@ -142,6 +143,29 @@ function Overlay() {
             }
             nav.push({ name: 'timer' })
           }}
+        />
+      )
+    }
+    case 'sharedHabit': {
+      const habit = habits.find((item) => item.id === screen.habitId)
+      const friend = friends.find((item) => item.userId === screen.friendUserId)
+      const shared = friend?.habits.find((item) => item.habitId === screen.habitId)
+      // Привычку могли удалить, а друга — уйти из неё, пока экран открыт;
+      // общих данных без обеих сторон не бывает, поэтому выходим так же,
+      // как и при исчезновении собственной привычки.
+      if (!habit || !friend || !shared) {
+        return <Placeholder title={t.tabs.friends} note={note} onBack={nav.pop} />
+      }
+      return (
+        <SharedHabitScreen
+          habit={habit}
+          friend={friend}
+          myDates={datesOf(habit.id)}
+          friendDates={shared.dates}
+          lang={settings.lang}
+          t={t}
+          onBack={nav.pop}
+          onToggle={() => void toggleEntry(habit.id, todayIso())}
         />
       )
     }
