@@ -69,25 +69,52 @@
 }
 
 /*
- * Участники и приглашение в одной строке: у одиночной привычки это просто
- * кнопка «позвать», у совместной рядом с ней сразу видно, кто уже внутри.
+ * Участники: каждый — строка, ведущая на общую сетку с ним. Строкой, а не
+ * рядом аватарок: у аватарки размером с ноготь не видно, что она нажимается,
+ * и имя рядом с ней не поместить, — а именно по имени человека и узнают.
  */
-.people {
+.friends {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.friendRow {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  color: color-mix(in srgb, var(--habit) 70%, var(--text-dim));
+  background: color-mix(in srgb, var(--habit) 10%, var(--surface));
+  text-align: left;
+  transition: transform var(--t-fast) var(--ease-spring);
 }
 
-/* Аватарки заходят друг на друга: так видно, что это одна компания,
-   а не набор отдельных значков. */
-.avatars {
+.friendRow:active {
+  transform: scale(0.98);
+}
+
+.friendText {
   display: flex;
-  flex: none;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
 }
 
-.avatars > * + * {
-  margin-left: -10px;
-  box-shadow: 0 0 0 2px var(--bg);
+.friendName {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friendNote {
+  font-size: var(--fs-caption);
+  color: color-mix(in srgb, var(--habit) 60%, var(--text-dim));
 }
 
 .inviteButton {
@@ -95,7 +122,6 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  flex: 1;
   padding: var(--sp-3);
   border-radius: var(--r-pill);
   font-size: var(--fs-label);

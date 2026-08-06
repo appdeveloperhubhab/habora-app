@@ -1,16 +1,17 @@
+import { useEffect } from 'react'
 import type { Habit } from '../../../types'
 import { useStore } from '../../../store/context'
+import { useNav } from '../../../shell/navigation'
 import { dict } from '../../../i18n'
 import { Icon } from '../../../ui/Icon'
 import { Avatar } from '../../../ui/Avatar'
 import { shareLink } from '../../../lib/telegram'
+import { currentStreak } from '../../../lib/streak'
 import { formatDuration } from '../../../lib/timer'
 import { ActivityGrid } from './ActivityGrid'
 import { MetricCards } from './MetricCards'
 import { MonthCalendar } from './MonthCalendar'
 import { TimelineChart } from './TimelineChart'
-import { WeekdaysBlock } from './WeekdaysBlock'
-import { YearCompare } from './YearCompare'
 import styles from './HabitScreen.module.css'
 
 /**
@@ -32,9 +33,20 @@ export function HabitScreen({
   onEdit(): void
   onOpenTimer(): void
 }) {
-  const { settings, datesOf, toggleEntry, inviteLink } = useStore()
+  const { settings, datesOf, toggleEntry, inviteLink, friends, refreshFriends } = useStore()
+  const nav = useNav()
   const t = dict(settings.lang)
   const dates = datesOf(habit.id)
+
+  /*
+   * Отметки друзей ставятся на их телефонах и сами собой не приходят —
+   * спрашиваем заново при открытии привычки. Без этого, если человек зашёл
+   * сюда, ни разу не открыв вкладку друзей, список был бы пуст, и совместная
+   * привычка выглядела бы одиночной.
+   */
+  useEffect(() => {
+    void refreshFriends()
+  }, [refreshFriends])
 
   const invite = async () => {
     const url = await inviteLink(habit.id)
@@ -43,6 +55,13 @@ export function HabitScreen({
   }
 
   const members = habit.members ?? []
+
+  /** Кто ведёт эту же привычку вместе с вами — с их отметками по ней. */
+  const sharedWith = friends
+    .map((friend) => ({ friend, shared: friend.habits.find((item) => item.habitId === habit.id) }))
+    .filter((entry): entry is { friend: (typeof friends)[number]; shared: { habitId: string; dates: string[] } } =>
+      entry.shared !== undefined,
+    )
 
   return (
     <div className={styles.screen} style={{ '--habit': habit.color } as React.CSSProperties}>
@@ -66,24 +85,44 @@ export function HabitScreen({
           Участники и приглашение — сразу под шапкой, до всей аналитики:
           совместность привычки это первое, что о ней стоит знать, а звать
           друга удобнее оттуда, где на привычку и смотришь.
-        */}
-        <div className={styles.people}>
-          <span className={styles.avatars}>
-            {members.map((member) => (
-              <Avatar
-                key={member.userId}
-                name={member.firstName}
-                photoUrl={member.photoUrl}
-                size={30}
-              />
-            ))}
-          </span>
 
-          <button className={styles.inviteButton} onClick={() => void invite()}>
-            <Icon name="friends" size={17} />
-            {members.length > 1 ? t.friends.invite : t.actions.invite}
-          </button>
-        </div>
+          Каждый участник — строка, ведущая на общую сетку с ним. Раньше здесь
+          лежали неподвижные аватарки: было видно, что привычка совместная, но
+          посмотреть, как у друга идут дела, можно было только через вкладку
+          «Друзья» — то есть выйдя из привычки, о которой и шла речь.
+        */}
+        {sharedWith.length > 0 && (
+          <div className={styles.friends}>
+            {sharedWith.map(({ friend, shared }) => {
+              const streak = currentStreak(shared.dates, habit.schedule)
+              return (
+                <button
+                  key={friend.userId}
+                  className={styles.friendRow}
+                  onClick={() =>
+                    nav.push({ name: 'sharedHabit', habitId: habit.id, friendUserId: friend.userId })
+                  }
+                >
+                  <Avatar name={friend.firstName} photoUrl={friend.photoUrl} size={34} />
+                  <span className={styles.friendText}>
+                    <span className={styles.friendName}>{friend.firstName}</span>
+                    <span className={styles.friendNote}>
+                      {streak.value > 0
+                        ? `${streak.value} ${streak.unit === 'weeks' ? t.common.weeks : t.common.days} ${t.common.inARow}`
+                        : t.friends.noStreak}
+                    </span>
+                  </span>
+                  <Icon name="chevronRight" size={18} />
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        <button className={styles.inviteButton} onClick={() => void invite()}>
+          <Icon name="friends" size={17} />
+          {members.length > 1 ? t.friends.invite : t.actions.invite}
+        </button>
 
         {/* Таймер живёт здесь, а не на карточке в списке: там он мешал
             полоскам недели и был лишним для большинства привычек. */}
@@ -97,8 +136,12 @@ export function HabitScreen({
           </button>
         )}
 
-        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
-        <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
+        {/*
+          Календарь идёт первым. Он единственный отвечает на вопрос «а этот
+          день я отметил?» и единственный, где отметку можно поставить задним
+          числом, — то есть с ним работают, а остальное разглядывают. Сводки
+          и графики встают следом, от короткого взгляда к деталям.
+        */}
         <MonthCalendar
           dates={dates}
           color={habit.color}
@@ -106,9 +149,9 @@ export function HabitScreen({
           t={t}
           onToggleDay={(date) => void toggleEntry(habit.id, date)}
         />
+        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
+        <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
         <TimelineChart dates={dates} color={habit.color} lang={settings.lang} t={t} />
-        <WeekdaysBlock dates={dates} color={habit.color} lang={settings.lang} t={t} />
-        <YearCompare dates={dates} color={habit.color} lang={settings.lang} t={t} />
       </div>
     </div>
   )

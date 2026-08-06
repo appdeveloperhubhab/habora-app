@@ -1,5 +1,5 @@
 import type { HabitSchedule, IsoDate } from '../types'
-import { addDays, fromIso, startOfWeek, todayIso, weekdayOf } from './dates'
+import { addDays, fromIso, startOfWeek, todayIso } from './dates'
 import { completionRate } from './streak'
 
 /**
@@ -54,43 +54,13 @@ export function countInWeek(dates: IsoDate[], iso: IsoDate = todayIso()): number
 }
 
 /** Отметки по месяцам выбранного года: 12 чисел, январь → декабрь. */
-export function monthlyCounts(dates: IsoDate[], year: number): number[] {
+function monthlyCounts(dates: IsoDate[], year: number): number[] {
   const counts = new Array(12).fill(0)
   for (const date of dates) {
     const d = fromIso(date)
     if (d.getFullYear() === year) counts[d.getMonth()]++
   }
   return counts
-}
-
-/** Отметки по дням недели за последние `months` месяцев: 7 чисел, Пн → Вс. */
-export function weekdayCounts(
-  dates: IsoDate[],
-  months = 12,
-  today: IsoDate = todayIso(),
-): number[] {
-  const from = addDays(today, -Math.round(months * 30.4))
-  const counts = new Array(7).fill(0)
-  for (const date of dates) {
-    if (date < from) continue
-    counts[weekdayOf(date)]++
-  }
-  return counts
-}
-
-/** Доля отметок в рабочие дни против выходных, в процентах. */
-export function workWeekendSplit(dates: IsoDate[], months = 12, today: IsoDate = todayIso()) {
-  const counts = weekdayCounts(dates, months, today)
-  const work = counts.slice(0, 5).reduce((a, b) => a + b, 0)
-  const weekend = counts[5] + counts[6]
-  const total = work + weekend
-  if (total === 0) return { work: 0, weekend: 0, workPercent: 0, weekendPercent: 0 }
-  return {
-    work,
-    weekend,
-    workPercent: Math.round((work / total) * 100),
-    weekendPercent: Math.round((weekend / total) * 100),
-  }
 }
 
 export type TimelinePeriod = 'week' | 'month' | 'year'
