@@ -236,15 +236,9 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
         <IconPicker
           value={icon}
           color={color}
-          lang={settings.lang}
           onChange={(next) => {
             setIcon(next)
             setIconSheet(false)
-          }}
-          labels={{
-            pickEmoji: t.editor.pickEmoji,
-            emojiHint: t.editor.emojiHint,
-            iconsHint: t.editor.iconsHint,
           }}
         />
       </Sheet>

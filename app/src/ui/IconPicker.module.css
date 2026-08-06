@@ -1,99 +1,22 @@
-.wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-}
-
-.emojiField {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3);
-  border-radius: var(--r-lg);
-  background: var(--surface-2);
-  text-align: left;
-  transition: box-shadow var(--t-fast) linear;
-}
-
-.emojiField.selected {
-  box-shadow: inset 0 0 0 2px var(--habit);
-}
-
-.emojiPreview {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-md);
-  background: var(--surface-3);
-  font-size: 24px;
-  line-height: 1;
-}
-
-.emojiText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.emojiTitle {
-  font-size: var(--fs-label);
-  font-weight: var(--fw-medium);
-}
-
-.emojiHint {
-  font-size: var(--fs-caption);
-  color: var(--text-dim);
-}
-
-/* Поле должно открывать системную клавиатуру, но не показывать курсор и текст:
-   визуально роль поля играет крупный превью-эмодзи слева. */
-.hiddenInput {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  outline: none;
-}
-
-.hint {
-  font-size: var(--fs-caption);
-  color: var(--text-faint);
-}
-
-.category {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-.label {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-medium);
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
+/*
+ * Сплошная сетка по шесть иконок в ряд — как на доске, взятой за образец.
+ * Число колонок задано жёстко, а не auto-fill: при подгонке под ширину
+ * последний ряд получал другое число иконок, и сетка переставала читаться
+ * ровной.
+ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
-  gap: var(--sp-2);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sp-3);
 }
 
+/* Кружок, а не квадрат: круглая подложка не спорит с силуэтом внутри —
+   у иконок нет углов, которые бы с ней перекликались. */
 .icon {
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  border-radius: var(--r-md);
+  border-radius: var(--r-pill);
   color: var(--text-dim);
   background: var(--surface-2);
   transition: transform var(--t-fast) var(--ease-spring), color var(--t-fast) linear,
@@ -104,8 +27,8 @@
   transform: scale(0.88);
 }
 
-.iconSelected {
+.selected {
   color: var(--habit);
-  background: color-mix(in srgb, var(--habit) 20%, var(--surface-2));
+  background: color-mix(in srgb, var(--habit) 22%, var(--surface-2));
   box-shadow: inset 0 0 0 2px var(--habit);
 }
