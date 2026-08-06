@@ -246,6 +246,32 @@
   opacity: 0.6;
 }
 
+/*
+ * Отказ от приглашения. Тише главной кнопки, но такого же роста: «потом» —
+ * законный ответ, а не отговорка, и мелкой ссылкой внизу его прятать незачем.
+ */
+.secondary {
+  position: relative;
+  flex: none;
+  margin-top: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--card-edge);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-mid) linear;
+}
+
+.secondary:active {
+  transform: scale(0.97);
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+}
+
 @keyframes screenIn {
   from {
     opacity: 0;

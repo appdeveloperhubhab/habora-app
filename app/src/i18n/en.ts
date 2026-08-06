@@ -35,6 +35,9 @@ export const en: Dict = {
     addOwn: 'Your own habit',
     addOwnHint: 'Create from scratch',
     hint: 'Tap when you have done it',
+    inviteTitle: 'Better together',
+    inviteHint: 'Pick a habit to invite a friend to — you will see each other’s check-ins. You can also do this later from the habit itself.',
+    inviteLater: 'Later',
   },
   timer: {
     title: 'Timer',
