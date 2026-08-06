@@ -35,7 +35,9 @@ const WAVE_STEP_MS = 70
 
 export function DayBars({ days, color, pulseKey }: Props) {
   return (
-    <div className={styles.row} style={{ '--habit': color } as React.CSSProperties}>
+    // Корень — span, а не div: у друзей строка привычки сама по себе кнопка,
+    // а блочный элемент внутри кнопки разметка не допускает.
+    <span className={styles.row} style={{ '--habit': color } as React.CSSProperties}>
       {days.map((day, index) => (
         <span
           key={`${day.date}:${pulseKey}`}
@@ -53,6 +55,6 @@ export function DayBars({ days, color, pulseKey }: Props) {
           style={{ animationDelay: `${index * WAVE_STEP_MS}ms` }}
         />
       ))}
-    </div>
+    </span>
   )
 }

@@ -5,6 +5,7 @@ import { dict } from '../../i18n'
 import { todayIso } from '../../lib/dates'
 import { currentStreak, weekProgress } from '../../lib/streak'
 import { HabitIcon } from '../../ui/habitIcons'
+import { DayBars } from '../habits/DayBars'
 import { Icon } from '../../ui/Icon'
 import { EmptyState } from '../../ui/EmptyState'
 import { Avatar } from '../../ui/Avatar'
@@ -112,24 +113,28 @@ export function FriendsScreen({
                       </span>
                     </span>
 
-                    {/* Неделя точками: видно не только сегодня, но и как шло дело. */}
-                    <span className={styles.week}>
-                      {week.map((day) => (
-                        <span
-                          key={day.date}
-                          className={[
-                            styles.dot,
-                            day.done ? styles.dotDone : '',
-                            day.isToday ? styles.dotToday : '',
-                            day.isFuture ? styles.dotFuture : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' ')}
-                        />
-                      ))}
-                    </span>
+                    {/*
+                      Неделя теми же полосками, что и у себя на главном экране.
+                      Раньше здесь были точки — чтобы чужой прогресс не выглядел
+                      нажимаемым. На деле вышло наоборот: одна и та же неделя
+                      рисовалась двумя разными способами, и строку друга
+                      приходилось разбирать заново вместо того, чтобы узнать.
+                      Что она не нажимается, и так видно — отметка у друга без
+                      кольца-приглашения, а вся строка ведёт на общий экран.
+                    */}
+                    <DayBars days={week} color={habit.color} pulseKey={0} />
 
-                    <span className={doneToday ? `${styles.mark} ${styles.markDone}` : styles.mark} />
+                    <span className={doneToday ? `${styles.mark} ${styles.markDone}` : styles.mark}>
+                      <svg className={styles.tick} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M5.5 12.5 10 17 18.5 7.5"
+                          stroke="currentColor"
+                          strokeWidth={2.8}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
                   </button>
                 )
               })}
