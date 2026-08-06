@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { Habit } from '../../types'
 import type { Dict } from '../../i18n'
 import { activityGrid } from '../../lib/stats'
@@ -46,24 +46,18 @@ const WEEKS = { month: 5, year: 57 } as const
 const BAND_WEEKS = 19
 
 /**
- * Шаг задержки на единицу расстояния от сегодняшней клетки.
+ * За сколько волна добегает от сегодняшней клетки до самой дальней.
  *
  * В неделе волна идёт слева направо, но здесь сетка двумерная, а отмечаемая
  * клетка сидит в её правом краю — проход строкой читался бы как движение мимо
- * места нажатия. Поэтому всплеск расходится кругами от самой клетки: задержка
- * растёт с расстоянием до неё.
- */
-const RIPPLE_STEP_MS = 34
-
-/**
- * Докуда всплеск ещё расходится. Дальние клетки трогаются все разом, вместе
- * с последней волной.
+ * места нажатия. Поэтому всплеск расходится кругами от самой клетки.
  *
- * Без предела круги шли бы до самого края года — это полторы секунды после
- * нажатия, и волна докатывалась бы до противоположного угла, когда о ней уже
- * забыли. Отклик должен закончиться, пока палец не убран.
+ * Задано время прохода целиком, а не задержка между соседями: в месяце клеток
+ * 35, в году 399, и при общем шаге волна в году шла бы вчетверо дольше — она
+ * докатывалась бы до дальнего угла, когда о нажатии уже забыли. Здесь же обе
+ * сетки проходятся за одно и то же время, примерно как неделя (6 × 70 мс).
  */
-const RIPPLE_REACH = 12
+const RIPPLE_SPREAD_MS = 460
 
 interface Props {
   habit: Habit
@@ -83,18 +77,25 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
   const longPressTimer = useRef<number | undefined>(undefined)
   const longPressFired = useRef(false)
 
-  const columns = activityGrid(dates, WEEKS[size])
+  /*
+   * Сетка пересобирается, только когда изменились сами отметки. Отметка на
+   * соседней карточке перерисовывает весь список, а в году клеток четыре
+   * сотни — считать их заново ради чужой отметки значит ощутимо подтормозить
+   * ровно в тот момент, когда палец на кнопке.
+   */
+  const bands = useMemo(() => {
+    const columns = activityGrid(dates, WEEKS[size])
 
-  // Год идёт полосами, месяц — одной сеткой. Ранние недели сверху, недавние
-  // снизу: читается сверху вниз, и сегодняшний день оказывается в конце.
-  const bands: (typeof columns)[] = []
-  if (size === 'year') {
+    // Год идёт полосами, месяц — одной сеткой. Ранние недели сверху, недавние
+    // снизу: читается сверху вниз, и сегодняшний день оказывается в конце.
+    if (size !== 'year') return [columns]
+
+    const split: (typeof columns)[] = []
     for (let start = 0; start < columns.length; start += BAND_WEEKS) {
-      bands.push(columns.slice(start, start + BAND_WEEKS))
+      split.push(columns.slice(start, start + BAND_WEEKS))
     }
-  } else {
-    bands.push(columns)
-  }
+    return split
+  }, [dates, size])
 
   const startLongPress = () => {
     longPressFired.current = false
@@ -125,8 +126,71 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
    */
   const rippleClass = pulseKey === 0 ? '' : pulseKey % 2 === 1 ? styles.rippleA : styles.rippleB
 
-  // Сегодняшняя клетка всегда в последнем столбце — с неё и начинается всплеск.
-  const todayRow = columns[columns.length - 1].findIndex((cell) => cell.isToday)
+  /*
+   * Откуда расходится волна и докуда ей идти.
+   *
+   * Считается в тех координатах, в которых человек видит сетку, а не по номеру
+   * недели в истории. Для года это принципиально: недели разложены полосами,
+   * и сороковая лежит не «далеко справа» от сегодняшней, а прямо над ней.
+   * По номеру в истории волна проходила бы одну нижнюю полосу, а две верхние
+   * дёргались бы разом — что и было видно.
+   *
+   * Ось недель у месяца идёт сверху вниз, а у года слева направо, но обе
+   * координаты входят в расстояние одинаково, поэтому разбирать эти случаи
+   * порознь не нужно.
+   */
+  const lastBand = bands[bands.length - 1]
+  const todayRow = lastBand[lastBand.length - 1].findIndex((cell) => cell.isToday)
+  const todayWeek = lastBand.length - 1
+  const todayDay = (bands.length - 1) * 7 + Math.max(todayRow, 0)
+  const lastDay = bands.length * 7 - 1
+
+  // Расстояние до самого дальнего угла: по нему нормируются все задержки,
+  // чтобы волна проходила и месяц, и год за одно и то же время.
+  const reach = Math.hypot(todayWeek, Math.max(todayDay, lastDay - todayDay)) || 1
+
+  /*
+   * Готовая разметка сетки запоминается целиком. Пока отметки и всплеск те же,
+   * React получает ту же самую ветку и не разбирает её заново — а разбирать
+   * там четыре сотни клеток. Именно на этом уходило около ста миллисекунд при
+   * каждом нажатии, в том числе на карточках, которых оно не касалось.
+   */
+  const grid = useMemo(
+    () => (
+      <span className={styles.bands}>
+        {bands.map((band, bandIndex) => (
+          <span key={band[0][0].date} className={styles.cells}>
+            {band.map((week, weekInBand) => (
+              <span key={week[0].date} className={styles.week}>
+                {week.map((cell, dayIndex) => (
+                  <span
+                    key={cell.date}
+                    className={[
+                      styles.cell,
+                      cell.done ? styles.cellDone : '',
+                      cell.isToday ? styles.cellToday : '',
+                      cell.isFuture ? styles.cellFuture : '',
+                      rippleClass,
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    style={{
+                      animationDelay: `${Math.round(
+                        (Math.hypot(todayWeek - weekInBand, todayDay - (bandIndex * 7 + dayIndex)) /
+                          reach) *
+                          RIPPLE_SPREAD_MS,
+                      )}ms`,
+                    }}
+                  />
+                ))}
+              </span>
+            ))}
+          </span>
+        ))}
+      </span>
+    ),
+    [bands, rippleClass, todayWeek, todayDay, reach],
+  )
 
   return (
     <article
@@ -157,48 +221,7 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
           <HabitMembers habit={habit} size={size === 'month' ? 16 : 20} />
         </span>
 
-        <span className={styles.bands}>
-          {bands.map((band, bandIndex) => (
-            <span key={band[0][0].date} className={styles.cells}>
-              {band.map((week, weekInBand) => {
-                // Расстояние до сегодняшней клетки считается по всей истории,
-                // а не внутри полосы: иначе волна начиналась бы заново
-                // в каждой из них, и вместо одного всплеска их было бы два.
-                const weekIndex = bandIndex * BAND_WEEKS + weekInBand
-
-                return (
-                  <span key={week[0].date} className={styles.week}>
-                    {week.map((cell, dayIndex) => (
-                      <span
-                        key={cell.date}
-                        className={[
-                          styles.cell,
-                          cell.done ? styles.cellDone : '',
-                          cell.isToday ? styles.cellToday : '',
-                          cell.isFuture ? styles.cellFuture : '',
-                          rippleClass,
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                        style={{
-                          animationDelay: `${
-                            Math.min(
-                              Math.hypot(
-                                columns.length - 1 - weekIndex,
-                                todayRow < 0 ? 0 : todayRow - dayIndex,
-                              ),
-                              RIPPLE_REACH,
-                            ) * RIPPLE_STEP_MS
-                          }ms`,
-                        }}
-                      />
-                    ))}
-                  </span>
-                )
-              })}
-            </span>
-          ))}
-        </span>
+        {grid}
       </button>
 
       <button className={done ? `${styles.mark} ${styles.markDone}` : styles.mark} onClick={handleToggle}>

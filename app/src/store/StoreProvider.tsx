@@ -98,6 +98,18 @@ export function StoreProvider({ children, source }: Props) {
     [doneKeys],
   )
 
+  /*
+   * Прошлые списки дат — чтобы вернуть те же самые массивы привычкам, которых
+   * отметка не коснулась.
+   *
+   * Без этого карта пересобирается целиком при любом изменении, и каждая
+   * привычка получает новый массив. Для React это «данные изменились», и он
+   * перерисовывает все карточки — в годовом виде это под тысячу клеток на
+   * ровном месте, заметная задержка в момент нажатия. Сохранённая ссылка
+   * позволяет карточке узнать, что у неё ничего не поменялось.
+   */
+  const previousDates = useRef(new Map<string, IsoDate[]>())
+
   const datesByHabit = useMemo(() => {
     const map = new Map<string, IsoDate[]>()
     for (const entry of entries) {
@@ -106,10 +118,26 @@ export function StoreProvider({ children, source }: Props) {
       else map.set(entry.habitId, [entry.date])
     }
     for (const list of map.values()) list.sort()
+
+    for (const [habitId, list] of map) {
+      const before = previousDates.current.get(habitId)
+      if (before?.length === list.length && before.every((date, i) => date === list[i])) {
+        map.set(habitId, before)
+      }
+    }
+    previousDates.current = map
     return map
   }, [entries])
 
-  const datesOf = useCallback((habitId: string) => datesByHabit.get(habitId) ?? [], [datesByHabit])
+  // Пустой список тоже должен быть одной и той же ссылкой: иначе привычка без
+  // отметок получала бы новый массив при каждом обращении и перерисовывалась
+  // бы всегда — ровно то, от чего избавляет сохранение ссылок выше.
+  const noDates = useRef<IsoDate[]>([]).current
+
+  const datesOf = useCallback(
+    (habitId: string) => datesByHabit.get(habitId) ?? noDates,
+    [datesByHabit, noDates],
+  )
 
   /** Дни с любой активностью — для общей серии приложения. */
   const activeDates = useMemo(() => [...new Set(entries.map((entry) => entry.date))], [entries])
