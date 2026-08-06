@@ -3,8 +3,13 @@ import styles from './TopBar.module.css'
 
 /**
  * Верхняя панель главного экрана: настройки и порядок слева, название текущей
- * вкладки с сегодняшней датой по центру, «+» справа. Название приложения здесь
- * намеренно не показывается — по центру всегда видно, в каком разделе находишься.
+ * вкладки по центру, «+» справа. Название приложения здесь намеренно не
+ * показывается — по центру всегда видно, в каком разделе находишься.
+ *
+ * Сегодняшней даты под названием больше нет. Она ничего не решала: приложение
+ * открывают, чтобы отметить сегодняшний день, и какое сегодня число, человек
+ * и так знает — а место занимала и заставляла название быть мелким, чтобы
+ * они вдвоём поместились в высоту панели.
  *
  * Обе левые кнопки открыты, а не спрятаны за «три точки»: их всего две, и
  * лишний тап по меню ради выбора из двух пунктов ничего не экономил.
@@ -14,7 +19,6 @@ import styles from './TopBar.module.css'
 
 interface Props {
   title: string
-  date: string
   settingsLabel: string
   orderLabel: string
   onSettings(): void
@@ -28,7 +32,6 @@ interface Props {
 
 export function TopBar({
   title,
-  date,
   settingsLabel,
   orderLabel,
   onSettings,
@@ -51,7 +54,6 @@ export function TopBar({
 
       <div className={styles.center}>
         <h1 className={styles.title}>{title}</h1>
-        <span className={styles.date}>{date}</span>
       </div>
 
       <div className={`${styles.side} ${styles.sideEnd}`}>

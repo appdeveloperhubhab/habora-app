@@ -109,10 +109,6 @@ export function monthGrid(iso: IsoDate): { date: IsoDate; outside: boolean }[][]
   return weeks
 }
 
-const MONTHS_RU_GENITIVE = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-]
 const MONTHS_RU_NOMINATIVE = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
@@ -128,14 +124,6 @@ const WEEKDAYS_SHORT_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс
 const WEEKDAYS_SHORT_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const WEEKDAYS_MIN_RU = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
 const WEEKDAYS_MIN_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
-/** Дата в шапке: «21 июля» / «July 21». */
-export function formatDayMonth(iso: IsoDate, lang: Lang): string {
-  const date = fromIso(iso)
-  return lang === 'ru'
-    ? `${date.getDate()} ${MONTHS_RU_GENITIVE[date.getMonth()]}`
-    : `${MONTHS_EN[date.getMonth()]} ${date.getDate()}`
-}
 
 /** Заголовок календаря: «Июль 2026» / «July 2026». */
 export function formatMonthYear(iso: IsoDate, lang: Lang): string {

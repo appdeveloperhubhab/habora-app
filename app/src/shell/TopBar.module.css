@@ -50,30 +50,27 @@
 
 .center {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0;
+  justify-content: center;
   min-width: 0;
 }
 
-/* Название раздела — самый крупный текст на экране: оно задаёт, где ты
-   находишься, и должно читаться раньше карточек. */
+/*
+ * Название раздела — самый крупный текст на экране: оно задаёт, где ты
+ * находишься, и должно читаться раньше карточек.
+ *
+ * Прежние 19 пикселей были подгонкой под дату: вдвоём они едва помещались
+ * в высоту панели. Даты больше нет, вся высота досталась названию.
+ */
 .title {
-  font-size: 19px;
+  font-size: 23px;
   font-weight: var(--fw-bold);
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-}
-
-.date {
-  font-size: 10px;
-  font-weight: var(--fw-medium);
-  letter-spacing: 0.01em;
-  color: var(--text-faint);
 }
 
 .iconButton {

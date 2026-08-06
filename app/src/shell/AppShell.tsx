@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store/context'
 import { useNav } from './navigation'
 import { dict } from '../i18n'
-import { formatDayMonth, todayIso } from '../lib/dates'
+import { todayIso } from '../lib/dates'
 import { startTimer } from '../lib/timer'
 import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { HabitEditor } from '../features/habits/HabitEditor'
@@ -45,7 +45,6 @@ export function AppShell() {
     <div className={styles.app}>
       <TopBar
         title={t.tabs[nav.tab]}
-        date={formatDayMonth(todayIso(), settings.lang)}
         settingsLabel={t.menu.settings}
         orderLabel={t.menu.order}
         onSettings={() => nav.push({ name: 'settings' })}
