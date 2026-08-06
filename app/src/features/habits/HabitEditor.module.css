@@ -197,29 +197,6 @@
   color: var(--text-faint);
 }
 
-.segment {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-}
-
-.segmentItem {
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-pill);
-  font-size: var(--fs-label);
-  font-weight: var(--fw-medium);
-  color: var(--text-dim);
-  transition: background var(--t-mid) var(--ease-soft), color var(--t-mid) linear;
-}
-
-.segmentActive {
-  color: #fff;
-  background: var(--habit);
-}
-
 .days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

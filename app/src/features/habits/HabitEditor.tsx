@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Habit, HabitInput, ScheduleType, Weekday } from '../../types'
+import type { Habit, HabitInput, Weekday } from '../../types'
 import { useStore } from '../../store/context'
 import { dict } from '../../i18n'
 import { weekdayShort } from '../../lib/dates'
@@ -7,7 +7,6 @@ import { hapticSelect, hapticSuccess, hapticWarning } from '../../lib/haptics'
 import { nextDefaultColor } from '../../theme/palette'
 import { DEFAULT_HABIT_ICON } from '../../ui/habitIconSet'
 import { HabitIcon } from '../../ui/habitIcons'
-import { ColorPicker } from '../../ui/ColorPicker'
 import { ColorStrip } from '../../ui/ColorStrip'
 import { IconPicker } from '../../ui/IconPicker'
 import { Sheet } from '../../ui/Sheet'
@@ -22,9 +21,8 @@ import styles from './HabitEditor.module.css'
 /**
  * Создание и редактирование привычки — одно место для всех её параметров.
  *
- * Форма намеренно короткая: набор иконок и полная палитра вынесены в отдельные
- * окна, иначе они занимали несколько экранов прокрутки и всё остальное
- * терялось под ними.
+ * Форма намеренно короткая: набор иконок вынесен в отдельное окно, иначе он
+ * занимал несколько экранов прокрутки и всё остальное терялось под ним.
  */
 
 const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6]
@@ -38,15 +36,20 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
   const [icon, setIcon] = useState(habit?.icon ?? DEFAULT_HABIT_ICON)
   const [color, setColor] = useState(habit?.color ?? nextDefaultColor(habits.length))
   const [tinted, setTinted] = useState(habit?.tinted ?? true)
-  const [scheduleType, setScheduleType] = useState<ScheduleType>(habit?.schedule.type ?? 'weekdays')
-  const [days, setDays] = useState<Weekday[]>(habit?.schedule.days ?? ALL_WEEKDAYS)
-  const [timesPerWeek, setTimesPerWeek] = useState(habit?.schedule.timesPerWeek ?? 3)
+  /*
+   * У привычки, заведённой по старому расписанию «N раз в неделю», сохранённый
+   * список дней мог остаться от прежних правок и не значить ничего. Открываем
+   * такую на всех семи днях: это ближайшее к «без ограничения по дням», и
+   * человек снимет лишние сам.
+   */
+  const [days, setDays] = useState<Weekday[]>(
+    habit && habit.schedule.type === 'weekdays' ? habit.schedule.days : ALL_WEEKDAYS,
+  )
   const [streakGoal, setStreakGoal] = useState<number | null>(habit?.streakGoal ?? null)
   const [durationSec, setDurationSec] = useState<number | null>(habit?.durationSec ?? null)
 
   const [error, setError] = useState<string | null>(null)
   const [iconSheet, setIconSheet] = useState(false)
-  const [colorSheet, setColorSheet] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const toggleDay = (day: Weekday) => {
@@ -61,7 +64,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
       setError(t.editor.nameRequired)
       return
     }
-    if (scheduleType === 'weekdays' && days.length === 0) {
+    if (days.length === 0) {
       hapticWarning()
       setError(t.editor.daysRequired)
       return
@@ -73,7 +76,10 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
       icon,
       color,
       tinted,
-      schedule: { type: scheduleType, days, timesPerWeek },
+      // Расписание теперь всегда по дням недели. `timesPerWeek` остаётся в типе
+      // ради привычек, заведённых до этого, и хранит прежнее значение по
+      // умолчанию — на расчёт серии у них оно уже не влияет.
+      schedule: { type: 'weekdays', days, timesPerWeek: 3 },
       streakGoal,
       durationSec,
     }
@@ -128,7 +134,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.colorBlock}>
-          <ColorStrip value={color} onChange={setColor} onOpenPalette={() => setColorSheet(true)} />
+          <ColorStrip value={color} onChange={setColor} />
 
           <div className={styles.tintRow}>
             <span className={styles.tintText}>
@@ -139,60 +145,40 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           </div>
         </div>
 
-        <input
-          className={styles.input}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t.editor.descriptionPlaceholder}
-          maxLength={120}
-        />
+        {/* У поля есть подпись, а не только placeholder: без неё было
+            непонятно, что вообще сюда пишут, — «Необязательно» отвечало,
+            что заполнять не обязательно, но не отвечало, что именно. */}
+        <section className={styles.block}>
+          <h3 className={styles.heading}>{t.editor.description}</h3>
+          <input
+            className={styles.input}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t.editor.descriptionPlaceholder}
+            maxLength={120}
+          />
+        </section>
 
+        {/* Только дни недели. Прежний второй режим — «N раз в неделю» —
+            убран: он задавал ту же привычку вторым способом, а серия по нему
+            считалась в неделях, и две привычки рядом показывали числа,
+            которые нельзя сравнить между собой. */}
         <section className={styles.block}>
           <h3 className={styles.heading}>{t.editor.schedule}</h3>
+          <p className={styles.hint}>{t.editor.scheduleHint}</p>
 
-          <div className={styles.segment}>
-            <button
-              className={scheduleType === 'weekdays' ? `${styles.segmentItem} ${styles.segmentActive}` : styles.segmentItem}
-              onClick={() => {
-                hapticSelect()
-                setScheduleType('weekdays')
-              }}
-            >
-              {t.editor.byWeekdays}
-            </button>
-            <button
-              className={scheduleType === 'frequency' ? `${styles.segmentItem} ${styles.segmentActive}` : styles.segmentItem}
-              onClick={() => {
-                hapticSelect()
-                setScheduleType('frequency')
-              }}
-            >
-              {t.editor.byFrequency}
-            </button>
+          <div className={styles.days}>
+            {ALL_WEEKDAYS.map((day) => (
+              <button
+                key={day}
+                className={days.includes(day) ? `${styles.day} ${styles.dayOn}` : styles.day}
+                onClick={() => toggleDay(day)}
+                aria-pressed={days.includes(day)}
+              >
+                {weekdayShort(day, settings.lang)}
+              </button>
+            ))}
           </div>
-
-          {scheduleType === 'weekdays' ? (
-            <div className={styles.days}>
-              {ALL_WEEKDAYS.map((day) => (
-                <button
-                  key={day}
-                  className={days.includes(day) ? `${styles.day} ${styles.dayOn}` : styles.day}
-                  onClick={() => toggleDay(day)}
-                  aria-pressed={days.includes(day)}
-                >
-                  {weekdayShort(day, settings.lang)}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <Stepper
-              label={t.editor.timesPerWeek}
-              value={timesPerWeek}
-              min={1}
-              max={7}
-              onChange={setTimesPerWeek}
-            />
-          )}
         </section>
 
         <section className={styles.block}>
@@ -239,17 +225,6 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           onChange={(next) => {
             setIcon(next)
             setIconSheet(false)
-          }}
-        />
-      </Sheet>
-
-      <Sheet open={colorSheet} title={t.editor.colorSheet} onClose={() => setColorSheet(false)}>
-        <ColorPicker
-          value={color}
-          lang={settings.lang}
-          onChange={(next) => {
-            setColor(next)
-            setColorSheet(false)
           }}
         />
       </Sheet>

@@ -1,7 +1,14 @@
-.wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
+/*
+ * Пять плиток в ряд, два ряда — все десять цветов видно целиком.
+ *
+ * Число колонок задано жёстко, а не подгонкой под ширину: при auto-fill
+ * последний ряд получал другое число плиток, и сетка переставала читаться
+ * ровной. Одиннадцатая плитка (старый цвет давней привычки) уезжает в третий
+ * ряд одна — это редкий случай, и он должен бросаться в глаза.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--sp-3);
   padding: var(--sp-3);
   border-radius: var(--r-lg);
@@ -9,89 +16,45 @@
 }
 
 /*
- * Затухание у правого края: без него обрезанный кружок читается как край
- * списка, и непонятно, что ряд можно листать дальше.
+ * Плитка — скруглённый квадрат, а не круг: квадрат при той же ширине даёт
+ * заметно больше цветного пятна, и оттенки сравниваются между собой легче.
  */
-.wrap::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 40px;
-  border-radius: 0 var(--r-lg) var(--r-lg) 0;
-  background: linear-gradient(to right, transparent, var(--surface-2));
-  pointer-events: none;
-}
-
-.palette {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--r-pill);
-  transition: transform var(--t-fast) var(--ease-spring);
-}
-
-.palette:active {
-  transform: scale(0.88);
-}
-
-.rainbow {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--r-pill);
-  background: conic-gradient(
-    #ff3b30,
-    #ff9500,
-    #ffd60a,
-    #34c759,
-    #06b6d4,
-    #007aff,
-    #8b5cf6,
-    #ff6fa5,
-    #ff3b30
-  );
-}
-
-.divider {
-  flex: none;
-  width: 1px;
-  height: 26px;
-  background: var(--surface-3);
-}
-
-/* Ряд прокручивается вбок; полоса прокрутки скрыта, чтобы не ломать линию. */
-.strip {
-  display: flex;
-  gap: var(--sp-2);
-  overflow-x: auto;
-  min-width: 0;
-  padding: 3px 0;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.strip::-webkit-scrollbar {
-  display: none;
-}
-
 .swatch {
-  flex: none;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--r-pill);
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
   background: var(--swatch);
   transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast) linear;
 }
 
 .swatch:active {
-  transform: scale(0.88);
+  transform: scale(0.9);
 }
 
 .selected {
   /* Обводка идёт цветом фона, а не белым: иначе на светлой теме
      выделение спорит со светлыми оттенками палитры. */
   box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px var(--swatch);
+}
+
+/* Выход в полную палитру — только у акцента приложения. Радуга вместо
+   одного цвета сразу говорит, что за плиткой не оттенок, а выбор. */
+.palette {
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: conic-gradient(
+    #ff453a,
+    #ff9f0a,
+    #ffd60a,
+    #32d74b,
+    #40c8e0,
+    #0a84ff,
+    #bf5af2,
+    #ff6482,
+    #ff453a
+  );
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+.palette:active {
+  transform: scale(0.9);
 }
