@@ -24,14 +24,14 @@ export interface StarterHabit {
 }
 
 export const STARTER_HABITS: StarterHabit[] = [
-  { id: 'water', icon: `${ICON_PREFIX}drop`, name: { ru: 'Пить воду', en: 'Drink water' }, color: '#38BDF8' },
-  { id: 'read', icon: `${ICON_PREFIX}book`, name: { ru: 'Читать', en: 'Read' }, color: '#FF9500' },
-  { id: 'sport', icon: `${ICON_PREFIX}dumbbell`, name: { ru: 'Спорт', en: 'Exercise' }, color: '#34C759' },
-  { id: 'sleep', icon: `${ICON_PREFIX}bed`, name: { ru: 'Ложиться вовремя', en: 'Sleep on time' }, color: '#8B5CF6' },
-  { id: 'meditate', icon: `${ICON_PREFIX}lotus`, name: { ru: 'Медитация', en: 'Meditate' }, color: '#06B6D4' },
-  { id: 'english', icon: `${ICON_PREFIX}message`, name: { ru: 'Английский', en: 'Language practice' }, color: '#FF6FA5' },
-  { id: 'walk', icon: `${ICON_PREFIX}shoe`, name: { ru: 'Прогулка', en: 'Walk' }, color: '#A3E635' },
-  { id: 'vitamins', icon: `${ICON_PREFIX}pill`, name: { ru: 'Витамины', en: 'Vitamins' }, color: '#FFD60A' },
-  { id: 'wakeup', icon: `${ICON_PREFIX}alarm`, name: { ru: 'Ранний подъём', en: 'Early wake-up' }, color: '#FFA524' },
-  { id: 'nosugar', icon: `${ICON_PREFIX}apple`, name: { ru: 'Без сладкого', en: 'No sweets' }, color: '#C2185B' },
+  { id: 'water', icon: `${ICON_PREFIX}drop`, name: { ru: 'Пить воду', en: 'Drink water', uk: 'Пити воду' }, color: '#38BDF8' },
+  { id: 'read', icon: `${ICON_PREFIX}book`, name: { ru: 'Читать', en: 'Read', uk: 'Читати' }, color: '#FF9500' },
+  { id: 'sport', icon: `${ICON_PREFIX}dumbbell`, name: { ru: 'Спорт', en: 'Exercise', uk: 'Спорт' }, color: '#34C759' },
+  { id: 'sleep', icon: `${ICON_PREFIX}bed`, name: { ru: 'Ложиться вовремя', en: 'Sleep on time', uk: 'Лягати вчасно' }, color: '#8B5CF6' },
+  { id: 'meditate', icon: `${ICON_PREFIX}lotus`, name: { ru: 'Медитация', en: 'Meditate', uk: 'Медитація' }, color: '#06B6D4' },
+  { id: 'english', icon: `${ICON_PREFIX}message`, name: { ru: 'Английский', en: 'Language practice', uk: 'Англійська' }, color: '#FF6FA5' },
+  { id: 'walk', icon: `${ICON_PREFIX}shoe`, name: { ru: 'Прогулка', en: 'Walk', uk: 'Прогулянка' }, color: '#A3E635' },
+  { id: 'vitamins', icon: `${ICON_PREFIX}pill`, name: { ru: 'Витамины', en: 'Vitamins', uk: 'Вітаміни' }, color: '#FFD60A' },
+  { id: 'wakeup', icon: `${ICON_PREFIX}alarm`, name: { ru: 'Ранний подъём', en: 'Early wake-up', uk: 'Ранній підйом' }, color: '#FFA524' },
+  { id: 'nosugar', icon: `${ICON_PREFIX}apple`, name: { ru: 'Без сладкого', en: 'No sweets', uk: 'Без солодкого' }, color: '#C2185B' },
 ]

@@ -182,6 +182,9 @@ export const ru = {
     gradientTo: 'Конечный',
     presets: 'Готовые сочетания',
     preview: 'Так это будет выглядеть',
+    notifications: 'Уведомления',
+    reminders: 'Вечернее напоминание',
+    remindersHint: 'Бот напишет в чат, если привычка не отмечена',
   },
 } as const
 

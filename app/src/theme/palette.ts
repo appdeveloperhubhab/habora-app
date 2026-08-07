@@ -1,3 +1,5 @@
+import type { Lang } from '../types'
+
 /**
  * Палитра цветов привычки: 50 оттенков, сгруппированных по семействам.
  *
@@ -9,14 +11,14 @@
 export interface ColorGroup {
   id: string
   /** Подпись группы: русская и английская. */
-  label: { ru: string; en: string }
+  label: Record<Lang, string>
   colors: string[]
 }
 
 export const COLOR_GROUPS: ColorGroup[] = [
   {
     id: 'red',
-    label: { ru: 'Красные и розовые', en: 'Reds & pinks' },
+    label: { ru: 'Красные и розовые', en: 'Reds & pinks', uk: 'Червоні та рожеві' },
     colors: [
       '#FFA6C1', // светло-розовый
       '#FF6FA5', // розовый
@@ -31,7 +33,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     id: 'orange',
-    label: { ru: 'Оранжевые и жёлтые', en: 'Oranges & yellows' },
+    label: { ru: 'Оранжевые и жёлтые', en: 'Oranges & yellows', uk: 'Помаранчеві та жовті' },
     colors: [
       '#FFE566', // светло-жёлтый
       '#FFD60A', // жёлтый
@@ -46,7 +48,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     id: 'green',
-    label: { ru: 'Зелёные', en: 'Greens' },
+    label: { ru: 'Зелёные', en: 'Greens', uk: 'Зелені' },
     colors: [
       '#A3E635', // салатовый
       '#5EEAD4', // мятный
@@ -61,7 +63,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     id: 'blue',
-    label: { ru: 'Синие и голубые', en: 'Blues' },
+    label: { ru: 'Синие и голубые', en: 'Blues', uk: 'Сині та блакитні' },
     colors: [
       '#7DD3FC', // небесный
       '#38BDF8', // голубой
@@ -76,7 +78,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     id: 'purple',
-    label: { ru: 'Фиолетовые', en: 'Purples' },
+    label: { ru: 'Фиолетовые', en: 'Purples', uk: 'Фіолетові' },
     colors: [
       '#C4B5FD', // лавандовый
       '#A78BFA', // сиреневый
@@ -90,7 +92,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     id: 'neutral',
-    label: { ru: 'Нейтральные', en: 'Neutrals' },
+    label: { ru: 'Нейтральные', en: 'Neutrals', uk: 'Нейтральні' },
     colors: [
       '#C7C9D1', // светло-серый
       '#8E8E99', // серый

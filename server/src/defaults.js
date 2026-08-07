@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS = {
   gradientFrom: '#2b1055',
   gradientTo: '#7597de',
   onboarded: false,
+  reminders: true,
   celebrated: [],
   hintSeen: false,
   timer: null,

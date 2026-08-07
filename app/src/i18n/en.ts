@@ -178,5 +178,8 @@ export const en: Dict = {
     gradientTo: 'To',
     presets: 'Ready-made combos',
     preview: 'Here is how it looks',
+    notifications: 'Notifications',
+    reminders: 'Evening reminder',
+    remindersHint: 'The bot writes in chat if a habit is not checked off',
   },
 }

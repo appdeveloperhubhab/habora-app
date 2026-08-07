@@ -196,9 +196,10 @@ export function currentUserId(): number | null {
 }
 
 /** Язык интерфейса Telegram — используется как значение по умолчанию при первом запуске. */
-export function telegramLang(): 'ru' | 'en' | null {
+export function telegramLang(): 'ru' | 'en' | 'uk' | null {
   const code = webApp?.initDataUnsafe?.user?.language_code
   if (!code) return null
+  if (code.startsWith('uk')) return 'uk'
   return code.startsWith('ru') ? 'ru' : 'en'
 }
 

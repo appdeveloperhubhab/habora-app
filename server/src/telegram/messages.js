@@ -1,8 +1,9 @@
 /**
- * Тексты бота на двух языках.
+ * Тексты бота на трёх языках.
  *
- * Язык берётся из настроек Telegram самого человека: бот пишет первым, и
- * спросить, на каком языке говорить, ему негде.
+ * Язык берётся из настроек приложения, а если человек их ещё не открывал —
+ * из настроек его Telegram: бот пишет первым, и спросить, на каком языке
+ * говорить, ему негде.
  */
 
 const TEXTS = {
@@ -82,15 +83,45 @@ const TEXTS = {
     joinGone: 'That habit is gone — it may have been deleted.',
     someoneJoined: (name, habit) => `${name} joined your habit <b>${habit}</b>`,
   },
+  uk: {
+    welcome: (name) =>
+      `Привіт, ${name}!\n\n<b>Habora — звички удвох.</b>\n\n` +
+      `• Заводьте звичку й кличте друга за посиланням\n` +
+      `• Відмічайтеся одним дотиком — кожен у себе\n` +
+      `• Бачите позначки одне одного й тримаєте серію разом\n` +
+      `• Увечері нагадаю про незроблене просто в цьому чаті\n\n` +
+      `Натисніть кнопку нижче, щоб почати.`,
+    open: 'Відкрити застосунок',
+    reminderTitle: 'Сьогодні не відмічено:',
+    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    remainingTitle: 'Залишилося:',
+    everyday: 'щодня',
+    noSchedule: 'без розкладу',
+    // «1 раз», «2 рази», «5 разів» — три формы, как и в русском, но у единицы
+    // своя, отдельная: «1 разів» звучало бы так же дико, как «1 дней».
+    timesAWeek: (n) => `${n} ${n === 1 ? 'раз' : n <= 4 ? 'рази' : 'разів'} на тиждень`,
+    markedOne: (habit) => `✅ <b>${habit}</b> — відмічено`,
+    allDone: '✅ Усе на сьогодні виконано',
+    markedToast: 'Відмічено',
+    goneToast: 'Звичку не знайдено',
+    unknown: 'Я вмію небагато: відкрити застосунок і нагадати про звички. Усе інше — всередині.',
+    joined: (habit, host) =>
+      `Ви приєдналися до звички <b>${habit}</b>${host ? ` — її веде ${host}` : ''}.\n\nВідмічайте її в себе, і побачите, як ідуть справи одне в одного.`,
+    joinedAlready: (habit) => `Ви вже берете участь у звичці <b>${habit}</b>.`,
+    joinGone: 'Звички за цим посиланням більше немає — можливо, її видалили.',
+    someoneJoined: (name, habit) => `${name} тепер з вами у звичці <b>${habit}</b>`,
+  },
 }
 
 export function texts(language) {
+  if (language?.startsWith('uk')) return TEXTS.uk
   return language?.startsWith('ru') ? TEXTS.ru : TEXTS.en
 }
 
 const WEEKDAYS = {
   ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
   en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  uk: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'],
 }
 
 /**
@@ -105,8 +136,8 @@ const WEEKDAYS = {
  * а тут продолжение строки после тире.
  */
 export function scheduleLabel(schedule, language) {
-  const ru = Boolean(language?.startsWith('ru'))
-  const t = ru ? TEXTS.ru : TEXTS.en
+  const code = language?.startsWith('uk') ? 'uk' : language?.startsWith('ru') ? 'ru' : 'en'
+  const t = TEXTS[code]
 
   // Расписание «N раз в неделю» убрано из приложения, но у привычек,
   // заведённых до этого, оно осталось в базе — и напоминание должно
@@ -116,7 +147,7 @@ export function scheduleLabel(schedule, language) {
   const days = Array.isArray(schedule?.days) ? schedule.days : []
   if (days.length === 0) return t.noSchedule
   if (days.length === 7) return t.everyday
-  return days.map((day) => WEEKDAYS[ru ? 'ru' : 'en'][day]).join(', ')
+  return days.map((day) => WEEKDAYS[code][day]).join(', ')
 }
 
 /** Экранирование для parse_mode: HTML — иначе «<» в названии привычки сломает разметку. */

@@ -106,6 +106,20 @@ button.row:active {
   font-size: var(--fs-body);
 }
 
+/* Строка с пояснением под названием: у переключателя иначе непонятно,
+   что именно он включает и куда придёт напоминание. */
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowHint {
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
 .rowValue {
   display: flex;
   align-items: center;
@@ -123,9 +137,10 @@ button.row:active {
   background: var(--surface-2);
 }
 
+/* Пункты делят ширину поровну, сколько бы их ни было: с появлением третьего
+   языка жёсткие две колонки отправили бы «English» на вторую строку. */
 .segment {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 4px;
   padding: 4px;
   border-radius: var(--r-pill);
@@ -133,11 +148,16 @@ button.row:active {
 }
 
 .segmentItem {
-  padding: var(--sp-3);
+  flex: 1;
+  min-width: 0;
+  /* Отступы по бокам меньше: у трёх пунктов на узком экране на «Українська»
+     иначе не остаётся места, и слово переносится по слогам. */
+  padding: var(--sp-3) var(--sp-1);
   border-radius: var(--r-pill);
   font-size: var(--fs-label);
   font-weight: var(--fw-medium);
   color: var(--text-dim);
+  white-space: nowrap;
   transition: background var(--t-mid) var(--ease-soft), color var(--t-mid) linear;
 }
 

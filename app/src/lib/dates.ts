@@ -117,29 +117,48 @@ const MONTHS_EN = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
+const MONTHS_UK_NOMINATIVE = [
+  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
+]
 const MONTHS_SHORT_RU = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
 const MONTHS_SHORT_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTHS_SHORT_UK = ['Січ', 'Лют', 'Бер', 'Кві', 'Тра', 'Чер', 'Лип', 'Сер', 'Вер', 'Жов', 'Лис', 'Гру']
 
 const WEEKDAYS_SHORT_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const WEEKDAYS_SHORT_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const WEEKDAYS_SHORT_UK = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 const WEEKDAYS_MIN_RU = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
 const WEEKDAYS_MIN_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const WEEKDAYS_MIN_UK = ['П', 'В', 'С', 'Ч', 'П', 'С', 'Н']
 
-/** Заголовок календаря: «Июль 2026» / «July 2026». */
+/**
+ * Нужный язык из трёх наборов.
+ *
+ * Английский стоит запасным: языков стало три, и цепочка тернарных операторов
+ * в каждой из четырёх функций ниже читалась бы хуже, чем один разбор здесь.
+ */
+function pick<T>(lang: Lang, ru: T, en: T, uk: T): T {
+  if (lang === 'ru') return ru
+  if (lang === 'uk') return uk
+  return en
+}
+
+/** Заголовок календаря: «Июль 2026» / «July 2026» / «Липень 2026». */
 export function formatMonthYear(iso: IsoDate, lang: Lang): string {
   const date = fromIso(iso)
-  const months = lang === 'ru' ? MONTHS_RU_NOMINATIVE : MONTHS_EN
+  const months = pick(lang, MONTHS_RU_NOMINATIVE, MONTHS_EN, MONTHS_UK_NOMINATIVE)
   return `${months[date.getMonth()]} ${date.getFullYear()}`
 }
 
 export function monthShort(monthIndex: number, lang: Lang): string {
-  return (lang === 'ru' ? MONTHS_SHORT_RU : MONTHS_SHORT_EN)[monthIndex]
+  return pick(lang, MONTHS_SHORT_RU, MONTHS_SHORT_EN, MONTHS_SHORT_UK)[monthIndex]
 }
 
 export function weekdayShort(day: Weekday, lang: Lang): string {
-  return (lang === 'ru' ? WEEKDAYS_SHORT_RU : WEEKDAYS_SHORT_EN)[day]
+  return pick(lang, WEEKDAYS_SHORT_RU, WEEKDAYS_SHORT_EN, WEEKDAYS_SHORT_UK)[day]
 }
 
 export function weekdayMin(day: Weekday, lang: Lang): string {
-  return (lang === 'ru' ? WEEKDAYS_MIN_RU : WEEKDAYS_MIN_EN)[day]
+  return pick(lang, WEEKDAYS_MIN_RU, WEEKDAYS_MIN_EN, WEEKDAYS_MIN_UK)[day]
 }

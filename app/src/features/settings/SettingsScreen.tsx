@@ -3,8 +3,15 @@ import { useNav } from '../../shell/navigation'
 import { dict } from '../../i18n'
 import { hapticSelect } from '../../lib/haptics'
 import { Icon } from '../../ui/Icon'
+import { Toggle } from '../../ui/Toggle'
 import type { Lang } from '../../types'
 import styles from './SettingsScreen.module.css'
+
+const LANGUAGES: [Lang, string][] = [
+  ['uk', 'Українська'],
+  ['ru', 'Русский'],
+  ['en', 'English'],
+]
 
 /**
  * Настройки — строгий список без палитр и предпросмотров внутри.
@@ -50,19 +57,41 @@ export function SettingsScreen({ onBack }: { onBack(): void }) {
 
         <section className={styles.group}>
           <h3 className={styles.groupTitle}>{t.settings.language}</h3>
+          {/* Название языка всегда на нём самом: человек, открывший приложение
+              не на своём языке, ищет глазами знакомое слово, а не перевод. */}
           <div className={styles.segment}>
-            <button
-              className={settings.lang === 'ru' ? `${styles.segmentItem} ${styles.segmentActive}` : styles.segmentItem}
-              onClick={() => setLang('ru')}
-            >
-              Русский
-            </button>
-            <button
-              className={settings.lang === 'en' ? `${styles.segmentItem} ${styles.segmentActive}` : styles.segmentItem}
-              onClick={() => setLang('en')}
-            >
-              English
-            </button>
+            {LANGUAGES.map(([code, label]) => (
+              <button
+                key={code}
+                className={
+                  settings.lang === code ? `${styles.segmentItem} ${styles.segmentActive}` : styles.segmentItem
+                }
+                onClick={() => setLang(code)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.group}>
+          <h3 className={styles.groupTitle}>{t.settings.notifications}</h3>
+          <div className={styles.rows}>
+            <div className={styles.row}>
+              <span className={styles.rowText}>
+                <span className={styles.rowLabel}>{t.settings.reminders}</span>
+                <span className={styles.rowHint}>{t.settings.remindersHint}</span>
+              </span>
+              <Toggle
+                checked={settings.reminders}
+                color={settings.accentColor}
+                label={t.settings.reminders}
+                onChange={(reminders) => {
+                  hapticSelect()
+                  void saveSettings({ reminders })
+                }}
+              />
+            </div>
           </div>
         </section>
 

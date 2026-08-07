@@ -113,13 +113,31 @@ export function reminderMessage(habits, language, webAppUrl, date) {
  * вечер.
  */
 export async function runReminderTick(webAppUrl, now = Date.now()) {
+  /*
+   * Настройки приходят вместе с человеком одним запросом. Спрашивать их
+   * отдельно для каждого значило бы столько же походов в базу, сколько людей,
+   * — и всё это каждые пять минут, ради того чтобы почти всегда узнать, что
+   * сейчас не их час.
+   */
   const { rows } = await db.execute(
-    'SELECT user_id, language, tz_offset, reminded_on FROM users WHERE chat_started = 1',
+    `SELECT u.user_id, u.language, u.tz_offset, u.reminded_on, s.data AS settings
+       FROM users u
+       LEFT JOIN settings s ON s.user_id = u.user_id
+      WHERE u.chat_started = 1`,
   )
 
-  const result = { checked: rows.length, sent: 0, skipped: 0 }
+  const result = { checked: rows.length, sent: 0, off: 0, skipped: 0 }
 
   for (const user of rows) {
+    const settings = parseSettings(user.settings)
+
+    // Выключено в настройках — молчим. Проверка стоит до часа и до отметки
+    // о рассылке: ни того, ни другого для молчания знать не нужно.
+    if (settings.reminders === false) {
+      result.off++
+      continue
+    }
+
     const { date, hour, weekday } = localNow(user.tz_offset, now)
     if (hour !== REMINDER_HOUR || user.reminded_on === date) {
       result.skipped++
@@ -134,10 +152,27 @@ export async function runReminderTick(webAppUrl, now = Date.now()) {
     const habits = await pendingHabits(user.user_id, date, weekday)
     if (habits.length === 0) continue
 
-    const { text, buttons } = reminderMessage(habits, user.language, webAppUrl, date)
+    /*
+     * Язык напоминания — тот, что человек выбрал в приложении, и только если
+     * не выбирал — язык его Telegram. Иначе выбор языка в настройках означал
+     * бы «переведи экраны, но пиши мне по-прежнему на другом».
+     */
+    const language = settings.lang ?? user.language
+
+    const { text, buttons } = reminderMessage(habits, language, webAppUrl, date)
     await sendMessage(user.user_id, text, buttons)
     result.sent++
   }
 
   return result
+}
+
+/** Настройки человека из хранилища; при любой поломке — пустые. */
+function parseSettings(raw) {
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
 }

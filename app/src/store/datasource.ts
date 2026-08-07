@@ -63,6 +63,10 @@ export const DEFAULT_SETTINGS: Settings = {
   gradientFrom: '#2b1055',
   gradientTo: '#7597de',
   onboarded: false,
+  // По умолчанию включены: напоминание — половина смысла бота, и человек,
+  // который его не хочет, скорее выключит одну настройку, чем тот, кто хочет,
+  // догадается её найти и включить.
+  reminders: true,
   celebrated: [],
   hintSeen: false,
   timer: null,
