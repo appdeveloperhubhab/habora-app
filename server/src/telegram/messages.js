@@ -7,8 +7,22 @@
 
 const TEXTS = {
   ru: {
+    /*
+     * Приветствие идёт подписью под картинкой, поэтому оно короткое и
+     * списком: подпись Telegram ограничивает 1024 символами, а длинную
+     * простыню под фотографией всё равно никто не читает.
+     *
+     * Совместные привычки стоят первым пунктом намеренно. Это главное отличие
+     * приложения, а раньше о нём в приветствии не было ни слова — человек
+     * узнавал о такой возможности, только добравшись до вкладки «Друзья».
+     */
     welcome: (name) =>
-      `Привет, ${name}!\n\nHabora — трекер привычек и задач. Отмечайте выполнение одним касанием, следите за серией и смотрите, как заполняется ваш год.\n\nНажмите кнопку ниже, чтобы начать.`,
+      `Привет, ${name}!\n\n<b>Habora — привычки вдвоём.</b>\n\n` +
+      `• Заводите привычку и зовите друга по ссылке\n` +
+      `• Отмечайтесь одним касанием — каждый у себя\n` +
+      `• Видите отметки друг друга и держите серию вместе\n` +
+      `• Вечером напомню о несделанном прямо в этом чате\n\n` +
+      `Нажмите кнопку ниже, чтобы начать.`,
     open: 'Открыть приложение',
     reminderOne: (habit) => `Сегодня осталась одна привычка: <b>${habit}</b>`,
     reminderMany: (count) => `Сегодня осталось непройденных привычек: <b>${count}</b>`,
@@ -31,7 +45,12 @@ const TEXTS = {
   },
   en: {
     welcome: (name) =>
-      `Hi, ${name}!\n\nHabora is a habit and task tracker. Mark things done with a single tap, keep your streak alive and watch your year fill up.\n\nTap the button below to start.`,
+      `Hi, ${name}!\n\n<b>Habora — habits you keep together.</b>\n\n` +
+      `• Start a habit and invite a friend by link\n` +
+      `• Check off with one tap — each on your own side\n` +
+      `• See each other's marks and keep the streak together\n` +
+      `• In the evening I will remind you here about what is left\n\n` +
+      `Tap the button below to start.`,
     open: 'Open app',
     reminderOne: (habit) => `One habit left today: <b>${habit}</b>`,
     reminderMany: (count) => `Habits left today: <b>${count}</b>`,

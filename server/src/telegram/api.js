@@ -79,6 +79,24 @@ export function sendMessage(chatId, text, replyMarkup) {
   })
 }
 
+/**
+ * Сообщение с картинкой. Подпись под ней — тот же HTML, что и в обычном
+ * сообщении, но не длиннее 1024 символов: это ограничение самого Telegram.
+ *
+ * Картинка передаётся ссылкой, а не файлом: Telegram скачивает её сам и потом
+ * держит у себя, так что за первой отправкой все следующие идут без обращения
+ * к нашему хостингу.
+ */
+export function sendPhoto(chatId, photoUrl, caption, replyMarkup) {
+  return call('sendPhoto', {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption,
+    parse_mode: 'HTML',
+    ...(replyMarkup ? { reply_markup: { inline_keyboard: replyMarkup } } : {}),
+  })
+}
+
 export function editMessageText(chatId, messageId, text, replyMarkup) {
   return call('editMessageText', {
     chat_id: chatId,

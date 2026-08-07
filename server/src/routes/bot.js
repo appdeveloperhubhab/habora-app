@@ -1,5 +1,12 @@
 import { db } from '../db.js'
-import { answerCallback, editMessageText, sendMessage, webAppButton, webhookSecret } from '../telegram/api.js'
+import {
+  answerCallback,
+  editMessageText,
+  sendMessage,
+  sendPhoto,
+  webAppButton,
+  webhookSecret,
+} from '../telegram/api.js'
 import { escapeHtml, texts } from '../telegram/messages.js'
 import { pendingHabits, runReminderTick, weekdayOf } from '../telegram/reminders.js'
 
@@ -81,11 +88,36 @@ async function handleMessage(message, webAppUrl) {
       return
     }
 
-    await sendMessage(from.id, t.welcome(escapeHtml(from.first_name ?? '')), webAppButton(t.open, webAppUrl))
+    await sendWelcome(from, t, webAppUrl)
     return
   }
 
   await sendMessage(from.id, t.unknown, webAppButton(t.open, webAppUrl))
+}
+
+/**
+ * Приветствие после «Старт»: картинка с подписью и кнопкой.
+ *
+ * Картинка лежит рядом с самим приложением, поэтому её адрес выводится из
+ * адреса приложения — отдельной настройки не нужно, а значит нет и места,
+ * где её можно забыть задать.
+ *
+ * Если картинку отправить не вышло — шлём то же приветствие текстом. Причин
+ * может быть две: приложение ещё не выложено с новой картинкой, или Telegram
+ * не смог её скачать. И в том, и в другом случае человек, впервые открывший
+ * бота, должен получить приветствие, а не молчание.
+ */
+async function sendWelcome(from, t, webAppUrl) {
+  const caption = t.welcome(escapeHtml(from.first_name ?? ''))
+  const buttons = webAppButton(t.open, webAppUrl)
+
+  if (webAppUrl) {
+    const photo = `${webAppUrl.replace(/\/+$/, '')}/welcome.png`
+    const sent = await sendPhoto(from.id, photo, caption, buttons)
+    if (sent?.ok) return
+  }
+
+  await sendMessage(from.id, caption, buttons)
 }
 
 /**
