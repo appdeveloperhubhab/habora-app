@@ -4,6 +4,7 @@ import { telegramLang } from '../lib/telegram'
 import { detectMilestone, type Milestone } from '../lib/milestones'
 import { DEFAULT_SETTINGS, type DataSource } from './datasource'
 import { pickDataSource } from './pickDataSource'
+import { readSnapshot, writeSnapshot } from './snapshot'
 import { StoreContext, type StoreValue } from './context'
 
 /**
@@ -27,7 +28,15 @@ interface Props {
 export function StoreProvider({ children, source }: Props) {
   const dataSource = useRef(source ?? pickDataSource()).current
 
-  const [ready, setReady] = useState(false)
+  /*
+   * Данные с прошлого запуска. Читаются один раз, до первой отрисовки, и
+   * подставляются как начальное состояние — поэтому список привычек виден
+   * сразу, ещё до того как сервер ответит. Сервер спрашивается следом, и его
+   * ответ снимок заменяет.
+   */
+  const cached = useRef(dataSource.remote ? readSnapshot() : null).current
+
+  const [ready, setReady] = useState(cached !== null)
   /**
    * Сорвалась ли загрузка. Бесплатный сервер засыпает без посетителей и
    * просыпается до полуминуты — всё это время он не отвечает вовсе. Молчащий
@@ -37,9 +46,9 @@ export function StoreProvider({ children, source }: Props) {
   const [failed, setFailed] = useState(false)
   /** Счётчик попыток: его смена перезапускает загрузку. */
   const [attempt, setAttempt] = useState(0)
-  const [habits, setHabits] = useState<Habit[]>([])
-  const [entries, setEntries] = useState<Entry[]>([])
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
+  const [habits, setHabits] = useState<Habit[]>(cached?.habits ?? [])
+  const [entries, setEntries] = useState<Entry[]>(cached?.entries ?? [])
+  const [settings, setSettings] = useState<Settings>(cached?.settings ?? DEFAULT_SETTINGS)
   const [friends, setFriends] = useState<Friend[]>([])
   const [celebration, setCelebration] = useState<Milestone | null>(null)
 
@@ -74,7 +83,13 @@ export function StoreProvider({ children, source }: Props) {
         setFailed(false)
         setReady(true)
       } catch {
-        if (!cancelled) setFailed(true)
+        /*
+         * Сервер не ответил. Если на экране уже показан снимок с прошлого
+         * запуска — оставляем его: подменять работающее приложение сообщением
+         * об ошибке значит отнять у человека то, что у него только что было.
+         * Экран неудачи нужен только когда показывать нечего.
+         */
+        if (!cancelled && cached === null) setFailed(true)
       }
     }
 
@@ -89,7 +104,21 @@ export function StoreProvider({ children, source }: Props) {
     return () => {
       cancelled = true
     }
-  }, [dataSource, attempt])
+  }, [dataSource, attempt, cached])
+
+  /*
+   * Снимок обновляется при любом изменении данных, а не только после загрузки
+   * с сервера. Отметки применяются сразу, не дожидаясь записи, — и в снимок
+   * они должны попадать так же: иначе поставленная галочка пропала бы при
+   * следующем открытии, если запись на сервер ещё не прошла.
+   *
+   * До готовности не пишем: там пустое начальное состояние, и оно затёрло бы
+   * годный снимок ещё до того, как его успели показать.
+   */
+  useEffect(() => {
+    if (!ready || !dataSource.remote) return
+    writeSnapshot(habits, entries, settings)
+  }, [ready, dataSource, habits, entries, settings])
 
   const doneKeys = useMemo(() => new Set(entries.map((e) => entryKey(e.habitId, e.date))), [entries])
 

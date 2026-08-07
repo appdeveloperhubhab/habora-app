@@ -12,6 +12,14 @@ import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../typ
  * не меняет ни одной сигнатуры.
  */
 export interface DataSource {
+  /**
+   * Данные лежат на сервере, а не в самом телефоне.
+   *
+   * От этого зависит, запоминать ли их между запусками: локальное хранилище
+   * и так отвечает мгновенно, и копия копии ему не нужна.
+   */
+  readonly remote?: boolean
+
   getHabits(): Promise<Habit[]>
   createHabit(input: HabitInput): Promise<Habit>
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<Habit>

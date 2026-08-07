@@ -12,6 +12,8 @@ import { normalizeSettings, type DataSource } from './datasource'
  * отдавать. Ни логинов, ни паролей: аккаунт — это аккаунт Telegram.
  */
 export class ApiDataSource implements DataSource {
+  readonly remote = true
+
   private readonly baseUrl: string
 
   constructor(baseUrl: string) {
