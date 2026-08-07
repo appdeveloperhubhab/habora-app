@@ -8,7 +8,7 @@ import {
   webhookSecret,
 } from '../telegram/api.js'
 import { escapeHtml, texts } from '../telegram/messages.js'
-import { pendingHabits, runReminderTick, weekdayOf } from '../telegram/reminders.js'
+import { habitLines, pendingHabits, runReminderTick, weekdayOf } from '../telegram/reminders.js'
 
 /**
  * Приём событий из Telegram и будильник рассылки.
@@ -241,6 +241,12 @@ async function handleCallback(query, webAppUrl) {
   const buttons = left.map((row) => [{ text: `✓ ${row.name}`, callback_data: `d:${row.id}:${date}` }])
   buttons.push([{ text: t.open, web_app: { url: webAppUrl } }])
 
-  const text = left.length === 0 ? t.allDone : t.markedOne(escapeHtml(habit.name))
+  // Что отмечено — и что после этого осталось, с тем же расписанием, что и в
+  // самом напоминании: список под кнопками не должен расходиться с кнопками.
+  const text =
+    left.length === 0
+      ? t.allDone
+      : `${t.markedOne(escapeHtml(habit.name))}\n\n${t.remainingTitle}\n${habitLines(left, query.from?.language_code)}`
+
   await editMessageText(message.chat.id, message.message_id, text, left.length === 0 ? [] : buttons)
 }

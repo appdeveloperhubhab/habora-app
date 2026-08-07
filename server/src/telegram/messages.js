@@ -24,8 +24,21 @@ const TEXTS = {
       `• Вечером напомню о несделанном прямо в этом чате\n\n` +
       `Нажмите кнопку ниже, чтобы начать.`,
     open: 'Открыть приложение',
-    reminderOne: (habit) => `Сегодня осталась одна привычка: <b>${habit}</b>`,
-    reminderMany: (count) => `Сегодня осталось непройденных привычек: <b>${count}</b>`,
+    /*
+     * Заголовок один на любое число привычек. Раньше их было два — про одну
+     * и про несколько, — и во втором называлось только количество: «осталось
+     * непройденных привычек: 3». Какие именно, приходилось угадывать по
+     * кнопкам под сообщением. Теперь заголовок общий, а названия и расписание
+     * идут списком под ним.
+     */
+    reminderTitle: 'Сегодня не отмечено:',
+    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    remainingTitle: 'Осталось:',
+    everyday: 'каждый день',
+    noSchedule: 'без расписания',
+    // «1 раз», «2 раза», «5 раз». Расписание бывает только от 1 до 7,
+    // поэтому обходимся без разбора сотен и десятков.
+    timesAWeek: (n) => `${n} ${n >= 2 && n <= 4 ? 'раза' : 'раз'} в неделю`,
     markedOne: (habit) => `✅ <b>${habit}</b> — отмечено`,
     allDone: '✅ Всё на сегодня выполнено',
     markedToast: 'Отмечено',
@@ -52,8 +65,12 @@ const TEXTS = {
       `• In the evening I will remind you here about what is left\n\n` +
       `Tap the button below to start.`,
     open: 'Open app',
-    reminderOne: (habit) => `One habit left today: <b>${habit}</b>`,
-    reminderMany: (count) => `Habits left today: <b>${count}</b>`,
+    reminderTitle: 'Not checked off today:',
+    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    remainingTitle: 'Still left:',
+    everyday: 'every day',
+    noSchedule: 'no schedule',
+    timesAWeek: (n) => `${n}× a week`,
     markedOne: (habit) => `✅ <b>${habit}</b> — done`,
     allDone: '✅ Everything done for today',
     markedToast: 'Done',
@@ -69,6 +86,37 @@ const TEXTS = {
 
 export function texts(language) {
   return language?.startsWith('ru') ? TEXTS.ru : TEXTS.en
+}
+
+const WEEKDAYS = {
+  ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+}
+
+/**
+ * Когда привычку положено выполнять: «каждый день», «Пн, Ср, Пт».
+ *
+ * Формулировки намеренно те же, что под названием привычки в приложении
+ * (см. `scheduleLabel` в app/src/features/habits): человек читает напоминание
+ * и карточку с разницей в секунду, и одно и то же расписание, названное
+ * по-разному, заставило бы сверять их вместо того, чтобы просто узнать.
+ *
+ * Разница одна — здесь со строчной буквы: в приложении это отдельная подпись,
+ * а тут продолжение строки после тире.
+ */
+export function scheduleLabel(schedule, language) {
+  const ru = Boolean(language?.startsWith('ru'))
+  const t = ru ? TEXTS.ru : TEXTS.en
+
+  // Расписание «N раз в неделю» убрано из приложения, но у привычек,
+  // заведённых до этого, оно осталось в базе — и напоминание должно
+  // называть его правильно, а не показывать пустое место.
+  if (schedule?.type === 'frequency') return t.timesAWeek(Number(schedule.timesPerWeek) || 1)
+
+  const days = Array.isArray(schedule?.days) ? schedule.days : []
+  if (days.length === 0) return t.noSchedule
+  if (days.length === 7) return t.everyday
+  return days.map((day) => WEEKDAYS[ru ? 'ru' : 'en'][day]).join(', ')
 }
 
 /** Экранирование для parse_mode: HTML — иначе «<» в названии привычки сломает разметку. */

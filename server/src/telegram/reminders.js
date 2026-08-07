@@ -1,6 +1,6 @@
 import { db } from '../db.js'
 import { sendMessage } from './api.js'
-import { escapeHtml, texts } from './messages.js'
+import { escapeHtml, scheduleLabel, texts } from './messages.js'
 
 /**
  * Ежедневное напоминание о невыполненных привычках.
@@ -69,15 +69,31 @@ export async function pendingHabits(userId, date, weekday) {
   })
 
   return rows
-    .filter((row) => isScheduled(weekday, JSON.parse(row.schedule)))
-    .map((row) => ({ id: row.id, name: row.name }))
+    .map((row) => ({ id: row.id, name: row.name, schedule: JSON.parse(row.schedule) }))
+    // Расписание нужно и дальше — по нему в напоминании видно, в какие дни
+    // привычку положено выполнять, — поэтому оно едет с привычкой, а не
+    // выбрасывается сразу после отбора.
+    .filter((habit) => isScheduled(weekday, habit.schedule))
+}
+
+/**
+ * Список привычек строками: название и когда его положено выполнять.
+ *
+ * Расписание рядом с названием — ответ на вопрос «а почему ты мне об этом
+ * пишешь именно сегодня». Без него привычка «по Пн, Ср, Пт» выглядела бы в
+ * четверг ошибкой напоминания.
+ */
+export function habitLines(habits, language) {
+  const t = texts(language)
+  return habits
+    .map((habit) => t.reminderItem(escapeHtml(habit.name), scheduleLabel(habit.schedule, language)))
+    .join('\n')
 }
 
 /** Текст и кнопки напоминания. */
 export function reminderMessage(habits, language, webAppUrl, date) {
   const t = texts(language)
-  const text =
-    habits.length === 1 ? t.reminderOne(escapeHtml(habits[0].name)) : t.reminderMany(habits.length)
+  const text = `${t.reminderTitle}\n\n${habitLines(habits, language)}`
 
   const buttons = habits.slice(0, MAX_BUTTONS).map((habit) => [
     // Отметить прямо из чата: секунда против «разблокировать телефон, найти
