@@ -1,4 +1,5 @@
 import { db } from '../db.js'
+import { visitSchema } from '../schemas.js'
 
 /**
  * Учёт заходов в приложение.
@@ -14,7 +15,7 @@ import { db } from '../db.js'
  * по имени.
  */
 export async function userRoutes(app) {
-  app.post('/api/visit', async (request) => {
+  app.post('/api/visit', { schema: visitSchema }, async (request) => {
     const now = new Date().toISOString()
     const user = request.telegramUser ?? {}
 

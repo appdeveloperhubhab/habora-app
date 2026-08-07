@@ -1,5 +1,6 @@
 import { db } from '../db.js'
 import { DEFAULT_SETTINGS } from '../defaults.js'
+import { settingsSchema } from '../schemas.js'
 
 /** Настройки приложения — одна запись на человека, целиком в JSON. */
 export async function settingsRoutes(app) {
@@ -13,7 +14,7 @@ export async function settingsRoutes(app) {
     return { ...DEFAULT_SETTINGS, ...(rows[0] ? JSON.parse(rows[0].data) : {}) }
   })
 
-  app.patch('/api/settings', async (request) => {
+  app.patch('/api/settings', { schema: settingsSchema }, async (request) => {
     const { rows } = await db.execute({
       sql: 'SELECT data FROM settings WHERE user_id = ?',
       args: [request.userId],

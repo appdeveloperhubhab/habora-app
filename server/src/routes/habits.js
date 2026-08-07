@@ -1,6 +1,14 @@
 import { randomUUID } from 'node:crypto'
 import { db, rowToHabit } from '../db.js'
 import { botUsername } from '../telegram/api.js'
+import {
+  createHabitSchema,
+  entriesQuerySchema,
+  habitsQuerySchema,
+  reorderSchema,
+  toggleEntrySchema,
+  updateHabitSchema,
+} from '../schemas.js'
 
 /**
  * Привычки, участники и отметки выполнения.
@@ -73,7 +81,7 @@ async function membersOf(habitIds, date) {
 }
 
 export async function habitRoutes(app) {
-  app.get('/api/habits', async (request) => {
+  app.get('/api/habits', { schema: habitsQuerySchema }, async (request) => {
     // Порядок берётся из участия, а не из привычки: у каждого он свой.
     const { rows } = await db.execute({
       sql: `SELECT h.*, m.sort_order AS sort_order
@@ -94,9 +102,8 @@ export async function habitRoutes(app) {
     }))
   })
 
-  app.post('/api/habits', async (request, reply) => {
-    const input = request.body ?? {}
-    if (!input.name?.trim()) return reply.code(400).send({ error: 'Название обязательно' })
+  app.post('/api/habits', { schema: createHabitSchema }, async (request) => {
+    const input = request.body
 
     // Новая привычка встаёт в конец списка — того, который видит сам создатель.
     const { rows } = await db.execute({
@@ -153,7 +160,7 @@ export async function habitRoutes(app) {
     return { ...habit, ownerId: request.userId, members: [] }
   })
 
-  app.patch('/api/habits/:id', async (request, reply) => {
+  app.patch('/api/habits/:id', { schema: updateHabitSchema }, async (request, reply) => {
     // Менять привычку вправе только тот, кто её завёл: остальные её выполняют.
     const existing = await ownHabit(request.params.id, request.userId)
     if (!existing) return reply.code(404).send({ error: 'Привычка не найдена' })
@@ -257,8 +264,8 @@ export async function habitRoutes(app) {
     return { ok: true, habitId: request.params.id, name: rows[0].name }
   })
 
-  app.post('/api/habits/reorder', async (request) => {
-    const ids = request.body?.ids ?? []
+  app.post('/api/habits/reorder', { schema: reorderSchema }, async (request) => {
+    const ids = request.body.ids
 
     // Весь новый порядок применяется одной транзакцией: иначе сбой на середине
     // оставил бы список наполовину переставленным.
@@ -281,7 +288,7 @@ export async function habitRoutes(app) {
     return rows.map(rowToHabit)
   })
 
-  app.get('/api/entries', async (request) => {
+  app.get('/api/entries', { schema: entriesQuerySchema }, async (request) => {
     const { from, to } = request.query ?? {}
 
     const { rows } =
@@ -298,9 +305,8 @@ export async function habitRoutes(app) {
     return rows.map((row) => ({ habitId: row.habit_id, date: row.date }))
   })
 
-  app.post('/api/entries/toggle', async (request, reply) => {
-    const { habitId, date } = request.body ?? {}
-    if (!habitId || !date) return reply.code(400).send({ error: 'Нужны habitId и date' })
+  app.post('/api/entries/toggle', { schema: toggleEntrySchema }, async (request, reply) => {
+    const { habitId, date } = request.body
 
     // Отмечать вправе любой участник, а не только создатель.
     if (!(await isMember(habitId, request.userId))) {
