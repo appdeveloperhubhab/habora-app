@@ -35,6 +35,15 @@ const TEXTS = {
     reminderTitle: 'Сегодня не отмечено:',
     reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
     remainingTitle: 'Осталось:',
+    /*
+     * Назначенное время стоит в самом напоминании: будильник снаружи стучится
+     * не по секундам, и сообщение приходит на несколько минут позже. Без него
+     * опоздание выглядело бы как сбитое время, а не как задержка доставки.
+     */
+    timedReminder: (habit, when) => `⏰ Пора: <b>${habit}</b>
+
+Напоминание на ${when}.`,
+    markButton: '✓ Отметить',
     everyday: 'каждый день',
     noSchedule: 'без расписания',
     // «1 раз», «2 раза», «5 раз». Расписание бывает только от 1 до 7,
@@ -69,6 +78,10 @@ const TEXTS = {
     reminderTitle: 'Not checked off today:',
     reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
     remainingTitle: 'Still left:',
+    timedReminder: (habit, when) => `⏰ Time for: <b>${habit}</b>
+
+Reminder set for ${when}.`,
+    markButton: '✓ Mark done',
     everyday: 'every day',
     noSchedule: 'no schedule',
     timesAWeek: (n) => `${n}× a week`,
@@ -95,6 +108,10 @@ const TEXTS = {
     reminderTitle: 'Сьогодні не відмічено:',
     reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
     remainingTitle: 'Залишилося:',
+    timedReminder: (habit, when) => `⏰ Час: <b>${habit}</b>
+
+Нагадування на ${when}.`,
+    markButton: '✓ Відмітити',
     everyday: 'щодня',
     noSchedule: 'без розкладу',
     // «1 раз», «2 рази», «5 разів» — три формы, как и в русском, но у единицы

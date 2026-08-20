@@ -18,6 +18,7 @@ export type IconName =
   | 'search'
   | 'flame'
   | 'play'
+  | 'bell'
   | 'habits'
   | 'friends'
   | 'chevronLeft'
@@ -62,6 +63,12 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   play: <path d="M8 5.5v13l11-6.5z" />,
+  bell: (
+    <>
+      <path d="M18 9a6 6 0 1 0-12 0c0 5.4-2 6.8-2 6.8h16S18 14.4 18 9z" />
+      <path d="M13.7 19a2 2 0 0 1-3.4 0" />
+    </>
+  ),
   flame: (
     <>
       <path d="M12 3s5 4.2 5 9a5 5 0 0 1-10 0c0-2 1-3.6 2-4.7 0 1.6.8 2.6 1.7 2.6.9 0 1.5-.9 1.3-2.4-.2-1.6-.6-3-.0-4.5z" />

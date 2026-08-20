@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { Milestone } from '../lib/milestones'
 import type { Dict } from '../i18n'
+import { milestoneRank } from '../lib/milestones'
 import { hapticSuccess } from '../lib/haptics'
 import styles from './Celebration.module.css'
 
@@ -16,6 +17,26 @@ import styles from './Celebration.module.css'
  */
 
 const PARTICLE_COUNT = 28
+
+/**
+ * Поздравление для достигнутого дня.
+ *
+ * У памятных вех оно своё, у остальных берётся из набора по кругу — так
+ * четырнадцатый день и двадцать первый не поздравляют одними и теми же
+ * словами. Фраза выводится из самого числа дней, а не выбирается случайно:
+ * случайная менялась бы при каждой перерисовке окна.
+ */
+function praiseFor(days: number, t: Dict): string {
+  const special: Record<number, string> = {
+    3: t.celebration.praise3,
+    7: t.celebration.praise7,
+    30: t.celebration.praise30,
+    100: t.celebration.praise100,
+    365: t.celebration.praise365,
+  }
+
+  return special[days] ?? t.celebration.praise[milestoneRank(days) % t.celebration.praise.length]
+}
 
 export function Celebration({
   milestone,
@@ -40,7 +61,11 @@ export function Celebration({
     milestone.kind === 'first'
       ? { value: null, title: t.celebration.firstTitle, text: t.celebration.firstText }
       : milestone.kind === 'habit'
-        ? { value: milestone.value, title: t.celebration.habitTitle, text: t.celebration.habitText }
+        ? {
+            value: milestone.value,
+            title: t.celebration.habitTitle,
+            text: praiseFor(milestone.value, t),
+          }
         : { value: milestone.value, title: t.celebration.appTitle, text: t.celebration.appText }
 
   return (

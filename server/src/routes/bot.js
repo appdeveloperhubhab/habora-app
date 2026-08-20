@@ -193,13 +193,17 @@ async function handleJoin(from, habitId, webAppUrl) {
 
 /**
  * Нажатие кнопки под напоминанием: отметить привычку, не открывая приложение.
- * Данные кнопки — `d:<id привычки>:<дата>`.
+ *
+ * Данные кнопки — `<вид>:<id привычки>:<дата>`, где вид говорит, под каким
+ * напоминанием стояла кнопка: `d` — под вечерним списком, `t` — под
+ * напоминанием о назначенном часе. От него зависит, во что превратится
+ * сообщение после нажатия.
  */
 async function handleCallback(query, webAppUrl) {
   const t = texts(query.from?.language_code)
   const [kind, habitId, date] = String(query.data ?? '').split(':')
 
-  if (kind !== 'd' || !habitId || !date) {
+  if ((kind !== 'd' && kind !== 't') || !habitId || !date) {
     await answerCallback(query.id)
     return
   }
@@ -231,6 +235,16 @@ async function handleCallback(query, webAppUrl) {
 
   const message = query.message
   if (!message) return
+
+  /*
+   * Напоминание о назначенном часе — про одну привычку, и остальные в нём ни
+   * при чём. Там, где вечернее показывает, что ещё осталось, это просто
+   * отмечается: список несделанного в ответ на «сделал» выглядел бы упрёком.
+   */
+  if (kind === 't') {
+    await editMessageText(message.chat.id, message.message_id, t.markedOne(escapeHtml(habit.name)), [])
+    return
+  }
 
   // Тот же отбор, что и в самом напоминании: привычки не на сегодня в списке
   // оставшихся не место — их и не предлагали отмечать.

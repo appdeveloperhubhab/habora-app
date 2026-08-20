@@ -122,6 +122,7 @@ export async function habitRoutes(app) {
       streakGoal: input.streakGoal ?? null,
       tinted: input.tinted ?? true,
       durationSec: input.durationSec ?? null,
+      remindAt: input.remindAt ?? null,
       sortOrder: next,
       createdAt: new Date().toISOString(),
     }
@@ -130,8 +131,8 @@ export async function habitRoutes(app) {
       [
         {
           sql: `INSERT INTO habits (id, user_id, name, description, color, icon, schedule,
-                                    streak_goal, tinted, duration_sec, sort_order, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    streak_goal, tinted, duration_sec, remind_at, sort_order, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
             habit.id,
             request.userId,
@@ -143,6 +144,7 @@ export async function habitRoutes(app) {
             habit.streakGoal,
             habit.tinted ? 1 : 0,
             habit.durationSec,
+            habit.remindAt,
             habit.sortOrder,
             habit.createdAt,
           ],
@@ -170,7 +172,7 @@ export async function habitRoutes(app) {
     await db.execute({
       sql: `UPDATE habits
               SET name = ?, description = ?, color = ?, icon = ?, schedule = ?,
-                  streak_goal = ?, tinted = ?, duration_sec = ?
+                  streak_goal = ?, tinted = ?, duration_sec = ?, remind_at = ?
             WHERE id = ? AND user_id = ?`,
       args: [
         merged.name,
@@ -181,10 +183,25 @@ export async function habitRoutes(app) {
         merged.streakGoal,
         merged.tinted ? 1 : 0,
         merged.durationSec,
+        merged.remindAt,
         request.params.id,
         request.userId,
       ],
     })
+
+    /*
+     * Переставленное время начинает действовать сегодня же.
+     *
+     * Отметка о сегодняшней отправке снимается у всех участников: без этого
+     * человек, уже получивший напоминание в девять, не дождался бы нового в
+     * шесть — сервер считал бы, что на сегодня всё отправлено.
+     */
+    if (merged.remindAt !== existing.remind_at) {
+      await db.execute({
+        sql: 'UPDATE habit_members SET reminded_on = NULL WHERE habit_id = ?',
+        args: [request.params.id],
+      })
+    }
 
     return merged
   })

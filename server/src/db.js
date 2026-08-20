@@ -38,6 +38,8 @@ await db.executeMultiple(`
     streak_goal  INTEGER,
     tinted       INTEGER NOT NULL DEFAULT 1,
     duration_sec INTEGER,
+    -- Время напоминания ЧЧ:ММ по местному времени участников; NULL — не напоминать.
+    remind_at    TEXT,
     sort_order   INTEGER NOT NULL DEFAULT 0,
     created_at   TEXT    NOT NULL
   );
@@ -58,6 +60,10 @@ await db.executeMultiple(`
     -- не сдвинулось.
     sort_order INTEGER NOT NULL DEFAULT 0,
     joined_at  TEXT    NOT NULL,
+    -- Дата последнего напоминания по времени привычки, по местному времени
+    -- участника. Своя у каждого: будильник стучится часто, и без отметки одно
+    -- и то же напоминание уходило бы каждые несколько минут до полуночи.
+    reminded_on TEXT,
     PRIMARY KEY (habit_id, user_id)
   );
 
@@ -150,6 +156,20 @@ await addColumnIfMissing('users', 'reminded_on', 'TEXT')
 
 /** Аватарка из Telegram — чтобы на общей привычке было видно лица, а не имена. */
 await addColumnIfMissing('users', 'photo_url', 'TEXT')
+
+/*
+ * Столбцы для напоминания в назначенный час.
+ *
+ * `habits.remind_at` — время `ЧЧ:ММ`, одно на привычку: в совместной привычке
+ * договариваются делать вместе, и разное время у участников означало бы разные
+ * привычки под одним названием.
+ *
+ * `habit_members.reminded_on` — дата последней отправки, у каждого участника
+ * своя: они живут в разных часовых поясах, и «сегодня» у них наступает
+ * в разные моменты.
+ */
+await addColumnIfMissing('habits', 'remind_at', 'TEXT')
+await addColumnIfMissing('habit_members', 'reminded_on', 'TEXT')
 
 /*
  * Представления снимаются перед переездами таблиц и создаются заново в конце.
@@ -258,7 +278,7 @@ await db.executeMultiple(`
   CREATE VIEW view_habits AS
     SELECT h.user_id, u.first_name, u.username,
            h.name, h.description, h.icon, h.color, h.schedule,
-           h.streak_goal, h.tinted, h.duration_sec, h.sort_order, h.created_at, h.id
+           h.streak_goal, h.tinted, h.duration_sec, h.remind_at, h.sort_order, h.created_at, h.id
       FROM habits h
       LEFT JOIN users u ON u.user_id = h.user_id;
 
@@ -313,6 +333,7 @@ export function rowToHabit(row) {
     // В SQLite нет отдельного булева типа — хранится 0 или 1.
     tinted: row.tinted === 1,
     durationSec: row.duration_sec,
+    remindAt: row.remind_at,
     sortOrder: row.sort_order,
     createdAt: row.created_at,
   }

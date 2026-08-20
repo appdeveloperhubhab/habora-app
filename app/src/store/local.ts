@@ -36,12 +36,13 @@ function entryKey(habitId: string, date: IsoDate): string {
 export class LocalDataSource implements DataSource {
   async getHabits(): Promise<Habit[]> {
     return read<Habit[]>(KEY_HABITS, [])
-      // Привычки, заведённые до появления настройки тонировки и таймера,
-      // читаются без этих полей — подставляем прежнее поведение.
+      // Привычки, заведённые до появления настройки тонировки, таймера и
+      // напоминания, читаются без этих полей — подставляем прежнее поведение.
       .map((habit) => ({
         ...habit,
         tinted: habit.tinted ?? true,
         durationSec: habit.durationSec ?? null,
+        remindAt: habit.remindAt ?? null,
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder)
   }

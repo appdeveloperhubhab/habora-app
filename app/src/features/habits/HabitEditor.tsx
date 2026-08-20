@@ -12,8 +12,7 @@ import { HabitMembers } from './HabitMembers'
 import { ColorStrip } from '../../ui/ColorStrip'
 import { IconPicker } from '../../ui/IconPicker'
 import { Sheet } from '../../ui/Sheet'
-import { Stepper } from '../../ui/Stepper'
-import { DurationPicker } from '../../ui/DurationPicker'
+import { TimePicker } from '../../ui/TimePicker'
 import { Toggle } from '../../ui/Toggle'
 import { Icon } from '../../ui/Icon'
 import { ConfirmDialog } from '../../ui/ConfirmDialog'
@@ -57,8 +56,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
   const [days, setDays] = useState<Weekday[]>(
     habit && habit.schedule.type === 'weekdays' ? habit.schedule.days : ALL_WEEKDAYS,
   )
-  const [streakGoal, setStreakGoal] = useState<number | null>(habit?.streakGoal ?? null)
-  const [durationSec, setDurationSec] = useState<number | null>(habit?.durationSec ?? null)
+  const [remindAt, setRemindAt] = useState<string | null>(habit?.remindAt ?? null)
 
   const [error, setError] = useState<string | null>(null)
   const [iconSheet, setIconSheet] = useState(false)
@@ -99,8 +97,14 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
       // ради привычек, заведённых до этого, и хранит прежнее значение по
       // умолчанию — на расчёт серии у них оно уже не влияет.
       schedule: { type: 'weekdays', days, timesPerWeek: 3 },
-      streakGoal,
-      durationSec,
+      /*
+       * Цель по серии и длительность убраны из формы, но не из привычки:
+       * заданные до этого — сохраняются, а не обнуляются молча при первой же
+       * правке названия. Новая привычка заводится без них.
+       */
+      streakGoal: habit?.streakGoal ?? null,
+      durationSec: habit?.durationSec ?? null,
+      remindAt,
     }
 
     if (habit) {
@@ -251,26 +255,16 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           </div>
         </section>
 
+        {/* Напоминание идёт сразу за расписанием: оба отвечают на вопрос
+            «когда», только одно днями, а другое часами. */}
         <section className={styles.block}>
-          <h3 className={styles.heading}>{t.timer.duration}</h3>
-          <p className={styles.hint}>{t.timer.durationHint}</p>
-          <DurationPicker
-            value={durationSec}
-            labels={{ minutes: t.timer.minutes, seconds: t.timer.seconds, off: t.timer.durationOff }}
-            onChange={setDurationSec}
-          />
-        </section>
-
-        <section className={styles.block}>
-          <h3 className={styles.heading}>{t.editor.goal}</h3>
-          <Stepper
-            label={streakGoal === null ? t.editor.goalOff : t.editor.goalHint}
-            value={streakGoal ?? 0}
-            min={0}
-            max={365}
-            step={streakGoal !== null && streakGoal >= 30 ? 10 : 1}
-            // 0 означает «без цели»: отдельный переключатель для этого избыточен.
-            onChange={(next) => setStreakGoal(next === 0 ? null : next)}
+          <h3 className={styles.heading}>{t.editor.remind}</h3>
+          <p className={styles.hint}>{t.editor.remindHint}</p>
+          <TimePicker
+            value={remindAt}
+            color={color}
+            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
+            onChange={setRemindAt}
           />
         </section>
 

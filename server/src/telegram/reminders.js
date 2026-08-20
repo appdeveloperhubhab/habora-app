@@ -31,6 +31,9 @@ export function localNow(tzOffsetMinutes, now = Date.now()) {
   return {
     date,
     hour: shifted.getUTCHours(),
+    // Минуты от полуночи: время у привычки задаётся с точностью до минуты,
+    // и одного часа для сравнения с ним не хватает.
+    minutes: shifted.getUTCHours() * 60 + shifted.getUTCMinutes(),
     // В приложении неделя начинается с понедельника, а в JS — с воскресенья.
     weekday: (shifted.getUTCDay() + 6) % 7,
   }
@@ -106,13 +109,26 @@ export function reminderMessage(habits, language, webAppUrl, date) {
 }
 
 /**
- * Один проход будильника: рассылает напоминания тем, у кого сейчас нужный час.
+ * Один проход будильника.
+ *
+ * Оба вида напоминаний идут одним заходом: вечернее — общим списком
+ * несделанного, и по каждой привычке — в назначенный ей час. Будильник
+ * снаружи один, и заводить ради второго вида ещё один незачем.
+ */
+export async function runReminderTick(webAppUrl, now = Date.now()) {
+  const evening = await runEveningReminders(webAppUrl, now)
+  const timed = await runTimedReminders(webAppUrl, now)
+  return { ...evening, timed }
+}
+
+/**
+ * Вечернее напоминание: одно сообщение со всем несделанным за день.
  *
  * Отметка о рассылке ставится и тогда, когда отправлять нечего: иначе каждый
  * следующий стук будильника заново перебирал бы привычки этого человека весь
  * вечер.
  */
-export async function runReminderTick(webAppUrl, now = Date.now()) {
+export async function runEveningReminders(webAppUrl, now = Date.now()) {
   /*
    * Настройки приходят вместе с человеком одним запросом. Спрашивать их
    * отдельно для каждого значило бы столько же походов в базу, сколько людей,
@@ -161,6 +177,102 @@ export async function runReminderTick(webAppUrl, now = Date.now()) {
 
     const { text, buttons } = reminderMessage(habits, language, webAppUrl, date)
     await sendMessage(user.user_id, text, buttons)
+    result.sent++
+  }
+
+  return result
+}
+
+/**
+ * Насколько поздно ещё имеет смысл напоминать, в минутах.
+ *
+ * Попасть ровно в назначенную минуту нельзя: будильник снаружи стучится раз в
+ * несколько минут, а сервер на бесплатном тарифе между стуками успевает
+ * заснуть и просыпается не сразу. Небольшое опоздание поэтому допускается.
+ * Но напоминание о девяти утра, пришедшее вечером, — уже не напоминание:
+ * дальше этого предела день считается пропущенным.
+ */
+const LATE_LIMIT_MINUTES = 90
+
+/** `ЧЧ:ММ` в минуты от полуночи; null — время записано не так. */
+export function minutesOfDay(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(String(value ?? ''))
+  if (!match) return null
+
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  return hours > 23 || minutes > 59 ? null : hours * 60 + minutes
+}
+
+/**
+ * Напоминание в назначенный привычке час.
+ *
+ * Время у привычки одно на всех участников: договариваются делать вместе, и
+ * разное время у каждого означало бы разные привычки под одним названием.
+ * А вот наступает оно у всех по-своему — участники живут в разных часовых
+ * поясах, — поэтому перебираем не привычки, а участие в них, и дату отправки
+ * помним у каждого свою.
+ */
+export async function runTimedReminders(webAppUrl, now = Date.now()) {
+  const { rows } = await db.execute(`
+    SELECT m.habit_id, m.user_id, m.reminded_on,
+           h.name, h.schedule, h.remind_at,
+           u.language, u.tz_offset,
+           s.data AS settings
+      FROM habit_members m
+      JOIN habits h ON h.id = m.habit_id
+      JOIN users  u ON u.user_id = m.user_id
+      LEFT JOIN settings s ON s.user_id = m.user_id
+     WHERE h.remind_at IS NOT NULL AND u.chat_started = 1
+  `)
+
+  const result = { checked: rows.length, sent: 0, skipped: 0 }
+
+  for (const row of rows) {
+    const settings = parseSettings(row.settings)
+    if (settings.reminders === false) {
+      result.skipped++
+      continue
+    }
+
+    const { date, minutes, weekday } = localNow(row.tz_offset, now)
+    const at = minutesOfDay(row.remind_at)
+    const late = at === null ? null : minutes - at
+
+    // До назначенного часа — рано, много позже — уже поздно, а сегодня
+    // отправленное второй раз не отправляют.
+    if (row.reminded_on === date || late === null || late < 0 || late > LATE_LIMIT_MINUTES) {
+      result.skipped++
+      continue
+    }
+
+    /*
+     * Отметка ставится до проверок ниже, а не после отправки. День не по
+     * расписанию и уже отмеченная привычка иначе перебирались бы заново каждым
+     * следующим стуком будильника — весь остаток отведённого времени.
+     */
+    await db.execute({
+      sql: 'UPDATE habit_members SET reminded_on = ? WHERE habit_id = ? AND user_id = ?',
+      args: [date, row.habit_id, row.user_id],
+    })
+
+    if (!isScheduled(weekday, JSON.parse(row.schedule))) continue
+
+    const done = await db.execute({
+      sql: 'SELECT 1 FROM entries WHERE habit_id = ? AND user_id = ? AND date = ?',
+      args: [row.habit_id, row.user_id, date],
+    })
+    if (done.rows[0]) continue
+
+    // Язык — тот же, что и у вечернего: выбранный в приложении, а если не
+    // выбирали — язык Telegram.
+    const t = texts(settings.lang ?? row.language)
+
+    await sendMessage(row.user_id, t.timedReminder(escapeHtml(row.name), row.remind_at), [
+      // Отметить прямо из чата — как и под вечерним напоминанием.
+      [{ text: t.markButton, callback_data: `t:${row.habit_id}:${date}` }],
+      [{ text: t.open, web_app: { url: webAppUrl } }],
+    ])
     result.sent++
   }
 

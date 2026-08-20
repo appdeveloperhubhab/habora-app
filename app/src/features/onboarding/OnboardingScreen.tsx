@@ -78,6 +78,7 @@ export function OnboardingScreen() {
           schedule: { type: 'weekdays', days: EVERY_DAY, timesPerWeek: 7 },
           streakGoal: null,
           durationSec: null,
+          remindAt: null,
         }),
       )
     }
