@@ -28,6 +28,23 @@ import styles from './HabitEditor.module.css'
 
 const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6]
 
+/**
+ * Убирает клавиатуру по нажатию на клавишу ввода.
+ *
+ * Атрибут `enterkeyhint` у полей ниже меняет только надпись на этой клавише —
+ * с «ввод» на «готово». Закрывать клавиатуру сам по себе он не станет:
+ * телефон ждёт, что это сделает страница. Без этого обработчика клавиша
+ * называлась бы «готово» и не делала ничего.
+ *
+ * Отменяем и стандартное действие: в форме клавиша ввода отправляет её,
+ * а здесь отправлять нечего — ниже ещё расписание, напоминание и цвет.
+ */
+function dismissKeyboard(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.key !== 'Enter') return
+  event.preventDefault()
+  event.currentTarget.blur()
+}
+
 export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose(): void }) {
   const { habits, settings, datesOf, createHabit, updateHabit, deleteHabit, inviteLink } = useStore()
   const t = dict(settings.lang)
@@ -184,6 +201,8 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
             placeholder={t.editor.namePlaceholder}
             maxLength={60}
             autoFocus={!habit}
+            enterKeyHint="done"
+            onKeyDown={dismissKeyboard}
           />
         </div>
 
@@ -212,6 +231,8 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t.editor.descriptionPlaceholder}
             maxLength={120}
+            enterKeyHint="done"
+            onKeyDown={dismissKeyboard}
           />
         </section>
 
