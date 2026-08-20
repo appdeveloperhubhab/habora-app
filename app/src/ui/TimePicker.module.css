@@ -1,4 +1,12 @@
-.row {
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* Крупное значение и переключатель — одной строкой: включено или нет и на
+   какой час, видно не читая, одним взглядом. */
+.head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8,26 +16,68 @@
   background: var(--surface-2);
 }
 
-.input {
-  font: inherit;
+.value {
   font-size: var(--fs-title);
   font-weight: var(--fw-bold);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--text);
-  background: transparent;
-  /* Тема приложения переключается сама, а колесо выбора времени рисует
-     браузер — без этого в тёмной теме оно оставалось бы белым. */
-  color-scheme: light dark;
-}
-
-/* Кнопка-часики от браузера: на телефоне поле открывается касанием по нему
-   самому, а на широком экране она только спорит с переключателем справа. */
-.input::-webkit-calendar-picker-indicator {
-  display: none;
+  /* Цифры одной ширины: при смене часа строка не дёргается. */
+  font-variant-numeric: tabular-nums;
 }
 
 .off {
   font-size: var(--fs-body);
   color: var(--text-faint);
+}
+
+.caption {
+  margin-top: var(--sp-1);
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/*
+ * Все двадцать четыре часа на виду, по шесть в ряд.
+ *
+ * Шесть — не случайное число: строка выходит ровно четвертью суток, и ряды
+ * читаются как ночь, утро, день, вечер. Искать нужный час не приходится —
+ * он там, где ему и место по смыслу.
+ */
+.hours {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.minutes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+/* Та же плитка, что у дней недели в расписании выше: два выбора подряд не
+   должны выглядеть двумя разными приложениями. */
+.cell {
+  padding: var(--sp-3) 0;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  transition:
+    transform var(--t-fast) var(--ease-spring),
+    background var(--t-fast) linear,
+    color var(--t-fast) linear;
+}
+
+.cell:active {
+  transform: scale(0.9);
+}
+
+.on {
+  color: #fff;
+  background: var(--habit);
 }

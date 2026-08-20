@@ -12,7 +12,7 @@ import { HabitMembers } from './HabitMembers'
 import { ColorStrip } from '../../ui/ColorStrip'
 import { IconPicker } from '../../ui/IconPicker'
 import { Sheet } from '../../ui/Sheet'
-import { TimePicker } from '../../ui/TimePicker'
+import { DEFAULT_TIME, TimePicker } from '../../ui/TimePicker'
 import { Toggle } from '../../ui/Toggle'
 import { Icon } from '../../ui/Icon'
 import { ConfirmDialog } from '../../ui/ConfirmDialog'
@@ -73,7 +73,20 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
   const [days, setDays] = useState<Weekday[]>(
     habit && habit.schedule.type === 'weekdays' ? habit.schedule.days : ALL_WEEKDAYS,
   )
-  const [remindAt, setRemindAt] = useState<string | null>(habit?.remindAt ?? null)
+  /*
+   * У новой привычки напоминание включено сразу.
+   *
+   * Выключенный переключатель человек проходил мимо: он читается как «эта
+   * возможность есть, если понадобится», а не как «выберите час». Включённый
+   * сразу показывает готовое время — остаётся либо поправить его под себя,
+   * либо выключить, и оба действия очевидны.
+   *
+   * У уже заведённой привычки берётся её собственное значение: там выключено
+   * значит выключено, и трогать чужой выбор нельзя.
+   */
+  const [remindAt, setRemindAt] = useState<string | null>(
+    habit ? habit.remindAt : DEFAULT_TIME,
+  )
 
   const [error, setError] = useState<string | null>(null)
   const [iconSheet, setIconSheet] = useState(false)
@@ -284,7 +297,12 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           <TimePicker
             value={remindAt}
             color={color}
-            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
+            labels={{
+              on: t.editor.remindOn,
+              off: t.editor.remindOff,
+              hours: t.editor.remindHours,
+              minutes: t.editor.remindMinutes,
+            }}
             onChange={setRemindAt}
           />
         </section>
