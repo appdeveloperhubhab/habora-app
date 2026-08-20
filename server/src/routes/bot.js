@@ -9,6 +9,7 @@ import {
 } from '../telegram/api.js'
 import { escapeHtml, texts } from '../telegram/messages.js'
 import { habitLines, pendingHabits, runReminderTick, weekdayOf } from '../telegram/reminders.js'
+import { notifyPartnersMarked } from '../telegram/partners.js'
 
 /**
  * Приём событий из Telegram и будильник рассылки.
@@ -225,11 +226,18 @@ async function handleCallback(query, webAppUrl) {
 
   // Именно вставка, а не переключение: кнопка называется «отметить», и
   // повторное нажатие не должно снимать отметку, поставленную секунду назад.
-  await db.execute({
+  const { rowsAffected } = await db.execute({
     sql: 'INSERT OR IGNORE INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
     args: [query.from.id, habitId, date],
   })
 
+  // Напарникам — только если отметка действительно появилась. Повторное
+  // нажатие по той же кнопке ничего не меняет, и новостью не является.
+  if (rowsAffected > 0) {
+    void notifyPartnersMarked(habitId, query.from.id, date).catch(() => {
+      // Весть не ушла — на самой отметке это никак не сказывается.
+    })
+  }
 
   await answerCallback(query.id, t.markedToast)
 

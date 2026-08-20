@@ -1,6 +1,7 @@
 import { db } from '../db.js'
 import { sendMessage } from './api.js'
 import { escapeHtml, scheduleLabel, texts } from './messages.js'
+import { forgetOldNotices } from './partners.js'
 
 /**
  * Ежедневное напоминание о невыполненных привычках.
@@ -118,7 +119,19 @@ export function reminderMessage(habits, language, webAppUrl, date) {
 export async function runReminderTick(webAppUrl, now = Date.now()) {
   const evening = await runEveningReminders(webAppUrl, now)
   const timed = await runTimedReminders(webAppUrl, now)
-  return { ...evening, timed }
+
+  /*
+   * Заодно подчищаем записи о вестях напарникам.
+   *
+   * Они нужны ровно на один день — чтобы одна и та же отметка не разошлась
+   * двумя сообщениями, — а живут иначе вечно, по строке на каждую отметку в
+   * каждой общей привычке. Порог с запасом в двое суток: часовые пояса
+   * разводят «сегодня» разных людей почти на день.
+   */
+  const twoDaysBack = new Date(now - 2 * 86400000).toISOString().slice(0, 10)
+  const forgotten = await forgetOldNotices(twoDaysBack)
+
+  return { ...evening, timed, forgotten }
 }
 
 /**

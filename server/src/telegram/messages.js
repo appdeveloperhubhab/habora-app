@@ -65,6 +65,16 @@ const TEXTS = {
     joinedAlready: (habit) => `Вы уже участвуете в привычке <b>${habit}</b>.`,
     joinGone: 'Привычки по этой ссылке больше нет — возможно, её удалили.',
     someoneJoined: (name, habit) => `${name} теперь с вами в привычке <b>${habit}</b>`,
+    /*
+     * Весть о том, что напарник отметился в общей привычке.
+     *
+     * «Отмечает», а не «отметил» или «отметила»: имя приходит из Telegram как
+     * есть, род по нему не угадывается, а настоящее время подходит любому.
+     */
+    partnerMarked: (name, habit) => `✅ ${name} отмечает <b>${habit}</b>`,
+    partnerYourTurn: 'Ваша очередь — сегодня вы ещё не отмечались.',
+    partnerBothDone: 'Сегодня оба. Так и держите 🔥',
+    markIt: 'Отметить',
   },
   en: {
     welcome: (name) =>
@@ -95,6 +105,10 @@ Reminder set for ${when}.`,
     joinedAlready: (habit) => `You are already in <b>${habit}</b>.`,
     joinGone: 'That habit is gone — it may have been deleted.',
     someoneJoined: (name, habit) => `${name} joined your habit <b>${habit}</b>`,
+    partnerMarked: (name, habit) => `✅ ${name} checked off <b>${habit}</b>`,
+    partnerYourTurn: 'Your turn — you have not checked in today.',
+    partnerBothDone: 'Both of you today. Keep it up 🔥',
+    markIt: 'Check off',
   },
   uk: {
     welcome: (name) =>
@@ -127,6 +141,10 @@ Reminder set for ${when}.`,
     joinedAlready: (habit) => `Ви вже берете участь у звичці <b>${habit}</b>.`,
     joinGone: 'Звички за цим посиланням більше немає — можливо, її видалили.',
     someoneJoined: (name, habit) => `${name} тепер з вами у звичці <b>${habit}</b>`,
+    partnerMarked: (name, habit) => `✅ ${name} відмічає <b>${habit}</b>`,
+    partnerYourTurn: 'Ваша черга — сьогодні ви ще не відмічалися.',
+    partnerBothDone: 'Сьогодні обоє. Так і тримайте 🔥',
+    markIt: 'Відмітити',
   },
 }
 

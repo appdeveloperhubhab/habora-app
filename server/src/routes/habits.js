@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { db, rowToHabit } from '../db.js'
 import { botUsername } from '../telegram/api.js'
+import { notifyPartnersMarked } from '../telegram/partners.js'
 import {
   createHabitSchema,
   entriesQuerySchema,
@@ -347,6 +348,17 @@ export async function habitRoutes(app) {
       sql: 'INSERT INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
       args: [request.userId, habitId, date],
     })
+
+    /*
+     * Напарникам — весть, но не дожидаясь её отправки: галочка в приложении
+     * должна отзываться мгновенно, а поход в Telegram занимает сотни
+     * миллисекунд на каждого участника. Не дошло — не беда, отметка уже
+     * записана, и ради неё сюда и обращались.
+     */
+    void notifyPartnersMarked(habitId, request.userId, date).catch((error) => {
+      app.log.error({ error, habitId }, 'не удалось известить напарников')
+    })
+
     return { done: true }
   })
 }
