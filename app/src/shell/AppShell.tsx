@@ -15,6 +15,7 @@ import { ThemeScreen } from '../features/settings/ThemeScreen'
 import { TimerScreen } from '../features/timer/TimerScreen'
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen'
 import { Celebration } from '../ui/Celebration'
+import { SwipeBack } from './SwipeBack'
 import { TopBar } from './TopBar'
 import { OrderBar } from './OrderBar'
 import { BottomTabs } from './BottomTabs'
@@ -94,7 +95,15 @@ export function AppShell() {
 
       <InviteSheet open={inviting} onClose={() => setInviting(false)} />
 
-      <Overlay />
+      {/* Слой жеста заводится только когда есть куда возвращаться: на главном
+          экране он был бы пустой обёрткой, слушающей касания впустую. */}
+      {nav.stack.length > 1 ? (
+        <SwipeBack onBack={nav.pop} screenKey={nav.screen.name}>
+          <Overlay />
+        </SwipeBack>
+      ) : (
+        <Overlay />
+      )}
 
       {celebration && <Celebration milestone={celebration} t={t} onClose={dismissCelebration} />}
     </div>
