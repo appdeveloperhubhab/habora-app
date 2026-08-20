@@ -33,6 +33,7 @@
 .pill {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex: none;
   margin-right: auto;
   padding: var(--sp-1) var(--sp-3);
@@ -40,6 +41,16 @@
   background: color-mix(in srgb, var(--habit) 16%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 28%, transparent);
   transition: transform var(--t-fast) var(--ease-spring);
+  /* Появляется вместе с включением переключателя, а не возникает рывком:
+     плашка вырастает из ничего за то же время, что едет сам переключатель. */
+  animation: pillIn var(--t-mid) var(--ease-spring);
+}
+
+@keyframes pillIn {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
 }
 
 .pill:active {
@@ -54,11 +65,43 @@
   letter-spacing: -0.02em;
   /* Цифры одной ширины: при смене часа плашка не меняет размер. */
   font-variant-numeric: tabular-nums;
+  text-align: center;
   color: var(--habit);
+  /*
+   * Телефон красит поля ввода по-своему, и на iPhone под цифрами оставался
+   * тёмный прямоугольник — собственный фон поля, проступавший сквозь плашку.
+   * Снимаем и оформление поля целиком, и его цвет: `-webkit-text-fill-color`
+   * нужен отдельно, потому что обычный `color` iOS у полей местами не
+   * слушает.
+   */
+  appearance: none;
+  -webkit-appearance: none;
   background: transparent;
-  /* Тема приложения переключается сама, а колесо выбора времени рисует
-     браузер — без этого в тёмной теме оно оставалось бы белым. */
-  color-scheme: light dark;
+  border: 0;
+  padding: 0;
+  -webkit-text-fill-color: var(--habit);
+}
+
+/*
+ * Само значение iPhone рисует отдельным слоем внутри поля, и выравнивание
+ * задаётся ему, а не полю: без этого цифры прижимались влево и стояли не по
+ * центру плашки, сколько бы её ни центрировали снаружи.
+ */
+.input::-webkit-date-and-time-value {
+  text-align: center;
+  margin: 0;
+}
+
+/* Часы, минуты и двоеточие между ними — каждая часть со своим фоном от
+   браузера. Тот самый тёмный прямоугольник складывался из них. */
+.input::-webkit-datetime-edit,
+.input::-webkit-datetime-edit-fields-wrapper,
+.input::-webkit-datetime-edit-hour-field,
+.input::-webkit-datetime-edit-minute-field,
+.input::-webkit-datetime-edit-text {
+  padding: 0;
+  color: inherit;
+  background: transparent;
 }
 
 /* Кнопка-часики от браузера: на телефоне поле открывается касанием по нему
