@@ -1,83 +1,74 @@
-.wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-/* Крупное значение и переключатель — одной строкой: включено или нет и на
-   какой час, видно не читая, одним взглядом. */
-.head {
+.row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-lg);
   background: var(--surface-2);
 }
 
-.value {
-  font-size: var(--fs-title);
-  font-weight: var(--fw-bold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  /* Цифры одной ширины: при смене часа строка не дёргается. */
-  font-variant-numeric: tabular-nums;
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--text-faint);
+  transition: color var(--t-fast) linear;
 }
 
-.off {
-  font-size: var(--fs-body);
-  color: var(--text-faint);
-}
-
-.caption {
-  margin-top: var(--sp-1);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.iconOn {
+  color: var(--habit);
 }
 
 /*
- * Все двадцать четыре часа на виду, по шесть в ряд.
+ * Плашка со временем.
  *
- * Шесть — не случайное число: строка выходит ровно четвертью суток, и ряды
- * читаются как ночь, утро, день, вечер. Искать нужный час не приходится —
- * он там, где ему и место по смыслу.
+ * Родное поле выбора времени ничем не показывает, что по нему можно нажать:
+ * это просто цифры, и рядом с переключателем они читались подписью к нему.
+ * Заливка в цвет привычки возвращает полю вид кнопки — по нему видно, что
+ * это и есть то, что нужно нажать.
+ *
+ * Ширина по содержимому, а не во всю строку: растянутая плашка выглядела бы
+ * полем ввода, в которое печатают, — а печатать здесь нечего.
  */
-.hours {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--sp-2);
+.pill {
+  display: flex;
+  align-items: center;
+  flex: none;
+  margin-right: auto;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--habit) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 28%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring);
 }
 
-.minutes {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--sp-2);
+.pill:active {
+  transform: scale(0.94);
 }
 
-/* Та же плитка, что у дней недели в расписании выше: два выбора подряд не
-   должны выглядеть двумя разными приложениями. */
-.cell {
-  padding: var(--sp-3) 0;
-  border-radius: var(--r-md);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-medium);
+.input {
+  font: inherit;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  /* Цифры одной ширины: при смене часа плашка не меняет размер. */
   font-variant-numeric: tabular-nums;
-  color: var(--text-dim);
-  background: var(--surface-2);
-  transition:
-    transform var(--t-fast) var(--ease-spring),
-    background var(--t-fast) linear,
-    color var(--t-fast) linear;
+  color: var(--habit);
+  background: transparent;
+  /* Тема приложения переключается сама, а колесо выбора времени рисует
+     браузер — без этого в тёмной теме оно оставалось бы белым. */
+  color-scheme: light dark;
 }
 
-.cell:active {
-  transform: scale(0.9);
+/* Кнопка-часики от браузера: на телефоне поле открывается касанием по нему
+   самому, а на широком экране она только спорит с переключателем справа. */
+.input::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
-.on {
-  color: #fff;
-  background: var(--habit);
+.off {
+  flex: 1;
+  font-size: var(--fs-body);
+  color: var(--text-faint);
 }

@@ -1,38 +1,28 @@
+import { useRef } from 'react'
 import { hapticSelect } from '../lib/haptics'
+import { Icon } from './Icon'
 import { Toggle } from './Toggle'
 import styles from './TimePicker.module.css'
 
 /**
- * Время напоминания: переключатель, крупное значение и выбор касанием.
+ * Время напоминания: переключатель и поле с часами.
  *
- * Раньше здесь стояло родное поле `input type="time"`. Оно открывало колесо
- * поверх экрана — чужое приложению по виду, разное на каждом телефоне, и
- * чтобы добраться до часа, его приходилось крутить. Теперь все часы разложены
- * сеткой и видны разом: нужный ставится одним касанием.
+ * Поле — родное для браузера `input type="time"`, а не своя сетка часов.
+ * Своя была: двадцать четыре плитки, все на виду. Выглядела она нарядно, но
+ * занимала пол-экрана ради выбора, который телефон делает лучше — его колесо
+ * человек уже знает по будильнику и по календарю, и крутить его привычнее,
+ * чем выцеливать плитку пальцем.
  *
- * Прокрутки вбок нет намеренно — по той же причине, по какой её нет у выбора
- * цвета: она прячет половину значений за краем экрана, и выбор превращается
- * в перебор вслепую.
+ * Само поле при этом не голый текст, а плашка в цвет привычки: родное поле
+ * ничем не показывает, что по нему можно нажать, и рядом с переключателем
+ * читалось просто подписью к нему.
  *
  * Выключенное состояние — `null`, а не нулевое время: полночь — такой же
  * назначенный час, как любой другой, и означать «не напоминать» не может.
  */
 
-/** Часы разложены по шесть в ряд — строка выходит частью суток. */
-const HOURS = Array.from({ length: 24 }, (_, hour) => hour)
-
-/**
- * Минуты — четвертями часа.
- *
- * Точность до минуты напоминанию не нужна: разница между «в 17:00» и «в 17:07»
- * не значит ничего, а выбор из шестидесяти значений стоил бы отдельного экрана.
- */
-const MINUTES = [0, 15, 30, 45]
-
 /** С чего начинается время, включённое впервые. Утро — самый частый час привычки. */
 export const DEFAULT_TIME = '09:00'
-
-const pad = (value: number) => String(value).padStart(2, '0')
 
 export function TimePicker({
   value,
@@ -43,66 +33,55 @@ export function TimePicker({
   /** Время `ЧЧ:ММ`; null — не напоминать. */
   value: string | null
   color: string
-  labels: { on: string; off: string; hours: string; minutes: string }
+  labels: { on: string; off: string }
   onChange(next: string | null): void
 }) {
-  const [hour, minute] = value ? value.split(':').map(Number) : [null, null]
+  /*
+   * Последнее назначенное время переживает выключение переключателя.
+   * Иначе задетый по ошибке переключатель стирал бы назначенные 17:00, и
+   * вернуть их можно было бы только набрав заново.
+   */
+  const last = useRef(value ?? DEFAULT_TIME)
+  if (value !== null) last.current = value
 
-  const set = (nextHour: number, nextMinute: number) => {
-    hapticSelect()
-    onChange(`${pad(nextHour)}:${pad(nextMinute)}`)
-  }
+  const on = value !== null
 
   return (
-    <div className={styles.wrap} style={{ '--habit': color } as React.CSSProperties}>
-      <div className={styles.head}>
-        <span className={value === null ? styles.off : styles.value}>{value ?? labels.off}</span>
-        <Toggle
-          checked={value !== null}
-          color={color}
-          label={labels.on}
-          onChange={(on) => {
-            hapticSelect()
-            onChange(on ? DEFAULT_TIME : null)
-          }}
-        />
-      </div>
+    <div className={styles.row} style={{ '--habit': color } as React.CSSProperties}>
+      {/* Колокольчик гаснет вместе с напоминанием: включено оно или нет,
+          видно раньше, чем прочитаны слова рядом. */}
+      <span className={on ? `${styles.icon} ${styles.iconOn}` : styles.icon}>
+        <Icon name="bell" size={17} />
+      </span>
 
-      {/* Выключено — сетку не показываем: выбирать нечего, а место она
-          занимает вчетверо больше самой строки с переключателем. */}
-      {value !== null && (
-        <>
-          <span className={styles.caption}>{labels.hours}</span>
-          <div className={styles.hours}>
-            {HOURS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={item === hour ? `${styles.cell} ${styles.on}` : styles.cell}
-                onClick={() => set(item, minute ?? 0)}
-                aria-pressed={item === hour}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <span className={styles.caption}>{labels.minutes}</span>
-          <div className={styles.minutes}>
-            {MINUTES.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={item === minute ? `${styles.cell} ${styles.on}` : styles.cell}
-                onClick={() => set(hour ?? 9, item)}
-                aria-pressed={item === minute}
-              >
-                :{pad(item)}
-              </button>
-            ))}
-          </div>
-        </>
+      {on ? (
+        <label className={styles.pill}>
+          <input
+            type="time"
+            className={styles.input}
+            value={value}
+            aria-label={labels.on}
+            onChange={(e) => {
+              // Пустое поле остаётся у очищенного ввода на пути к новому
+              // времени. Считать это выключением значило бы гасить
+              // переключатель под рукой у человека, который набирает часы.
+              if (e.target.value) onChange(e.target.value)
+            }}
+          />
+        </label>
+      ) : (
+        <span className={styles.off}>{labels.off}</span>
       )}
+
+      <Toggle
+        checked={on}
+        color={color}
+        label={labels.on}
+        onChange={(next) => {
+          hapticSelect()
+          onChange(next ? last.current : null)
+        }}
+      />
     </div>
   )
 }

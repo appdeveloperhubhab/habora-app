@@ -297,12 +297,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           <TimePicker
             value={remindAt}
             color={color}
-            labels={{
-              on: t.editor.remindOn,
-              off: t.editor.remindOff,
-              hours: t.editor.remindHours,
-              minutes: t.editor.remindMinutes,
-            }}
+            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
             onChange={setRemindAt}
           />
         </section>

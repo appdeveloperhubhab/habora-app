@@ -130,8 +130,6 @@ export const en: Dict = {
     remindHint: 'The bot writes in chat at this time — on the days above',
     remindOff: 'No reminder',
     remindOn: 'Remind at a set time',
-    remindHours: 'Hour',
-    remindMinutes: 'Minutes',
     inviteHint: 'The habit will be saved, then you pick who to send it to',
     goal: 'Streak goal',
     goalHint: 'How many days in a row you aim for',
