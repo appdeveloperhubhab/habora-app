@@ -199,8 +199,10 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
         .join(' ')}
       style={{ '--habit': habit.color } as React.CSSProperties}
     >
+      {/* Слой во всю карточку, как и у недельной: отступы по краям и зазор над
+          кнопкой отметки раньше не отзывались на тап, хотя выглядели её частью. */}
       <button
-        className={styles.body}
+        className={styles.open}
         onClick={() => {
           if (!longPressFired.current) onOpen()
         }}
@@ -210,7 +212,9 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
         onPointerCancel={() => window.clearTimeout(longPressTimer.current)}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={habit.name}
-      >
+      />
+
+      <span className={styles.body}>
         <span className={styles.header}>
           <span className={styles.icon}>
             <HabitIcon icon={habit.icon} size={18} />
@@ -222,7 +226,7 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
         </span>
 
         {grid}
-      </button>
+      </span>
 
       <button className={done ? `${styles.mark} ${styles.markDone}` : styles.mark} onClick={handleToggle}>
         {pulseKey > 0 && <span key={pulseKey} className={styles.glow} />}

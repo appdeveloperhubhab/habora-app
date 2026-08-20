@@ -14,7 +14,9 @@
     inset 0 0 0 1px var(--card-edge),
     inset 0 1px 0 var(--card-highlight),
     0 6px 18px -8px color-mix(in srgb, var(--habit) 55%, transparent);
-  transition: box-shadow var(--t-slow) var(--ease-out);
+  transition:
+    box-shadow var(--t-slow) var(--ease-out),
+    transform var(--t-fast) var(--ease-spring);
 }
 
 .plain {
@@ -31,21 +33,35 @@
   gap: var(--sp-2);
 }
 
+/*
+ * Кнопка открытия — пустой слой во всю карточку. Позиционирована, а потому
+ * лежит выше содержимого в потоке и забирает тапы по нему; кнопка отметки
+ * тоже позиционирована и стоит в разметке позже, поэтому остаётся нажимаемой.
+ */
+.open {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
 .body {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
   width: 100%;
   text-align: left;
-  transition: transform var(--t-fast) var(--ease-spring);
+  /* Название и сетка — украшение: тап проваливается к слою карточки. Без
+     этого приглушённые клетки будущих дней перехватывали бы его на себя. */
+  pointer-events: none;
 }
 
 .month .body {
   gap: var(--sp-2);
 }
 
-.body:active {
-  transform: scale(0.985);
+/* Отклик даёт вся карточка: нажать теперь можно куда угодно на ней. */
+.card:has(.open:active) {
+  transform: scale(0.99);
 }
 
 .header {

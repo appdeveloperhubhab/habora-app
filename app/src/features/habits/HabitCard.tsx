@@ -85,6 +85,13 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
       className={[styles.card, habit.tinted ? '' : styles.plain, flashClass].filter(Boolean).join(' ')}
       style={{ '--habit': habit.color } as React.CSSProperties}
     >
+      {/*
+        Кнопка открытия — пустой слой во всю карточку, а не обёртка вокруг
+        названия. Раньше открывала только левая половина: тап по полоскам
+        недели или рядом с галочкой не делал ничего, хотя выглядел как тап по
+        карточке. Теперь открывает вся, кроме самой галочки — она лежит выше
+        и забирает свои нажатия себе.
+      */}
       <button
         className={styles.open}
         onClick={handleOpen}
@@ -94,7 +101,9 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
         onPointerCancel={cancelLongPress}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={habit.name}
-      >
+      />
+
+      <span className={styles.face}>
         <span className={styles.icon}>
           <HabitIcon icon={habit.icon} size={20} />
         </span>
@@ -109,7 +118,7 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
             <span className={styles.subtitleText}>{subtitle}</span>
           </span>
         </span>
-      </button>
+      </span>
 
       {/* Полоски — прямой ребёнок карточки, а не части с текстом: только так
           их ширину можно задать в долях самой карточки. */}
