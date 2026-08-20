@@ -89,6 +89,36 @@ export async function notifyPartnersMarked(habitId, actorId, date) {
 }
 
 /**
+ * Весть об удалении общей привычки.
+ *
+ * Отметки исчезают у человека без его участия — по чужой воле. Молчание тут
+ * хуже всего: он открывает приложение, привычки нет, серии нет, и первое, что
+ * он подумает, — что данные потеряло приложение. Сообщение отвечает на оба
+ * вопроса сразу: что случилось и кто это сделал.
+ *
+ * Участники и название передаются готовыми: к моменту вызова привычки в базе
+ * уже нет, и спросить их было бы негде.
+ */
+export async function notifyHabitDeleted(others, habitName, actorName) {
+  const habit = escapeHtml(habitName ?? '')
+  const actor = escapeHtml(actorName ?? '')
+
+  let sent = 0
+  for (const partner of others) {
+    if (partner.chat_started !== 1) continue
+
+    const settings = parseSettings(partner.settings)
+    if (settings.reminders === false) continue
+
+    const t = texts(settings.lang ?? partner.language)
+    const result = await sendMessage(partner.user_id, t.habitDeleted(actor, habit))
+    if (result?.ok) sent++
+  }
+
+  return { sent, total: others.length }
+}
+
+/**
  * Чистка старых записей об отправленных вестях.
  *
  * Дальше сегодняшнего дня они не нужны: повтор ловится только в пределах

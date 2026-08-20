@@ -183,6 +183,9 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
     onClose()
   }
 
+  /** Привычка совместная — значит удаление заденет не только удаляющего. */
+  const shared = (habit?.members?.length ?? 0) > 1
+
   return (
     <div className={styles.screen} style={{ '--habit': color } as React.CSSProperties}>
       <header className={styles.bar}>
@@ -329,8 +332,10 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
 
       {confirmDelete && (
         <ConfirmDialog
-          title={t.editor.deleteTitle}
-          text={t.editor.deleteText}
+          // У совместной привычки удаляют не только своё — предупреждение
+          // об этом должно стоять до нажатия, а не после.
+          title={shared ? t.editor.deleteSharedTitle : t.editor.deleteTitle}
+          text={shared ? t.editor.deleteSharedText : t.editor.deleteText}
           confirmLabel={t.editor.deleteConfirm}
           cancelLabel={t.common.cancel}
           onCancel={() => setConfirmDelete(false)}

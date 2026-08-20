@@ -136,6 +136,9 @@ export const en: Dict = {
     goalOff: 'No goal',
     deleteTitle: 'Delete this habit?',
     deleteText: 'Its whole history will be gone for good.',
+    deleteSharedTitle: 'Delete for everyone?',
+    deleteSharedText:
+      'The habit will disappear for everyone in it, along with all of their check-in history. This cannot be undone.',
     deleteConfirm: 'Delete',
     nameRequired: 'Enter a name',
     daysRequired: 'Pick at least one day',

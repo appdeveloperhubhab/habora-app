@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { db, rowToHabit } from '../db.js'
 import { botUsername } from '../telegram/api.js'
-import { notifyPartnersMarked } from '../telegram/partners.js'
+import { notifyHabitDeleted, notifyPartnersMarked } from '../telegram/partners.js'
 import {
   createHabitSchema,
   entriesQuerySchema,
@@ -15,9 +15,12 @@ import {
  * Привычки, участники и отметки выполнения.
  *
  * Привычка принадлежит не одному человеку, а списку участников: обычная — это
- * просто список из одного. Право читать даёт участие, право менять и удалять —
- * создательство: иначе двое правили бы одно и то же, а вышедший забирал бы
- * привычку у остальных.
+ * просто список из одного.
+ *
+ * Право читать и удалять даёт участие, право менять — создательство. Правка
+ * оставлена одному, потому что двое переименовывали бы одно и то же по
+ * очереди; удаление отдано всем, потому что общая привычка либо нужна обоим,
+ * либо не нужна вовсе.
  *
  * Отметки у каждого свои. Это и есть смысл совместной привычки: пропуск одного
  * не стирает отметку другому, а видно каждому обоих.
@@ -208,33 +211,59 @@ export async function habitRoutes(app) {
   })
 
   /**
-   * Удаление у создателя убирает привычку у всех, у остальных — только выход.
-   * Иначе присоединившийся, нажав «удалить», стирал бы чужую историю.
+   * Удаление привычки — у всех участников сразу, кто бы её ни удалил.
+   *
+   * Раньше право стереть привычку у всех было только у создателя, а участник
+   * своим «удалить» лишь выходил из неё. Получалось, что у двоих на одну и ту
+   * же кнопку два разных исхода, и который из них твой — зависело от того,
+   * кто первым завёл привычку месяц назад.
+   *
+   * Теперь исход один: общая привычка исчезает у обоих вместе со всей
+   * историей отметок. Взамен об этом предупреждают дважды — в самом
+   * приложении перед удалением и сообщением бота остальным после него: чужие
+   * отметки пропадают не молча, и человек знает, что случилось и по чьей
+   * воле.
+   *
+   * Участников, отметки и служебные записи о вестях уносит каскадом за самой
+   * привычкой — внешние ключи в базе включены, это проверено.
    */
-  app.delete('/api/habits/:id', async (request) => {
-    const own = await ownHabit(request.params.id, request.userId)
+  app.delete('/api/habits/:id', async (request, reply) => {
+    const habitId = request.params.id
 
-    if (own) {
-      await db.execute({ sql: 'DELETE FROM habits WHERE id = ?', args: [request.params.id] })
-      return { ok: true, deleted: true }
+    /*
+     * Всё нужное собираем до удаления: после него ни привычки, ни списка
+     * участников уже нет, и сообщать будет некому и не о чем.
+     */
+    const { rows } = await db.execute({
+      sql: `SELECT m.user_id, u.language, u.chat_started, s.data AS settings,
+                   h.name AS habit_name
+              FROM habit_members m
+              JOIN habits h ON h.id = m.habit_id
+              LEFT JOIN users u ON u.user_id = m.user_id
+              LEFT JOIN settings s ON s.user_id = m.user_id
+             WHERE m.habit_id = ?`,
+      args: [habitId],
+    })
+
+    // Удалять вправе участник, и только он: идентификатор привычки уходит в
+    // ссылке-приглашении, и посторонний с ней не должен стирать чужое.
+    const me = rows.find((row) => Number(row.user_id) === Number(request.userId))
+    if (!me) return reply.code(404).send({ error: 'Привычка не найдена' })
+
+    await db.execute({ sql: 'DELETE FROM habits WHERE id = ?', args: [habitId] })
+
+    /*
+     * Весть остальным — вдогонку ответу: удаление уже состоялось, и держать
+     * из-за неё интерфейс незачем. Не дошла — привычка всё равно удалена.
+     */
+    const others = rows.filter((row) => Number(row.user_id) !== Number(request.userId))
+    if (others.length > 0) {
+      void notifyHabitDeleted(others, rows[0].habit_name, request.telegramUser?.first_name).catch(
+        (error) => app.log.error({ error, habitId }, 'не удалось известить об удалении'),
+      )
     }
 
-    await db.batch(
-      [
-        {
-          sql: 'DELETE FROM habit_members WHERE habit_id = ? AND user_id = ?',
-          args: [request.params.id, request.userId],
-        },
-        // Свои отметки уходят вместе с участием: вернувшись, человек начинает
-        // с чистого листа, а у остальных его следов не остаётся.
-        {
-          sql: 'DELETE FROM entries WHERE habit_id = ? AND user_id = ?',
-          args: [request.params.id, request.userId],
-        },
-      ],
-      'write',
-    )
-    return { ok: true, deleted: false }
+    return { ok: true, deleted: true }
   })
 
   /**

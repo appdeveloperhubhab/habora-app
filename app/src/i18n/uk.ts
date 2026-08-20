@@ -136,6 +136,9 @@ export const uk: Dict = {
     goalOff: 'Без мети',
     deleteTitle: 'Видалити звичку?',
     deleteText: 'Уся історія позначок буде видалена без можливості повернути.',
+    deleteSharedTitle: 'Видалити в усіх?',
+    deleteSharedText:
+      'Звичка зникне в усіх учасників разом з усією їхньою історією позначок. Повернути буде неможливо.',
     deleteConfirm: 'Видалити',
     nameRequired: 'Введіть назву',
     daysRequired: 'Оберіть хоча б один день',

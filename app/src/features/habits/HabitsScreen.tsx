@@ -147,8 +147,15 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
 
       {deleting && (
         <ConfirmDialog
-          title={t.editor.deleteTitle}
-          text={t.editor.deleteText}
+          // То же предупреждение, что и в редакторе: удалить общую привычку
+          // можно и отсюда, долгим нажатием по карточке, — а последствия у
+          // обоих путей одни.
+          title={
+            (deleting.members?.length ?? 0) > 1 ? t.editor.deleteSharedTitle : t.editor.deleteTitle
+          }
+          text={
+            (deleting.members?.length ?? 0) > 1 ? t.editor.deleteSharedText : t.editor.deleteText
+          }
           confirmLabel={t.editor.deleteConfirm}
           cancelLabel={t.common.cancel}
           onCancel={() => setDeleting(null)}

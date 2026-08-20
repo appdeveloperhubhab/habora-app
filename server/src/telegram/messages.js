@@ -75,6 +75,15 @@ const TEXTS = {
     partnerYourTurn: 'Ваша очередь — сегодня вы ещё не отмечались.',
     partnerBothDone: 'Сегодня оба. Так и держите 🔥',
     markIt: 'Отметить',
+    /*
+     * «Удаляет», а не «удалил» или «удалила» — по той же причине, что и в
+     * вести об отметке: род по имени из Telegram не угадывается.
+     */
+    habitDeleted: (name, habit) =>
+      `❌ ${name} удаляет общую привычку <b>${habit}</b>
+
+` +
+      `Она исчезла у всех участников вместе с историей отметок. Вернуть её нельзя — но можно завести заново.`,
   },
   en: {
     welcome: (name) =>
@@ -109,6 +118,11 @@ Reminder set for ${when}.`,
     partnerYourTurn: 'Your turn — you have not checked in today.',
     partnerBothDone: 'Both of you today. Keep it up 🔥',
     markIt: 'Check off',
+    habitDeleted: (name, habit) =>
+      `❌ ${name} deleted the shared habit <b>${habit}</b>
+
+` +
+      `It is gone for everyone, along with the check-in history. It cannot be restored — but you can start it again.`,
   },
   uk: {
     welcome: (name) =>
@@ -145,6 +159,11 @@ Reminder set for ${when}.`,
     partnerYourTurn: 'Ваша черга — сьогодні ви ще не відмічалися.',
     partnerBothDone: 'Сьогодні обоє. Так і тримайте 🔥',
     markIt: 'Відмітити',
+    habitDeleted: (name, habit) =>
+      `❌ ${name} видаляє спільну звичку <b>${habit}</b>
+
+` +
+      `Вона зникла в усіх учасників разом з історією позначок. Повернути її не можна — але можна завести наново.`,
   },
 }
 
