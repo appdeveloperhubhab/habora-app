@@ -73,15 +73,19 @@ export async function notifyPartnersMarked(habitId, actorId, date) {
     const t = texts(settings.lang ?? partner.language)
     const мой = doneToday(marked, partner.user_id)
 
-    const text = мой
-      ? `${t.partnerMarked(actorName, habitName)}\n\n${t.partnerBothDone}`
-      : `${t.partnerMarked(actorName, habitName)}\n\n${t.partnerYourTurn}`
+    /*
+     * Само сообщение одно на оба случая — две строки, кто и что сделал.
+     * Прежде к нему приписывалась третья: «ваша очередь» либо «сегодня оба».
+     * Её убрали: очередь и без слов видна по кнопке ниже, а когда кнопки нет,
+     * значит уже отмечено — говорить об этом отдельной строкой незачем.
+     */
+    const text = t.partnerMarked(actorName, habitName)
 
     // Отметиться прямо отсюда — та же кнопка, что и под вечерним
     // напоминанием. Тому, кто уже отметился, нажимать нечего.
-    const buttons = мой ? [] : [[{ text: `✓ ${t.markIt}`, callback_data: `d:${habitId}:${date}` }]]
+    const buttons = мой ? undefined : [[{ text: t.markIt, callback_data: `d:${habitId}:${date}` }]]
 
-    const result = await sendMessage(partner.user_id, text, buttons.length > 0 ? buttons : undefined)
+    const result = await sendMessage(partner.user_id, text, buttons)
     if (result?.ok) sent++
   }
 

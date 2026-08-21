@@ -281,7 +281,7 @@ export async function runTimedReminders(webAppUrl, now = Date.now()) {
     // выбирали — язык Telegram.
     const t = texts(settings.lang ?? row.language)
 
-    await sendMessage(row.user_id, t.timedReminder(escapeHtml(row.name), row.remind_at), [
+    await sendMessage(row.user_id, t.timedReminder(escapeHtml(row.name)), [
       // Отметить прямо из чата — как и под вечерним напоминанием.
       [{ text: t.markButton, callback_data: `t:${row.habit_id}:${date}` }],
       [{ text: t.open, web_app: { url: webAppUrl } }],

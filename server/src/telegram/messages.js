@@ -4,6 +4,15 @@
  * Язык берётся из настроек приложения, а если человек их ещё не открывал —
  * из настроек его Telegram: бот пишет первым, и спросить, на каком языке
  * говорить, ему негде.
+ *
+ * Уведомления построены по одному правилу: первой строкой, полужирным, — о ком
+ * или о чём речь, второй — что произошло. В ленте чатов Telegram показывает
+ * начало сообщения, и по одной строке уже понятно, чьё оно и о какой привычке,
+ * — открывать не обязательно. Прежние тексты начинались со значка и служебных
+ * слов («Пора:», «✅ Аня отмечает…»), и в списке чатов от них не было толку.
+ *
+ * Значков в начале нет намеренно: у бота своя аватарка, и ещё один рисунок
+ * перед каждым сообщением только шумит.
  */
 
 const TEXTS = {
@@ -26,64 +35,41 @@ const TEXTS = {
       `Нажмите кнопку ниже, чтобы начать.`,
     open: 'Открыть приложение',
     /*
-     * Заголовок один на любое число привычек. Раньше их было два — про одну
-     * и про несколько, — и во втором называлось только количество: «осталось
-     * непройденных привычек: 3». Какие именно, приходилось угадывать по
-     * кнопкам под сообщением. Теперь заголовок общий, а названия и расписание
-     * идут списком под ним.
+     * Вечернее — единственное, где в первой строке не название привычки:
+     * их там несколько, и любая на месте заголовка обманывала бы, обещая
+     * сообщение про неё одну.
      */
-    reminderTitle: 'Сегодня не отмечено:',
-    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    reminderTitle: '<b>Не отмечено сегодня</b>',
+    reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Осталось:',
-    /*
-     * Назначенное время стоит в самом напоминании: будильник снаружи стучится
-     * не по секундам, и сообщение приходит на несколько минут позже. Без него
-     * опоздание выглядело бы как сбитое время, а не как задержка доставки.
-     */
-    timedReminder: (habit, when) => `⏰ Пора: <b>${habit}</b>
-
-Напоминание на ${when}.`,
-    markButton: '✓ Отметить',
+    timedReminder: (habit) => `<b>${habit}</b>\nПора выполнить привычку`,
+    markButton: 'Отметить',
     everyday: 'каждый день',
     noSchedule: 'без расписания',
     // «1 раз», «2 раза», «5 раз». Расписание бывает только от 1 до 7,
     // поэтому обходимся без разбора сотен и десятков.
     timesAWeek: (n) => `${n} ${n >= 2 && n <= 4 ? 'раза' : 'раз'} в неделю`,
-    markedOne: (habit) => `✅ <b>${habit}</b> — отмечено`,
-    allDone: '✅ Всё на сегодня выполнено',
+    markedOne: (habit) => `<b>${habit}</b>\nВыполнено`,
+    allDone: 'Всё на сегодня выполнено',
     markedToast: 'Отмечено',
     goneToast: 'Привычка не найдена',
     unknown: 'Я умею немногое: открыть приложение и напомнить о привычках. Всё остальное — внутри.',
     /*
      * Имя приходит из Telegram как есть: склонять его нельзя, и род по нему
      * не угадывается. Поэтому имя всюду стоит в именительном падеже, а
-     * сказуемые подобраны так, чтобы подойти любому: «ведёт», а не «завёл»,
-     * «теперь с вами», а не «присоединился».
+     * сказуемые подобраны так, чтобы подойти любому: «выполняет», а не
+     * «выполнил», «ведёт», а не «завёл».
      */
     joined: (habit, host) =>
-      `Вы присоединились к привычке <b>${habit}</b>${host ? ` — её ведёт ${host}` : ''}.\n\nОтмечайте её у себя, и увидите, как идут дела друг у друга.`,
-    joinedAlready: (habit) => `Вы уже участвуете в привычке <b>${habit}</b>.`,
+      `<b>${habit}</b>\nВы присоединились к привычке${host ? ` — её ведёт ${host}` : ''}`,
+    joinedAlready: (habit) => `<b>${habit}</b>\nВы уже участвуете в этой привычке`,
     joinGone: 'Привычки по этой ссылке больше нет — возможно, её удалили.',
-    someoneJoined: (name, habit) => `${name} теперь с вами в привычке <b>${habit}</b>`,
-    /*
-     * Весть о том, что напарник отметился в общей привычке.
-     *
-     * «Отмечает», а не «отметил» или «отметила»: имя приходит из Telegram как
-     * есть, род по нему не угадывается, а настоящее время подходит любому.
-     */
-    partnerMarked: (name, habit) => `✅ ${name} отмечает <b>${habit}</b>`,
-    partnerYourTurn: 'Ваша очередь — сегодня вы ещё не отмечались.',
-    partnerBothDone: 'Сегодня оба. Так и держите 🔥',
+    someoneJoined: (name, habit) => `<b>${name}</b>\nтеперь ведёт привычку ${habit} вместе с вами`,
+    partnerMarked: (name, habit) => `<b>${name}</b>\nвыполняет привычку ${habit}`,
     markIt: 'Отметить',
-    /*
-     * «Удаляет», а не «удалил» или «удалила» — по той же причине, что и в
-     * вести об отметке: род по имени из Telegram не угадывается.
-     */
     habitDeleted: (name, habit) =>
-      `❌ ${name} удаляет общую привычку <b>${habit}</b>
-
-` +
-      `Она исчезла у всех участников вместе с историей отметок. Вернуть её нельзя — но можно завести заново.`,
+      `<b>${name}</b>\nудаляет общую привычку ${habit}\n\n` +
+      `Она исчезла у всех участников вместе с историей отметок.`,
   },
   en: {
     welcome: (name) =>
@@ -94,35 +80,29 @@ const TEXTS = {
       `• In the evening I will remind you here about what is left\n\n` +
       `Tap the button below to start.`,
     open: 'Open app',
-    reminderTitle: 'Not checked off today:',
-    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    reminderTitle: '<b>Not checked off today</b>',
+    reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Still left:',
-    timedReminder: (habit, when) => `⏰ Time for: <b>${habit}</b>
-
-Reminder set for ${when}.`,
-    markButton: '✓ Mark done',
+    timedReminder: (habit) => `<b>${habit}</b>\nTime to do this habit`,
+    markButton: 'Mark done',
     everyday: 'every day',
     noSchedule: 'no schedule',
     timesAWeek: (n) => `${n}× a week`,
-    markedOne: (habit) => `✅ <b>${habit}</b> — done`,
-    allDone: '✅ Everything done for today',
+    markedOne: (habit) => `<b>${habit}</b>\nDone`,
+    allDone: 'Everything done for today',
     markedToast: 'Done',
     goneToast: 'Habit not found',
     unknown: 'I can do little: open the app and remind you about habits. Everything else lives inside.',
     joined: (habit, host) =>
-      `You joined <b>${habit}</b>${host ? ` together with ${host}` : ''}.\n\nMark it off on your side — and you will both see how it goes.`,
-    joinedAlready: (habit) => `You are already in <b>${habit}</b>.`,
+      `<b>${habit}</b>\nYou joined this habit${host ? ` — ${host} keeps it too` : ''}`,
+    joinedAlready: (habit) => `<b>${habit}</b>\nYou are already in this habit`,
     joinGone: 'That habit is gone — it may have been deleted.',
-    someoneJoined: (name, habit) => `${name} joined your habit <b>${habit}</b>`,
-    partnerMarked: (name, habit) => `✅ ${name} checked off <b>${habit}</b>`,
-    partnerYourTurn: 'Your turn — you have not checked in today.',
-    partnerBothDone: 'Both of you today. Keep it up 🔥',
+    someoneJoined: (name, habit) => `<b>${name}</b>\nnow keeps the habit ${habit} with you`,
+    partnerMarked: (name, habit) => `<b>${name}</b>\ndid the habit ${habit}`,
     markIt: 'Check off',
     habitDeleted: (name, habit) =>
-      `❌ ${name} deleted the shared habit <b>${habit}</b>
-
-` +
-      `It is gone for everyone, along with the check-in history. It cannot be restored — but you can start it again.`,
+      `<b>${name}</b>\ndeleted the shared habit ${habit}\n\n` +
+      `It is gone for everyone, along with the check-in history.`,
   },
   uk: {
     welcome: (name) =>
@@ -133,37 +113,31 @@ Reminder set for ${when}.`,
       `• Увечері нагадаю про незроблене просто в цьому чаті\n\n` +
       `Натисніть кнопку нижче, щоб почати.`,
     open: 'Відкрити застосунок',
-    reminderTitle: 'Сьогодні не відмічено:',
-    reminderItem: (habit, when) => `• <b>${habit}</b> — ${when}`,
+    reminderTitle: '<b>Не відмічено сьогодні</b>',
+    reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Залишилося:',
-    timedReminder: (habit, when) => `⏰ Час: <b>${habit}</b>
-
-Нагадування на ${when}.`,
-    markButton: '✓ Відмітити',
+    timedReminder: (habit) => `<b>${habit}</b>\nЧас виконати звичку`,
+    markButton: 'Відмітити',
     everyday: 'щодня',
     noSchedule: 'без розкладу',
     // «1 раз», «2 рази», «5 разів» — три формы, как и в русском, но у единицы
     // своя, отдельная: «1 разів» звучало бы так же дико, как «1 дней».
     timesAWeek: (n) => `${n} ${n === 1 ? 'раз' : n <= 4 ? 'рази' : 'разів'} на тиждень`,
-    markedOne: (habit) => `✅ <b>${habit}</b> — відмічено`,
-    allDone: '✅ Усе на сьогодні виконано',
+    markedOne: (habit) => `<b>${habit}</b>\nВиконано`,
+    allDone: 'Усе на сьогодні виконано',
     markedToast: 'Відмічено',
     goneToast: 'Звичку не знайдено',
     unknown: 'Я вмію небагато: відкрити застосунок і нагадати про звички. Усе інше — всередині.',
     joined: (habit, host) =>
-      `Ви приєдналися до звички <b>${habit}</b>${host ? ` — її веде ${host}` : ''}.\n\nВідмічайте її в себе, і побачите, як ідуть справи одне в одного.`,
-    joinedAlready: (habit) => `Ви вже берете участь у звичці <b>${habit}</b>.`,
+      `<b>${habit}</b>\nВи приєдналися до звички${host ? ` — її веде ${host}` : ''}`,
+    joinedAlready: (habit) => `<b>${habit}</b>\nВи вже берете участь у цій звичці`,
     joinGone: 'Звички за цим посиланням більше немає — можливо, її видалили.',
-    someoneJoined: (name, habit) => `${name} тепер з вами у звичці <b>${habit}</b>`,
-    partnerMarked: (name, habit) => `✅ ${name} відмічає <b>${habit}</b>`,
-    partnerYourTurn: 'Ваша черга — сьогодні ви ще не відмічалися.',
-    partnerBothDone: 'Сьогодні обоє. Так і тримайте 🔥',
+    someoneJoined: (name, habit) => `<b>${name}</b>\nтепер веде звичку ${habit} разом з вами`,
+    partnerMarked: (name, habit) => `<b>${name}</b>\nвиконує звичку ${habit}`,
     markIt: 'Відмітити',
     habitDeleted: (name, habit) =>
-      `❌ ${name} видаляє спільну звичку <b>${habit}</b>
-
-` +
-      `Вона зникла в усіх учасників разом з історією позначок. Повернути її не можна — але можна завести наново.`,
+      `<b>${name}</b>\nвидаляє спільну звичку ${habit}\n\n` +
+      `Вона зникла в усіх учасників разом з історією позначок.`,
   },
 }
 
