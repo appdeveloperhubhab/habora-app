@@ -12,7 +12,12 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* Цвет темы снизу, свой фон поверх — если он выбран. Закреплён за окном, а
+     не за содержимым: иначе градиент уезжал бы вместе с прокруткой списка. */
+  background-color: var(--bg);
+  background-image: var(--app-gradient, none);
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   font-size: var(--fs-body);

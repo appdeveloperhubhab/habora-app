@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: var(--bg);
+  background: var(--screen-bg);
   animation: screenIn var(--t-screen) var(--ease-screen);
 }
 

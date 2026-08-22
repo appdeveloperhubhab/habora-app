@@ -19,16 +19,28 @@ export function ThemeEffect() {
     root.lang = settings.lang
   }, [settings.theme, settings.accentColor, settings.lang])
 
+  /*
+   * Градиент кладётся переменной на весь документ, а не заливкой одного
+   * элемента.
+   *
+   * Раньше он жил только на `body` и был виден только на главном списке:
+   * экраны привычки, настроек и редактора лежат поверх и накрывали его
+   * сплошной заливкой темы — переход туда выглядел так, будто выбранный фон
+   * выключили. Теперь тот же градиент доступен всем, кто рисует полный экран,
+   * а пометка `data-bg` заодно включает полупрозрачные карточки в токенах.
+   */
   useEffect(() => {
-    const body = document.body
+    const root = document.documentElement
 
     if (settings.backgroundKind === 'gradient') {
-      body.style.backgroundImage = `linear-gradient(160deg, ${settings.gradientFrom}, ${settings.gradientTo})`
-      body.style.backgroundSize = 'cover'
-      body.style.backgroundAttachment = 'fixed'
+      root.style.setProperty(
+        '--app-gradient',
+        `linear-gradient(160deg, ${settings.gradientFrom}, ${settings.gradientTo})`,
+      )
+      root.dataset.bg = 'gradient'
     } else {
-      body.style.backgroundImage = ''
-      body.style.backgroundAttachment = ''
+      root.style.removeProperty('--app-gradient')
+      delete root.dataset.bg
     }
   }, [settings.backgroundKind, settings.gradientFrom, settings.gradientTo])
 

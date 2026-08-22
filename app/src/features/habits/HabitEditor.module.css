@@ -4,7 +4,7 @@
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--screen-bg);
   animation: screenUp var(--t-screen) var(--ease-screen);
 }
 

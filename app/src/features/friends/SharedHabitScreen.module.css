@@ -6,7 +6,7 @@
   z-index: 45;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--screen-bg);
   animation: screenIn var(--t-screen) var(--ease-screen);
 }
 
