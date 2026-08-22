@@ -178,7 +178,6 @@ export const ru = {
     marks: 'отметок',
     currentWeek: 'Текущая неделя',
     goalProgress: 'до цели',
-    calendar: 'Календарь',
     timeline: 'Хронология',
     timelineHint: 'Общее количество отметок за всё время',
     periodWeek: 'Неделя',

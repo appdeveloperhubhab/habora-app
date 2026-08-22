@@ -165,7 +165,6 @@ export function HabitScreen({
           dates={dates}
           color={habit.color}
           lang={settings.lang}
-          t={t}
           onToggleDay={(date) => void toggleEntry(habit.id, date)}
         />
         <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />

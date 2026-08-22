@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { Lang } from '../../../types'
-import type { Dict } from '../../../i18n'
 import { addMonths, formatMonthYear, fromIso, monthGrid, todayIso, weekdayMin } from '../../../lib/dates'
 import { hapticSelect, hapticTick, hapticUntick } from '../../../lib/haptics'
 import { Icon } from '../../../ui/Icon'
@@ -18,13 +17,11 @@ export function MonthCalendar({
   dates,
   color,
   lang,
-  t,
   onToggleDay,
 }: {
   dates: string[]
   color: string
   lang: Lang
-  t: Dict
   onToggleDay(date: string): void
 }) {
   const today = todayIso()
@@ -39,23 +36,28 @@ export function MonthCalendar({
 
   return (
     <section className={styles.card} style={{ '--habit': color } as React.CSSProperties}>
+      {/*
+        Заголовка «Календарь» здесь нет: под ним и так календарь, и подпись
+        называла очевидное, заодно отжимая месяц от середины карточки. Стрелки
+        разведены по краям, месяц стоит между ними — так его видно первым,
+        а до кнопок легче дотянуться большим пальцем.
+      */}
       <header className={styles.header}>
-        <h3 className={styles.title}>{t.detail.calendar}</h3>
-        <div className={styles.nav}>
-          <button className={styles.navButton} onClick={() => shiftMonth(-1)} aria-label="Previous month">
-            <Icon name="chevronLeft" size={18} />
-          </button>
-          <span className={styles.month}>{formatMonthYear(month, lang)}</span>
-          <button
-            className={styles.navButton}
-            onClick={() => shiftMonth(1)}
-            // Листать в будущее незачем: отмечать вперёд нельзя.
-            disabled={month.slice(0, 7) >= today.slice(0, 7)}
-            aria-label="Next month"
-          >
-            <Icon name="chevronRight" size={18} />
-          </button>
-        </div>
+        <button className={styles.navButton} onClick={() => shiftMonth(-1)} aria-label="Previous month">
+          <Icon name="chevronLeft" size={18} />
+        </button>
+
+        <span className={styles.month}>{formatMonthYear(month, lang)}</span>
+
+        <button
+          className={styles.navButton}
+          onClick={() => shiftMonth(1)}
+          // Листать в будущее незачем: отмечать вперёд нельзя.
+          disabled={month.slice(0, 7) >= today.slice(0, 7)}
+          aria-label="Next month"
+        >
+          <Icon name="chevronRight" size={18} />
+        </button>
       </header>
 
       <div className={styles.weekdays}>

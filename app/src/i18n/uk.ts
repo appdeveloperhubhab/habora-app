@@ -162,7 +162,6 @@ export const uk: Dict = {
     marks: 'позначок',
     currentWeek: 'Поточний тиждень',
     goalProgress: 'до мети',
-    calendar: 'Календар',
     timeline: 'Хронологія',
     timelineHint: 'Загальна кількість позначок за весь час',
     periodWeek: 'Тиждень',

@@ -160,7 +160,6 @@ export const en: Dict = {
     marks: 'check-ins',
     currentWeek: 'This week',
     goalProgress: 'to goal',
-    calendar: 'Calendar',
     timeline: 'Timeline',
     timelineHint: 'Total check-ins over time',
     periodWeek: 'Week',

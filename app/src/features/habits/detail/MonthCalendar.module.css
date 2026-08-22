@@ -14,22 +14,10 @@
   gap: var(--sp-3);
 }
 
-.title {
-  font-size: 11px;
-  font-weight: var(--fw-bold);
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
+/* Месяц занимает всё, что осталось между стрелками, и стоит ровно посередине
+   карточки. Стрелки при этом прибиты к краям и не ездят от длины названия. */
 .month {
-  min-width: 104px;
+  flex: 1;
   text-align: center;
   font-size: var(--fs-label);
   font-weight: var(--fw-bold);
