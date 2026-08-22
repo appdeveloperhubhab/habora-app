@@ -5,8 +5,6 @@ import { useNav } from '../../../shell/navigation'
 import { dict } from '../../../i18n'
 import { Icon } from '../../../ui/Icon'
 import { Avatar } from '../../../ui/Avatar'
-import { HabitIcon } from '../../../ui/habitIcons'
-import { scheduleLabel } from '../scheduleLabel'
 import { shareLink } from '../../../lib/telegram'
 import { currentStreak } from '../../../lib/streak'
 import { formatDuration } from '../../../lib/timer'
@@ -67,16 +65,15 @@ export function HabitScreen({
 
   return (
     <div className={styles.screen} style={{ '--habit': habit.color } as React.CSSProperties}>
-      {/*
-        Верхняя полоса разгружена до двух кнопок: имя привычки переехало под
-        неё, где ему хватает места на любую длину. В строке между кнопками оно
-        помещалось строк в одну и обрезалось многоточием, хотя это главное
-        слово всего экрана.
-      */}
       <header className={styles.bar}>
         <button className={styles.iconButton} onClick={onBack} aria-label={t.common.back}>
           <Icon name="back" size={22} />
         </button>
+
+        <div className={styles.heading}>
+          <h2 className={styles.title}>{habit.name}</h2>
+          {habit.description && <p className={styles.description}>{habit.description}</p>}
+        </div>
 
         <button className={`${styles.iconButton} ${styles.edit}`} onClick={onEdit} aria-label={t.common.edit}>
           <Icon name="pencil" size={20} />
@@ -84,21 +81,6 @@ export function HabitScreen({
       </header>
 
       <div className={styles.content}>
-        {/*
-          Знакомство с привычкой: своя иконка, имя и расписание — столбиком по
-          центру. Иконка крупная и в цвете привычки: на экране, куда заходят
-          ради одной-единственной привычки, она отвечает «а какой именно» до
-          того, как прочитано название.
-        */}
-        <section className={styles.identity}>
-          <span className={styles.mark}>
-            <HabitIcon icon={habit.icon} size={40} />
-          </span>
-          <h2 className={styles.name}>{habit.name}</h2>
-          <p className={styles.schedule}>{scheduleLabel(habit.schedule, settings.lang, t)}</p>
-          {habit.description && <p className={styles.description}>{habit.description}</p>}
-        </section>
-
         {/*
           Участники и приглашение — сразу под шапкой, до всей аналитики:
           совместность привычки это первое, что о ней стоит знать, а звать
