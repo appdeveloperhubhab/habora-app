@@ -163,8 +163,6 @@ export const ru = {
     iconSheet: 'Иконка привычки',
   },
   detail: {
-    remindAt: 'Напоминание',
-    remindersOff: 'Напоминания выключены в настройках',
     activity: 'Активность',
     currentStreak: 'Текущая серия',
     longest: 'Самый длинный',

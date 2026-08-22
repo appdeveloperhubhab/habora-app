@@ -124,25 +124,6 @@ export function HabitScreen({
           {members.length > 1 ? t.friends.invite : t.actions.invite}
         </button>
 
-        {/*
-          Назначенный час — единственное место, где его видно, не открывая
-          редактор. Участнику совместной привычки редактор и вовсе недоступен:
-          правит привычку только создатель, а напоминание приходит обоим.
-        */}
-        {habit.remindAt && (
-          <div className={styles.remind}>
-            <div className={styles.remindRow}>
-              <Icon name="bell" size={17} />
-              {t.detail.remindAt}
-              <span className={styles.remindTime}>{habit.remindAt}</span>
-            </div>
-
-            {/* Выключенные напоминания гасят и этот час: обещать письмо,
-                которое не придёт, хуже, чем не обещать ничего. */}
-            {!settings.reminders && <p className={styles.remindOff}>{t.detail.remindersOff}</p>}
-          </div>
-        )}
-
         {/* Таймер живёт здесь, а не на карточке в списке: там он мешал
             полоскам недели и был лишним для большинства привычек. */}
         {habit.durationSec !== null && (

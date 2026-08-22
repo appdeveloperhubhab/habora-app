@@ -179,41 +179,6 @@
   opacity: 0.7;
 }
 
-/*
- * Назначенный час. Тише кнопки таймера намеренно: на неё нажимают, а этот
- * ряд только сообщает, и одинаковая заметность заставляла бы искать в нём
- * действие, которого нет.
- */
-.remind {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-lg);
-  color: var(--text-dim);
-  background: var(--surface-2);
-}
-
-.remindRow {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-label);
-}
-
-.remindTime {
-  margin-left: auto;
-  font-weight: var(--fw-bold);
-  /* Моноширинные цифры: иначе время дёргалось бы по ширине от часа к часу. */
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-.remindOff {
-  font-size: var(--fs-caption);
-  color: var(--text-faint);
-}
-
 /* Экран приходит справа, но смещение маленькое, а времени много:
    движение читается как мягкий наплыв, а не как рывок. */
 @keyframes screenIn {

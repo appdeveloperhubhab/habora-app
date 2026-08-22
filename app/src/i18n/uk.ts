@@ -147,8 +147,6 @@ export const uk: Dict = {
     iconSheet: 'Іконка звички',
   },
   detail: {
-    remindAt: 'Нагадування',
-    remindersOff: 'Нагадування вимкнені в налаштуваннях',
     activity: 'Активність',
     currentStreak: 'Поточна серія',
     longest: 'Найдовша',
