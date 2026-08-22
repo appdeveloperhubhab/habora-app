@@ -60,16 +60,24 @@
 }
 
 /*
- * Иконка приглушена и отодвинута вправо: она помогает узнать плашку с одного
- * взгляда, но спорить с цифрой не должна — читают здесь число.
+ * Знак справа — крупный и в полном цвете привычки.
+ *
+ * Был вдвое мельче и приглушён до трети — на плашке рядом с крупной цифрой
+ * он читался как случайная точка, и опознать по нему плашку не выходило.
+ * Теперь это второй по заметности предмет после числа: глаз цепляется за
+ * него первым и уже потом читает цифру.
+ *
+ * Кружок под ним оставлен светлее самого знака: без подложки знак висел бы
+ * в пустоте, а с подложкой в его же силе — спорил бы с числом.
  */
 .icon {
   display: grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-pill);
-  color: color-mix(in srgb, var(--habit) 70%, transparent);
-  background: color-mix(in srgb, var(--habit) 12%, transparent);
+  color: var(--habit);
+  background: color-mix(in srgb, var(--habit) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 20%, transparent);
 }

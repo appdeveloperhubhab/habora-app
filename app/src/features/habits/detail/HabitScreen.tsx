@@ -156,23 +156,23 @@ export function HabitScreen({
         )}
 
         {/*
-          Календарь идёт первым. Он единственный отвечает на вопрос «а этот
-          день я отметил?» и единственный, где отметку можно поставить задним
-          числом, — то есть с ним работают, а остальное разглядывают. Сводки
-          и графики встают следом, от короткого взгляда к деталям.
+          Порядок — от итога к подробностям.
+
+          Цифры первыми: четыре числа отвечают «как дела» целиком, и ради
+          этого ответа сюда чаще всего и заходят. Календарь следом — он
+          единственный, где отметку можно поставить задним числом, то есть с
+          ним работают. Дальше хронология и сетка года: их разглядывают, и
+          ждать своей очереди они могут.
         */}
+        <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
         <MonthCalendar
           dates={dates}
           color={habit.color}
           lang={settings.lang}
           onToggleDay={(date) => void toggleEntry(habit.id, date)}
         />
-        {/* Цифры идут сразу за календарём: он отвечает «когда именно», они —
-            «и сколько всего», и вместе это ответ на один вопрос. Сетка года и
-            графики встают следом, для тех, кто хочет разглядывать. */}
-        <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
-        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
         <TimelineChart dates={dates} color={habit.color} lang={settings.lang} t={t} />
+        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
       </div>
     </div>
   )
