@@ -8,11 +8,11 @@
   animation: screenIn var(--t-screen) var(--ease-screen);
 }
 
+/* Только две кнопки по краям — название переехало под полосу, в «знакомство». */
 .bar {
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  justify-content: space-between;
   flex: none;
   /* Высота вместе с отступом: box-sizing: border-box вычитает отступ из
      заданной высоты, и на содержимое шапки не осталось бы места. */
@@ -21,29 +21,58 @@
   padding-top: var(--top-inset);
 }
 
-.heading {
+/*
+ * Знакомство с привычкой: иконка, имя, расписание — столбиком по центру.
+ *
+ * Имя стояло в строке между кнопками и обрезалось многоточием на длинном
+ * названии — при том что это главное слово экрана. Здесь ему хватает всей
+ * ширины, а перенос на вторую строку ничего не ломает.
+ */
+.identity {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  min-width: 0;
+  gap: var(--sp-1);
+  padding: var(--sp-2) 0 var(--sp-4);
+  text-align: center;
 }
 
-.title {
-  font-size: 17px;
+/*
+ * Иконка крупная и в цвете привычки: на экране, куда заходят ради одной
+ * привычки, она отвечает «а какой именно» раньше, чем прочитано название.
+ * Мягкий круг под ней — тот же приём, что у карточек в списке: цвет
+ * разбавлен до подложки, чтобы знак читался как предмет, а не как наклейка.
+ */
+.mark {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  margin-bottom: var(--sp-1);
+  border-radius: var(--r-pill);
+  color: var(--habit);
+  background: color-mix(in srgb, var(--habit) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 22%, transparent);
+}
+
+.name {
+  font-size: var(--fs-title);
   font-weight: var(--fw-bold);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  /* Перенос разрешён: длинное название лучше в две строки, чем с многоточием. */
   max-width: 100%;
+}
+
+.schedule {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--text-dim);
 }
 
 .description {
   font-size: var(--fs-caption);
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-faint);
   max-width: 100%;
 }
 
