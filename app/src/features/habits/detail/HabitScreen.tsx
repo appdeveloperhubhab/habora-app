@@ -5,6 +5,7 @@ import { useNav } from '../../../shell/navigation'
 import { dict } from '../../../i18n'
 import { Icon } from '../../../ui/Icon'
 import { Avatar } from '../../../ui/Avatar'
+import { TimePicker } from '../../../ui/TimePicker'
 import { shareLink } from '../../../lib/telegram'
 import { currentStreak } from '../../../lib/streak'
 import { formatDuration } from '../../../lib/timer'
@@ -33,7 +34,8 @@ export function HabitScreen({
   onEdit(): void
   onOpenTimer(): void
 }) {
-  const { settings, datesOf, toggleEntry, inviteLink, friends, refreshFriends } = useStore()
+  const { settings, datesOf, toggleEntry, inviteLink, friends, refreshFriends, setReminder } =
+    useStore()
   const nav = useNav()
   const t = dict(settings.lang)
   const dates = datesOf(habit.id)
@@ -123,6 +125,28 @@ export function HabitScreen({
           <Icon name="friends" size={17} />
           {members.length > 1 ? t.friends.invite : t.actions.invite}
         </button>
+
+        {/*
+          Напоминание — своё у каждого участника, и настраивается оно здесь.
+          Не в редакторе: редактор открывает только создатель, а час нужен
+          каждому. Приглашённый входит с выключенным и назначает себе сам, ни
+          на кого не влияя.
+        */}
+        <section className={styles.remind}>
+          <h3 className={styles.remindTitle}>{t.editor.remind}</h3>
+          <TimePicker
+            value={habit.remindAt}
+            color={habit.color}
+            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
+            onChange={(next) => void setReminder(habit.id, next)}
+          />
+
+          {/* Выключенные в настройках напоминания гасят и этот час: обещать
+              письмо, которое не придёт, хуже, чем не обещать ничего. */}
+          {habit.remindAt && !settings.reminders && (
+            <p className={styles.remindOff}>{t.detail.remindersOff}</p>
+          )}
+        </section>
 
         {/* Таймер живёт здесь, а не на карточке в списке: там он мешал
             полоскам недели и был лишним для большинства привычек. */}

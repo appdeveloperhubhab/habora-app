@@ -165,3 +165,18 @@ export const settingsSchema = {
     },
   },
 }
+
+/**
+ * Время напоминания — своё у каждого участника, поэтому у него отдельный
+ * маршрут и отдельное описание: в правке привычки это поле принимается от
+ * создателя заодно, а здесь — от любого участника и только оно одно.
+ */
+export const reminderSchema = {
+  body: {
+    type: 'object',
+    properties: {
+      remindAt: { type: ['string', 'null'], pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' },
+    },
+    additionalProperties: false,
+  },
+}

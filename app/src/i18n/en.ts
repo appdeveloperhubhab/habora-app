@@ -147,6 +147,7 @@ export const en: Dict = {
     iconSheet: 'Habit icon',
   },
   detail: {
+    remindersOff: 'Reminders are turned off in settings',
     activity: 'Activity',
     currentStreak: 'Current streak',
     longest: 'Longest',

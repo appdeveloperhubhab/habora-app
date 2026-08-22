@@ -67,6 +67,14 @@ export class ApiDataSource implements DataSource {
     return this.request<Habit>(`/api/habits/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
   }
 
+  /** Своё время напоминания: у каждого участника оно личное. */
+  async setReminder(id: string, remindAt: string | null) {
+    await this.request(`/api/habits/${id}/reminder`, {
+      method: 'PATCH',
+      body: JSON.stringify({ remindAt }),
+    })
+  }
+
   async deleteHabit(id: string) {
     await this.request(`/api/habits/${id}`, { method: 'DELETE' })
   }

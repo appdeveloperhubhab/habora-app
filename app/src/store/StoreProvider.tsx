@@ -233,6 +233,21 @@ export function StoreProvider({ children, source }: Props) {
     [dataSource],
   )
 
+  /**
+   * Своё время напоминания по привычке.
+   *
+   * Меняем состояние сразу, не дожидаясь сервера: переключатель должен
+   * отзываться мгновенно, а час — личная настройка, и разойтись с чужими
+   * данными она не может.
+   */
+  const setReminder = useCallback(
+    async (id: string, remindAt: string | null) => {
+      setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, remindAt } : h)))
+      await dataSource.setReminder(id, remindAt)
+    },
+    [dataSource],
+  )
+
   const deleteHabit = useCallback(
     async (id: string) => {
       await dataSource.deleteHabit(id)
@@ -306,6 +321,7 @@ export function StoreProvider({ children, source }: Props) {
       toggleEntry,
       createHabit,
       updateHabit,
+      setReminder,
       deleteHabit,
       reorderHabits,
       saveSettings,
@@ -315,7 +331,7 @@ export function StoreProvider({ children, source }: Props) {
     [
       ready, failed, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
       isDone, datesOf, activeDates, toggleEntry,
-      createHabit, updateHabit, deleteHabit, reorderHabits,
+      createHabit, updateHabit, setReminder, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,
     ],
   )

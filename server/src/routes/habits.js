@@ -6,6 +6,7 @@ import {
   createHabitSchema,
   entriesQuerySchema,
   habitsQuerySchema,
+  reminderSchema,
   reorderSchema,
   toggleEntrySchema,
   updateHabitSchema,
@@ -33,6 +34,32 @@ async function isMember(habitId, userId) {
     args: [habitId, userId],
   })
   return rows.length > 0
+}
+
+/**
+ * Ставит человеку его собственное время напоминания по этой привычке.
+ *
+ * Отметка о сегодняшней отправке снимается вместе со временем — и только у
+ * него одного. Без этого переставивший час с девяти на шесть не дождался бы
+ * напоминания сегодня: сервер считал бы, что ему уже отправлено. У остальных
+ * участников свой час и своя отметка, трогать их незачем.
+ */
+/** Собственное время напоминания человека по этой привычке; null — выключено. */
+async function ownReminder(habitId, userId) {
+  const { rows } = await db.execute({
+    sql: 'SELECT remind_at FROM habit_members WHERE habit_id = ? AND user_id = ?',
+    args: [habitId, userId],
+  })
+  return rows[0]?.remind_at ?? null
+}
+
+async function setOwnReminder(habitId, userId, remindAt) {
+  await db.execute({
+    sql: `UPDATE habit_members
+             SET remind_at = ?, reminded_on = NULL
+           WHERE habit_id = ? AND user_id = ?`,
+    args: [remindAt, habitId, userId],
+  })
 }
 
 /** Привычка, если человек её создал. Иначе null — менять её он не вправе. */
@@ -86,9 +113,18 @@ async function membersOf(habitIds, date) {
 
 export async function habitRoutes(app) {
   app.get('/api/habits', { schema: habitsQuerySchema }, async (request) => {
-    // Порядок берётся из участия, а не из привычки: у каждого он свой.
+    /*
+     * Порядок и время напоминания берутся из участия, а не из привычки:
+     * и то и другое у каждого своё.
+     *
+     * Имена столбцов разведены намеренно. В таблице привычки есть свои
+     * `sort_order` и `remind_at`, и `h.*` притаскивает их сюда же; при
+     * совпадении имён побеждает первый, то есть столбец привычки, а личное
+     * значение молча теряется. Порядку это сходило с рук — он берётся из
+     * `ORDER BY`, — а вот время напоминания приходило бы пустым всегда.
+     */
     const { rows } = await db.execute({
-      sql: `SELECT h.*, m.sort_order AS sort_order
+      sql: `SELECT h.*, m.sort_order AS my_sort_order, m.remind_at AS my_remind_at
               FROM habits h
               JOIN habit_members m ON m.habit_id = h.id
              WHERE m.user_id = ?
@@ -101,6 +137,8 @@ export async function habitRoutes(app) {
 
     return rows.map((row) => ({
       ...rowToHabit(row),
+      sortOrder: row.my_sort_order,
+      remindAt: row.my_remind_at,
       ownerId: Number(row.user_id),
       members: members.get(row.id) ?? [],
     }))
@@ -135,8 +173,8 @@ export async function habitRoutes(app) {
       [
         {
           sql: `INSERT INTO habits (id, user_id, name, description, color, icon, schedule,
-                                    streak_goal, tinted, duration_sec, remind_at, sort_order, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    streak_goal, tinted, duration_sec, sort_order, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
             habit.id,
             request.userId,
@@ -148,16 +186,22 @@ export async function habitRoutes(app) {
             habit.streakGoal,
             habit.tinted ? 1 : 0,
             habit.durationSec,
-            habit.remindAt,
             habit.sortOrder,
             habit.createdAt,
           ],
         },
-        // Создатель — первый участник. Обе записи одной транзакцией: привычка
-        // без участников не видна вообще никому, включая её автора.
+        /*
+         * Создатель — первый участник. Обе записи одной транзакцией: привычка
+         * без участников не видна вообще никому, включая её автора.
+         *
+         * Время напоминания ложится сюда, а не в привычку: оно личное. У
+         * заводящего оно берётся из формы, у тех, кого позовут позже, начнётся
+         * с выключенного — своё время каждый назначает сам.
+         */
         {
-          sql: 'INSERT INTO habit_members (habit_id, user_id, sort_order, joined_at) VALUES (?, ?, ?, ?)',
-          args: [habit.id, request.userId, habit.sortOrder, habit.createdAt],
+          sql: `INSERT INTO habit_members (habit_id, user_id, sort_order, joined_at, remind_at)
+                VALUES (?, ?, ?, ?, ?)`,
+          args: [habit.id, request.userId, habit.sortOrder, habit.createdAt, habit.remindAt],
         },
       ],
       'write',
@@ -176,7 +220,7 @@ export async function habitRoutes(app) {
     await db.execute({
       sql: `UPDATE habits
               SET name = ?, description = ?, color = ?, icon = ?, schedule = ?,
-                  streak_goal = ?, tinted = ?, duration_sec = ?, remind_at = ?
+                  streak_goal = ?, tinted = ?, duration_sec = ?
             WHERE id = ? AND user_id = ?`,
       args: [
         merged.name,
@@ -187,27 +231,46 @@ export async function habitRoutes(app) {
         merged.streakGoal,
         merged.tinted ? 1 : 0,
         merged.durationSec,
-        merged.remindAt,
         request.params.id,
         request.userId,
       ],
     })
 
     /*
-     * Переставленное время начинает действовать сегодня же.
-     *
-     * Отметка о сегодняшней отправке снимается у всех участников: без этого
-     * человек, уже получивший напоминание в девять, не дождался бы нового в
-     * шесть — сервер считал бы, что на сегодня всё отправлено.
+     * Время напоминания приходит сюда же, из той же формы, но живёт не в
+     * привычке, а в участии — и меняется только своё. Создатель, правя
+     * привычку, переставляет час себе, а не всем: у остальных он свой.
      */
-    if (merged.remindAt !== existing.remind_at) {
-      await db.execute({
-        sql: 'UPDATE habit_members SET reminded_on = NULL WHERE habit_id = ?',
-        args: [request.params.id],
-      })
+    if (request.body && 'remindAt' in request.body) {
+      await setOwnReminder(request.params.id, request.userId, request.body.remindAt ?? null)
     }
 
-    return merged
+    /*
+     * Час в ответе — свой, а не из привычки.
+     *
+     * `merged` собран из строки привычки, а там столбец времени остался
+     * пустым после переезда. Верни мы его как есть — приложение приняло бы
+     * пустоту за выключенное напоминание и погасило бы у себя только что
+     * назначенный час.
+     */
+    return { ...merged, remindAt: await ownReminder(request.params.id, request.userId) }
+  })
+
+  /**
+   * Время напоминания — своё у каждого участника.
+   *
+   * Отдельный маршрут, а не поле в правке привычки: править привычку вправе
+   * один создатель, а назначать себе час — каждый, кто в ней состоит. Иначе
+   * приглашённый не смог бы включить напоминание вовсе.
+   */
+  app.patch('/api/habits/:id/reminder', { schema: reminderSchema }, async (request, reply) => {
+    if (!(await isMember(request.params.id, request.userId))) {
+      return reply.code(404).send({ error: 'Привычка не найдена' })
+    }
+
+    const remindAt = request.body?.remindAt ?? null
+    await setOwnReminder(request.params.id, request.userId, remindAt)
+    return { remindAt }
   })
 
   /**

@@ -228,15 +228,15 @@ export function minutesOfDay(value) {
  */
 export async function runTimedReminders(webAppUrl, now = Date.now()) {
   const { rows } = await db.execute(`
-    SELECT m.habit_id, m.user_id, m.reminded_on,
-           h.name, h.schedule, h.remind_at,
+    SELECT m.habit_id, m.user_id, m.reminded_on, m.remind_at,
+           h.name, h.schedule,
            u.language, u.tz_offset,
            s.data AS settings
       FROM habit_members m
       JOIN habits h ON h.id = m.habit_id
       JOIN users  u ON u.user_id = m.user_id
       LEFT JOIN settings s ON s.user_id = m.user_id
-     WHERE h.remind_at IS NOT NULL AND u.chat_started = 1
+     WHERE m.remind_at IS NOT NULL AND u.chat_started = 1
   `)
 
   const result = { checked: rows.length, sent: 0, skipped: 0 }

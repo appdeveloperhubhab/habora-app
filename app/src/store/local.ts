@@ -70,6 +70,11 @@ export class LocalDataSource implements DataSource {
     return updated
   }
 
+  async setReminder(id: string, remindAt: string | null): Promise<void> {
+    const habits = read<Habit[]>(KEY_HABITS, [])
+    write(KEY_HABITS, habits.map((h) => (h.id === id ? { ...h, remindAt } : h)))
+  }
+
   async deleteHabit(id: string): Promise<void> {
     write(
       KEY_HABITS,

@@ -31,6 +31,7 @@ export interface StoreValue {
   toggleEntry(habitId: string, date: IsoDate): Promise<void>
   createHabit(input: HabitInput): Promise<Habit>
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<void>
+  setReminder(id: string, remindAt: string | null): Promise<void>
   deleteHabit(id: string): Promise<void>
   reorderHabits(ids: string[]): Promise<void>
 
