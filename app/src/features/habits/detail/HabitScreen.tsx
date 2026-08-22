@@ -167,8 +167,11 @@ export function HabitScreen({
           lang={settings.lang}
           onToggleDay={(date) => void toggleEntry(habit.id, date)}
         />
-        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
+        {/* Цифры идут сразу за календарём: он отвечает «когда именно», они —
+            «и сколько всего», и вместе это ответ на один вопрос. Сетка года и
+            графики встают следом, для тех, кто хочет разглядывать. */}
         <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
+        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
         <TimelineChart dates={dates} color={habit.color} lang={settings.lang} t={t} />
       </div>
     </div>

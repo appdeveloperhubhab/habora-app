@@ -1,123 +1,75 @@
-/*
- * minmax(0, 1fr) вместо 1fr: обычная доля не даёт колонке стать уже своего
- * содержимого, и длинный заголовок вроде «ПОСЛЕДОВАТЕЛЬНОСТЬ» распирал сетку
- * за край экрана.
- */
+/* Две в ряд: на телефоне четыре плашки в строку сжались бы до нечитаемых
+   столбиков, а по одной — растянули бы экран вчетверо. */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-3);
+  gap: var(--sp-2);
 }
 
 .card {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--sp-2);
-  padding: var(--sp-4);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
   border-radius: var(--r-lg);
   background: var(--surface);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
   min-width: 0;
 }
 
-.streak,
-.consistency {
-  /* Две квадратные карточки в ряд — как на референсе. */
-  aspect-ratio: 1;
-}
-
-.month {
-  grid-column: 1 / -1;
-}
-
-.title {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-2);
-  font-size: 11px;
-  font-weight: var(--fw-bold);
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  /* Длинные заголовки переносятся с дефисом, а не рвутся посреди слова
-     и не вылезают за карточку. */
-  hyphens: auto;
-  -webkit-hyphens: auto;
-}
-
-.title svg {
-  flex: none;
-}
-
+/* Число и единица на одной строке, по нижнему краю: так «5» и «дней»
+   стоят на общей опорной линии, а не болтаются по центру друг друга. */
 .value {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  margin-top: auto;
+  gap: 5px;
+  min-width: 0;
 }
 
 .number {
-  font-size: 40px;
+  font-size: 26px;
   font-weight: var(--fw-bold);
-  line-height: 1;
   letter-spacing: -0.03em;
+  line-height: 1.05;
   color: var(--habit);
+  /* Цифры одной ширины: иначе плашки в паре расходятся по высоте текста. */
+  font-variant-numeric: tabular-nums;
 }
 
 .unit {
-  font-size: var(--fs-body);
-  font-weight: var(--fw-bold);
-}
-
-.footnote {
-  margin-top: auto;
   font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.footnote strong {
-  color: var(--text);
+.label {
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.streak .footnote,
-.month .footnote {
-  margin-top: var(--sp-3);
-}
-
-.ring {
+/*
+ * Иконка приглушена и отодвинута вправо: она помогает узнать плашку с одного
+ * взгляда, но спорить с цифрой не должна — читают здесь число.
+ */
+.icon {
   display: grid;
   place-items: center;
-  flex: 1;
-}
-
-.ringLabel {
-  font-size: var(--fs-label);
-  color: var(--habit);
-}
-
-.monthBody {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--sp-4);
-}
-
-/* Мини-график по месяцам: показывает форму года, без осей и подписей. */
-.spark {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 64px;
-  flex: 1;
-  max-width: 140px;
-}
-
-.sparkBar {
-  flex: 1;
-  min-height: 4px;
-  border-radius: var(--r-cell);
-  background: color-mix(in srgb, var(--habit) 25%, transparent);
-}
-
-.sparkNow {
-  background: var(--habit);
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  color: color-mix(in srgb, var(--habit) 70%, transparent);
+  background: color-mix(in srgb, var(--habit) 12%, transparent);
 }

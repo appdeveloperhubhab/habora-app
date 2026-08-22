@@ -1,5 +1,5 @@
 import type { HabitSchedule, IsoDate } from '../types'
-import { addDays, fromIso, startOfWeek, todayIso } from './dates'
+import { addDays, fromIso, startOfWeek, todayIso, weekdayOf } from './dates'
 import { completionRate } from './streak'
 
 /**
@@ -133,6 +133,58 @@ export function consistency(
   const ratio = completionRate(dates, schedule, 30, today)
   const level: ConsistencyLevel = ratio >= 0.75 ? 'high' : ratio >= 0.4 ? 'medium' : 'low'
   return { ratio, level }
+}
+
+/**
+ * Сделано за месяц из того, что было положено по расписанию.
+ *
+ * Считаем только по сегодняшний день, а не весь месяц: с полным месяцем
+ * первого числа выходило бы «0 из 22», и цифра каждый раз начинала бы с
+ * приговора вместо отчёта. «Из положенного к этому дню» — то, по чему себя
+ * и оценивают.
+ *
+ * У расписания «N раз в неделю» конкретных дней нет — там за положенное
+ * берём число прошедших недель на недельную норму.
+ */
+export function monthProgress(
+  dates: IsoDate[],
+  schedule: HabitSchedule,
+  today: IsoDate = todayIso(),
+): { done: number; planned: number } {
+  const marks = new Set(dates)
+  const day = Number(today.slice(8, 10))
+  const first = `${today.slice(0, 8)}01`
+
+  /*
+   * Считаем только дни из расписания — и в положенном, и в сделанном.
+   *
+   * Отметку можно поставить в любой прошедший день, тапнув по календарю, в
+   * том числе не по расписанию. Считай мы все подряд, у привычки «Пн, Ср, Пт»
+   * выходило бы «16 из 9» — сделано больше, чем положено, и пара переставала
+   * бы читаться. Отметки сверх плана от этого не пропадают: они есть в
+   * календаре, в сетке года и в хронологии.
+   */
+  if (schedule.type === 'frequency') {
+    const weeks = Math.max(1, Math.ceil(day / 7))
+    const planned = weeks * Math.max(1, schedule.timesPerWeek)
+    let done = 0
+    for (let i = 0; i < day; i++) {
+      if (marks.has(addDays(first, i))) done++
+    }
+    // У недельной нормы расписания по дням нет, и «сверх плана» здесь
+    // возможно так же — ограничиваем самой нормой.
+    return { done: Math.min(done, planned), planned }
+  }
+
+  let done = 0
+  let planned = 0
+  for (let i = 0; i < day; i++) {
+    const date = addDays(first, i)
+    if (!schedule.days.includes(weekdayOf(date))) continue
+    planned++
+    if (marks.has(date)) done++
+  }
+  return { done, planned }
 }
 
 /** Годы, за которые есть хотя бы одна отметка, по убыванию. */
