@@ -71,6 +71,15 @@ export function FriendsScreen({
 
   return (
     <div className={styles.screen}>
+      {/* Позвать ещё одного — сразу под заголовком: это главное действие
+          раздела, и искать его в конце длинного списка не должно быть нужно.
+          Тихой строкой, не заливкой: людей и их привычки оно перебивать не
+          должно — за ним приходят, когда уже решили позвать. */}
+      <button className={styles.invite} onClick={onInvite}>
+        <Icon name="friends" size={16} />
+        {t.friends.invite}
+      </button>
+
       <div className={styles.list}>
         {friends.map((friend) => {
           /*
@@ -100,13 +109,6 @@ export function FriendsScreen({
           )
         })}
       </div>
-
-      {/* Позвать ещё одного — не прячем в меню: это главное действие раздела,
-          и оно должно быть на виду, а не находиться наощупь. */}
-      <button className={styles.invite} onClick={onInvite}>
-        <Icon name="friends" size={18} />
-        {t.friends.invite}
-      </button>
     </div>
   )
 }

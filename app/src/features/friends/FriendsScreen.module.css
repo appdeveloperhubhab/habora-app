@@ -6,21 +6,22 @@
 }
 
 /*
- * Позвать ещё — тише карточек друзей: приглашение здесь уже не первый шаг,
- * а продолжение. Обводкой, а не заливкой, чтобы не спорить с ними за внимание.
+ * Позвать ещё — тише всего на экране: тонкая строка без заливки, приглушённым
+ * цветом и мелким шрифтом. Стоит она первой, и в полную силу перебивала бы
+ * людей, ради которых сюда и заходят: приглашение — не то, что нужно каждый
+ * раз, а то, что должно найтись, когда понадобится.
  */
 .invite {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  padding: var(--sp-4);
-  border-radius: var(--r-lg);
-  font-size: var(--fs-label);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  color: color-mix(in srgb, var(--accent) 45%, var(--text-dim));
+  box-shadow: inset 0 0 0 1px var(--card-edge);
   transition: transform var(--t-fast) var(--ease-spring);
 }
 
