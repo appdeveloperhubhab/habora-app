@@ -152,7 +152,7 @@ export async function runEveningReminders(webAppUrl, now = Date.now()) {
     `SELECT u.user_id, u.language, u.tz_offset, u.reminded_on, s.data AS settings
        FROM users u
        LEFT JOIN settings s ON s.user_id = u.user_id
-      WHERE u.chat_started = 1`,
+      WHERE u.chat_started = 1 AND u.blocked = 0`,
   )
 
   const result = { checked: rows.length, sent: 0, off: 0, skipped: 0 }
@@ -236,7 +236,7 @@ export async function runTimedReminders(webAppUrl, now = Date.now()) {
       JOIN habits h ON h.id = m.habit_id
       JOIN users  u ON u.user_id = m.user_id
       LEFT JOIN settings s ON s.user_id = m.user_id
-     WHERE m.remind_at IS NOT NULL AND u.chat_started = 1
+     WHERE m.remind_at IS NOT NULL AND u.chat_started = 1 AND u.blocked = 0
   `)
 
   const result = { checked: rows.length, sent: 0, skipped: 0 }

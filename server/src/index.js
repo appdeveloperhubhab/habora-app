@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import { verifyInitData } from './telegramAuth.js'
+import { isBlocked } from './db.js'
 import { habitRoutes } from './routes/habits.js'
 import { settingsRoutes } from './routes/settings.js'
 import { userRoutes } from './routes/users.js'
@@ -81,6 +82,18 @@ app.addHook('preHandler', async (request, reply) => {
   const result = verifyInitData(request.headers['x-telegram-init-data'], process.env.BOT_TOKEN)
   if (!result.ok) {
     return reply.code(401).send({ error: 'Не удалось подтвердить вход', reason: result.reason })
+  }
+
+  /*
+   * Закрытый доступ. Проверка стоит сразу после подписи и до всех обработчиков:
+   * иначе запирать пришлось бы каждый маршрут по отдельности, и забытый
+   * означал бы дыру.
+   *
+   * Вторая дверь — сам бот, в routes/bot.js: если запереть только эту,
+   * напоминания продолжали бы приходить как ни в чём не бывало.
+   */
+  if (await isBlocked(result.userId)) {
+    return reply.code(403).send({ error: 'Доступ закрыт' })
   }
 
   request.userId = result.userId

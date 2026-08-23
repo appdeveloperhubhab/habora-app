@@ -30,12 +30,17 @@ import styles from './AppShell.module.css'
  * список привычек не пересобирается и не теряет позицию скролла.
  */
 export function AppShell() {
-  const { ready, failed, retry, settings, celebration, dismissCelebration, saveSettings } = useStore()
+  const { ready, failed, denied, retry, settings, celebration, dismissCelebration, saveSettings } =
+    useStore()
   const nav = useNav()
   const t = dict(settings.lang)
 
   const [orderMode, setOrderMode] = useState(false)
   const [inviting, setInviting] = useState(false)
+
+  /* Закрытый доступ — раньше проверки готовности: со снимком с прошлого
+     запуска приложение считается готовым и показало бы прежние привычки. */
+  if (denied) return <Loading failed={false} denied onRetry={retry} t={t} />
 
   if (!ready) return <Loading failed={failed} onRetry={retry} t={t} />
 

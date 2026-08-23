@@ -93,6 +93,8 @@ export const en: Dict = {
     slow: 'The server is waking up after being idle — it takes up to half a minute. It will be quick after that.',
     failed: 'Cannot reach the server',
     failedHint: 'No answer from the server. Trying again in a few seconds usually helps.',
+    denied: 'Access closed',
+    deniedHint: 'The app is not available for this account.',
     retry: 'Try again',
   },
   friends: {

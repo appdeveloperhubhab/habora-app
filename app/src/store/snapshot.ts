@@ -51,6 +51,21 @@ export function readSnapshot(): Snapshot | null {
   }
 }
 
+/**
+ * Стереть снимок.
+ *
+ * Нужен, когда сервер закрыл доступ: снимок пережил бы отказ, и приложение
+ * продолжало бы показывать прежние привычки, ничего никуда не отправляя.
+ */
+export function clearSnapshot(): void {
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // Недоступное хранилище — не повод ронять экран: показывать всё равно
+    // будем отказ, а снимок без сервера ни во что не превратится.
+  }
+}
+
 export function writeSnapshot(habits: Habit[], entries: Entry[], settings: Settings): void {
   const me = currentUserId()
   if (me === null) return

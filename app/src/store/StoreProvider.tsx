@@ -4,7 +4,8 @@ import { telegramLang } from '../lib/telegram'
 import { detectMilestone, type Milestone } from '../lib/milestones'
 import { DEFAULT_SETTINGS, type DataSource } from './datasource'
 import { pickDataSource } from './pickDataSource'
-import { readSnapshot, writeSnapshot } from './snapshot'
+import { AccessDenied } from './api'
+import { clearSnapshot, readSnapshot, writeSnapshot } from './snapshot'
 import { StoreContext, type StoreValue } from './context'
 
 /**
@@ -44,6 +45,11 @@ export function StoreProvider({ children, source }: Props) {
    * и дать возможность повторить.
    */
   const [failed, setFailed] = useState(false)
+  /**
+   * Закрыт ли доступ этому аккаунту. Отдельно от неудачи: та временная, а
+   * этот отказ — решение владельца бота, и «Повторить» его не изменит.
+   */
+  const [denied, setDenied] = useState(false)
   /** Счётчик попыток: его смена перезапускает загрузку. */
   const [attempt, setAttempt] = useState(0)
   const [habits, setHabits] = useState<Habit[]>(cached?.habits ?? [])
@@ -82,14 +88,27 @@ export function StoreProvider({ children, source }: Props) {
         setSettings(initial)
         setFailed(false)
         setReady(true)
-      } catch {
+      } catch (error) {
+        if (cancelled) return
+
+        /*
+         * Доступ закрыт. Здесь снимок как раз убираем: иначе приложение
+         * продолжало бы показывать прежние привычки и принимать отметки,
+         * которым некуда уйти, — то есть выглядело бы работающим, не работая.
+         */
+        if (error instanceof AccessDenied) {
+          clearSnapshot()
+          setDenied(true)
+          return
+        }
+
         /*
          * Сервер не ответил. Если на экране уже показан снимок с прошлого
          * запуска — оставляем его: подменять работающее приложение сообщением
          * об ошибке значит отнять у человека то, что у него только что было.
          * Экран неудачи нужен только когда показывать нечего.
          */
-        if (!cancelled && cached === null) setFailed(true)
+        if (cached === null) setFailed(true)
       }
     }
 
@@ -113,12 +132,13 @@ export function StoreProvider({ children, source }: Props) {
    * следующем открытии, если запись на сервер ещё не прошла.
    *
    * До готовности не пишем: там пустое начальное состояние, и оно затёрло бы
-   * годный снимок ещё до того, как его успели показать.
+   * годный снимок ещё до того, как его успели показать. При закрытом доступе —
+   * тоже: снимок только что стёрли, и записывать его обратно незачем.
    */
   useEffect(() => {
-    if (!ready || !dataSource.remote) return
+    if (!ready || denied || !dataSource.remote) return
     writeSnapshot(habits, entries, settings)
-  }, [ready, dataSource, habits, entries, settings])
+  }, [ready, denied, dataSource, habits, entries, settings])
 
   const doneKeys = useMemo(() => new Set(entries.map((e) => entryKey(e.habitId, e.date))), [entries])
 
@@ -308,6 +328,7 @@ export function StoreProvider({ children, source }: Props) {
     () => ({
       ready,
       failed,
+      denied,
       retry,
       habits,
       entries,
@@ -329,7 +350,7 @@ export function StoreProvider({ children, source }: Props) {
       dismissCelebration,
     }),
     [
-      ready, failed, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
+      ready, failed, denied, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
       isDone, datesOf, activeDates, toggleEntry,
       createHabit, updateHabit, setReminder, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,

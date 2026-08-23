@@ -15,7 +15,18 @@ import styles from './Loading.module.css'
  */
 const EXPLAIN_AFTER_MS = 1800
 
-export function Loading({ failed, onRetry, t }: { failed: boolean; onRetry(): void; t: Dict }) {
+export function Loading({
+  failed,
+  denied = false,
+  onRetry,
+  t,
+}: {
+  failed: boolean
+  /** Доступ закрыт владельцем бота — не поломка, повторять нечего. */
+  denied?: boolean
+  onRetry(): void
+  t: Dict
+}) {
   const [slow, setSlow] = useState(false)
 
   useEffect(() => {
@@ -23,6 +34,23 @@ export function Loading({ failed, onRetry, t }: { failed: boolean; onRetry(): vo
     const id = window.setTimeout(() => setSlow(true), EXPLAIN_AFTER_MS)
     return () => window.clearTimeout(id)
   }, [failed])
+
+  /*
+   * Закрытый доступ. Тот же экран, что и у неудачи, но без кнопки «Повторить»:
+   * от повтора здесь ничего не изменится, и предлагать его — значит отправить
+   * человека жать её до бесконечности.
+   */
+  if (denied) {
+    return (
+      <div className={styles.screen}>
+        <span className={styles.icon}>
+          <Icon name="close" size={26} />
+        </span>
+        <p className={styles.title}>{t.loading.denied}</p>
+        <p className={styles.hint}>{t.loading.deniedHint}</p>
+      </div>
+    )
+  }
 
   if (failed) {
     return (

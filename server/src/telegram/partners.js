@@ -35,7 +35,7 @@ export async function notifyPartnersMarked(habitId, actorId, date) {
   // Участники, название привычки и имя отметившегося — одним запросом:
   // отдельными это четыре похода в облачную базу на каждое касание галочки.
   const { rows } = await db.execute({
-    sql: `SELECT m.user_id, u.language, u.chat_started, s.data AS settings,
+    sql: `SELECT m.user_id, u.language, u.chat_started, u.blocked, s.data AS settings,
                  h.name AS habit_name, a.first_name AS actor_name
             FROM habit_members m
             JOIN habits h ON h.id = m.habit_id
@@ -63,6 +63,9 @@ export async function notifyPartnersMarked(habitId, actorId, date) {
   for (const partner of rows) {
     // Telegram запрещает боту писать первым: без «Старта» сообщение не дойдёт.
     if (partner.chat_started !== 1) continue
+
+    // Закрытому доступу бот не пишет ничего — ни напоминаний, ни вестей.
+    if (partner.blocked === 1) continue
 
     // Выключил сообщения бота — молчим и здесь. Отдельного выключателя для
     // вестей о напарнике нет: человек попросил не писать ему, а не «не писать
@@ -110,6 +113,7 @@ export async function notifyHabitDeleted(others, habitName, actorName) {
   let sent = 0
   for (const partner of others) {
     if (partner.chat_started !== 1) continue
+    if (partner.blocked === 1) continue
 
     const settings = parseSettings(partner.settings)
     if (settings.reminders === false) continue

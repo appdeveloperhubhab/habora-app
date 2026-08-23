@@ -11,6 +11,14 @@ import { normalizeSettings, type DataSource } from './datasource'
  * запроса. Сервер проверяет подпись токеном бота и по ней понимает, чьи данные
  * отдавать. Ни логинов, ни паролей: аккаунт — это аккаунт Telegram.
  */
+/**
+ * Сервер закрыл доступ этому аккаунту.
+ *
+ * Отдельно от прочих неудач: остальные — временные, и от них помогает
+ * «Повторить». Здесь повторять нечего, и предлагать это значило бы врать.
+ */
+export class AccessDenied extends Error {}
+
 export class ApiDataSource implements DataSource {
   readonly remote = true
 
@@ -31,6 +39,8 @@ export class ApiDataSource implements DataSource {
         ...init?.headers,
       },
     })
+
+    if (response.status === 403) throw new AccessDenied('доступ закрыт')
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '')

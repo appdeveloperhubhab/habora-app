@@ -1,4 +1,4 @@
-import { db } from '../db.js'
+import { db, isBlocked } from '../db.js'
 import {
   answerCallback,
   editMessageText,
@@ -46,6 +46,17 @@ export async function botRoutes(app) {
 }
 
 async function handleUpdate(update, webAppUrl) {
+  /*
+   * Закрытому доступу бот не отвечает вовсе: «Старт» ничего не делает, кнопки
+   * молчат. Запретить человеку написать боту нельзя — Telegram такого не
+   * умеет, — но обслуживать написанное мы не обязаны.
+   *
+   * Молча, без объяснения: сказать «вы заблокированы» — значит позвать спорить
+   * там, где спорить не с кем. Вторая дверь — вход в приложение, в index.js.
+   */
+  const from = update.message?.from ?? update.callback_query?.from
+  if (from?.id && (await isBlocked(from.id))) return
+
   if (update.message) return handleMessage(update.message, webAppUrl)
   if (update.callback_query) return handleCallback(update.callback_query, webAppUrl)
 }

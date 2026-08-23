@@ -299,7 +299,7 @@ export async function habitRoutes(app) {
      * участников уже нет, и сообщать будет некому и не о чем.
      */
     const { rows } = await db.execute({
-      sql: `SELECT m.user_id, u.language, u.chat_started, s.data AS settings,
+      sql: `SELECT m.user_id, u.language, u.chat_started, u.blocked, s.data AS settings,
                    h.name AS habit_name
               FROM habit_members m
               JOIN habits h ON h.id = m.habit_id

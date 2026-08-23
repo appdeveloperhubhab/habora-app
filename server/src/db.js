@@ -131,7 +131,8 @@ await db.executeMultiple(`
     opens        INTEGER NOT NULL DEFAULT 1,
     chat_started INTEGER NOT NULL DEFAULT 0,
     tz_offset    INTEGER,
-    reminded_on  TEXT
+    reminded_on  TEXT,
+    blocked      INTEGER NOT NULL DEFAULT 0
   );
 `)
 
@@ -175,6 +176,12 @@ await addColumnIfMissing('users', 'reminded_on', 'TEXT')
 
 /** Аватарка из Telegram — чтобы на общей привычке было видно лица, а не имена. */
 await addColumnIfMissing('users', 'photo_url', 'TEXT')
+
+/**
+ * Закрыт ли человеку доступ. Ноль у всех, кроме тех, кого закрыли вручную:
+ * блокировка — редкое решение владельца бота, а не что-то, что случается само.
+ */
+await addColumnIfMissing('users', 'blocked', 'INTEGER NOT NULL DEFAULT 0')
 
 /*
  * Столбцы для напоминания в назначенный час.
@@ -380,6 +387,43 @@ await db.executeMultiple(`
       FROM settings s
       LEFT JOIN users u ON u.user_id = s.user_id;
 `)
+
+/**
+ * Как долго список заблокированных живёт в памяти, не перечитываясь.
+ *
+ * Спрашивать базу на каждый запрос — лишний поход в облако ради ответа,
+ * который меняется раз в год. Плата за память — блокировка вступает в силу
+ * в течение минуты, а не мгновенно; для решения, принимаемого руками, это
+ * никакой роли не играет.
+ */
+const BLOCKED_TTL_MS = 60_000
+
+let blocked = { readAt: 0, ids: new Set() }
+
+/**
+ * Закрыт ли человеку доступ.
+ *
+ * Telegram запретить кому-то писать боту не умеет — бан есть только у групп и
+ * каналов. Значит, отказывать приходится самому серверу, и делает он это по
+ * номеру Telegram: тот приходит подписанным ключом бота, и подделать его,
+ * не зная токена, нельзя.
+ *
+ * Сорвавшийся запрос к базе никого не блокирует: когда база молчит, не
+ * работает и всё остальное, и запирать в этот момент вообще всех — значит
+ * превращать заминку в облаке в отказ приложения.
+ */
+export async function isBlocked(userId) {
+  if (Date.now() - blocked.readAt > BLOCKED_TTL_MS) {
+    try {
+      const { rows } = await db.execute('SELECT user_id FROM users WHERE blocked = 1')
+      blocked = { readAt: Date.now(), ids: new Set(rows.map((row) => Number(row.user_id))) }
+    } catch {
+      // Оставляем прежний список и не долбим базу до следующего срока.
+      blocked = { ...blocked, readAt: Date.now() }
+    }
+  }
+  return blocked.ids.has(Number(userId))
+}
 
 /**
  * Привычка из базы в тот же вид, что ждёт приложение.
