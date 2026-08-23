@@ -28,10 +28,14 @@
   transform: scale(0.97);
 }
 
+/*
+ * Люди идут один под другим и разделены заметно шире, чем привычки внутри
+ * человека: иначе не видно, где кончается один список и начинается другой.
+ */
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
+  gap: var(--sp-6);
 }
 
 /* Тот же каскад появления, что у привычек: списки по всему приложению
@@ -50,22 +54,24 @@
   animation-delay: calc(var(--t-stagger) * 3);
 }
 
-.card {
+/*
+ * Человек и его привычки. Коробки вокруг нет намеренно: внутри лежат обычные
+ * карточки привычек, и рамка вокруг них делала бы из них что-то другое —
+ * сводку о друге вместо тех же самых привычек.
+ */
+.friend {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
-  padding: var(--sp-4);
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  box-shadow:
-    inset 0 0 0 1px var(--card-edge),
-    inset 0 1px 0 var(--card-highlight);
+  gap: var(--sp-2);
 }
 
+/* Имя — заголовок над списком, а не строка карточки, поэтому отступ по краям
+   маленький: имя должно стоять почти вровень с карточками под ним. */
 .head {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  padding: 0 var(--sp-2);
   min-width: 0;
 }
 
@@ -91,95 +97,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.habits {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-/*
- * Строка общей привычки: иконка, название с серией, неделя точками
- * и отметка за сегодня у самого края. Сама строка — кнопка, ведущая на общую
- * сетку вдвоём; текст выровнен влево и ширина растянута, иначе кнопка
- * не унаследовала бы вид обычной строки.
- */
-.habit {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  width: 100%;
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--habit) 12%, var(--surface-2));
-  text-align: left;
-  transition: transform var(--t-fast) var(--ease-spring);
-}
-
-.habit:active {
-  transform: scale(0.98);
-}
-
-.habitIcon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  color: color-mix(in srgb, var(--habit) 70%, var(--text-faint));
-}
-
-.habitBody {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-}
-
-.habitName {
-  font-size: var(--fs-label);
-  font-weight: var(--fw-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.habitNote {
-  font-size: 11px;
-  color: color-mix(in srgb, var(--habit) 60%, var(--text-dim));
-}
-
-/*
- * Отметка друга за сегодня — та же по виду, что кнопка отметки у себя, только
- * не нажимается: у неё нет ни промина под пальцем, ни бледной галочки внутри
- * пустого круга. Бледная галочка на своей кнопке говорит «сюда можно нажать»,
- * и здесь она обещала бы то, чего нет, — чужую привычку отмечают за себя.
- */
-.mark {
-  display: grid;
-  place-items: center;
-  flex: none;
-  /* Та же величина, что у кнопки отметки на главном экране: строка друга
-     должна читаться как та же самая карточка привычки, а не как её сводка. */
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-pill);
-  color: transparent;
-  background: color-mix(in srgb, var(--habit) 14%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--habit) 28%, transparent);
-}
-
-.markDone {
-  /* Светлая заливка с тёмной галочкой — та же инверсия, что и у себя:
-     она разделяет состояния с одного взгляда даже на маленьком экране. */
-  color: color-mix(in srgb, var(--habit) 88%, #000 35%);
-  background: color-mix(in srgb, var(--habit) var(--check-fill), #fff);
-  box-shadow: none;
-}
-
-.tick {
-  width: 58%;
-  height: 58%;
 }
 
 @keyframes cardIn {
