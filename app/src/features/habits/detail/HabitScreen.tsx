@@ -99,6 +99,17 @@ export function HabitScreen({
     })),
   ]
 
+  /*
+   * Те же участники, но с отметками готовым набором: календарь спрашивает про
+   * каждый день каждого, и перебирать список дат на каждую клетку — это под
+   * две сотни проходов на один показанный месяц.
+   */
+  const calendarPeople = people.map((человек) => ({
+    key: человек.key,
+    color: человек.color,
+    marks: new Set(человек.dates),
+  }))
+
   return (
     <div className={styles.screen} style={{ '--habit': habit.color } as React.CSSProperties}>
       <header className={styles.bar}>
@@ -237,6 +248,7 @@ export function HabitScreen({
 
         <MonthCalendar
           dates={dates}
+          people={calendarPeople}
           color={habit.color}
           lang={settings.lang}
           onToggleDay={(date) => void toggleEntry(habit.id, date)}

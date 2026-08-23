@@ -10,16 +10,56 @@ import styles from './MonthCalendar.module.css'
  * «сколько», этот блок показывает «когда именно»: у каждой клетки есть число
  * и день недели, чтобы не пересчитывать вручную, на какой день пришлась отметка.
  *
+ * У совместной привычки день закрашен долями — по одной на участника, каждая
+ * своим цветом. День, который сделали оба, виден сразу двумя половинами: это
+ * то, ради чего привычку и ведут вдвоём, и одним цветом такой день ничем не
+ * отличался бы от сделанного в одиночку.
+ *
  * Здесь же закрываются пропуски: тап по прошедшему дню ставит или снимает
- * отметку задним числом. Будущие дни недоступны.
+ * отметку задним числом — но только свою. Будущие дни недоступны.
  */
+
+/** Чьи отметки рисуем в клетках и каким цветом. */
+export interface CalendarPerson {
+  key: string
+  marks: Set<string>
+  color: string
+}
+
+/**
+ * Заливка клетки: по доле на участника, в том же порядке.
+ *
+ * Доли режутся жёсткими границами, а не переходом: это не градиент, а две
+ * краски рядом, и мягкая растушёвка между ними читалась бы как третий цвет.
+ * Не отметившийся получает цвет пустого дня — так видно и что день сделан,
+ * и кем именно.
+ */
+function fill(people: CalendarPerson[], кто: boolean[]): string | undefined {
+  // Никто не отметил — пусть клетку красит обычное правило из стилей.
+  if (!кто.some(Boolean)) return undefined
+
+  // Один участник — сплошная заливка, без лишней возни с долями.
+  if (people.length === 1) return people[0].color
+
+  const доля = 100 / people.length
+  const части = people.map((человек, i) => {
+    const цвет = кто[i] ? человек.color : 'var(--cell-empty)'
+    return `${цвет} ${i * доля}% ${(i + 1) * доля}%`
+  })
+  return `linear-gradient(135deg, ${части.join(', ')})`
+}
+
 export function MonthCalendar({
   dates,
+  people,
   color,
   lang,
   onToggleDay,
 }: {
+  /** Свои отметки: только их и переключает тап по дню. */
   dates: string[]
+  /** Все участники с их отметками — сам человек первым. */
+  people: CalendarPerson[]
   color: string
   lang: Lang
   onToggleDay(date: string): void
@@ -73,17 +113,28 @@ export function MonthCalendar({
           week.map((cell) => {
             const isDone = done.has(cell.date)
             const isFuture = cell.date > today
+
+            /*
+             * Кто отметил этот день. Порядок тот же, что у плашек с цифрами:
+             * сначала сам человек, затем напарники, — и доли в клетке идут
+             * в нём же, чтобы свой цвет всегда был с одной стороны.
+             */
+            const кто = people.map((человек) => человек.marks.has(cell.date))
+            const отметилиВсе = кто.length > 1 && кто.every(Boolean)
+
             return (
               <button
                 key={cell.date}
                 className={[
                   styles.day,
-                  isDone ? styles.done : '',
+                  кто.some(Boolean) ? styles.done : '',
+                  отметилиВсе ? styles.everyone : '',
                   cell.date === today ? styles.today : '',
                   cell.outside ? styles.outside : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
+                style={{ background: fill(people, кто) }}
                 disabled={isFuture}
                 onClick={() => {
                   if (isDone) hapticUntick()
