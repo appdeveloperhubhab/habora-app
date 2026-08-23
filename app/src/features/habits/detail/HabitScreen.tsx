@@ -6,6 +6,7 @@ import { dict } from '../../../i18n'
 import { Icon } from '../../../ui/Icon'
 import { Avatar } from '../../../ui/Avatar'
 import { TimePicker } from '../../../ui/TimePicker'
+import { canEdit } from '../canEdit'
 import { shareLink } from '../../../lib/telegram'
 import { currentStreak } from '../../../lib/streak'
 import { formatDuration } from '../../../lib/timer'
@@ -77,9 +78,19 @@ export function HabitScreen({
           {habit.description && <p className={styles.description}>{habit.description}</p>}
         </div>
 
-        <button className={`${styles.iconButton} ${styles.edit}`} onClick={onEdit} aria-label={t.common.edit}>
-          <Icon name="pencil" size={20} />
-        </button>
+        {/* Карандаш — только у создателя. Приглашённому он открывал форму,
+            которая ничего не сохраняла: правка чужой привычки запрещена на
+            сервере, и галочка просто не срабатывала. */}
+        {canEdit(habit) ? (
+          <button className={`${styles.iconButton} ${styles.edit}`} onClick={onEdit} aria-label={t.common.edit}>
+            <Icon name="pencil" size={20} />
+          </button>
+        ) : (
+          /* Пустое место вместо кнопки: шапка — сетка из трёх ячеек, и без
+             третьей название съехало бы с середины к правому краю. Именно
+             пустое: с фоном кнопки оно читалось бы как сломанная кнопка. */
+          <span className={styles.barSpacer} aria-hidden="true" />
+        )}
       </header>
 
       <div className={styles.content}>

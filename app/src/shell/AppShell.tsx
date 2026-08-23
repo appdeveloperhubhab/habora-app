@@ -6,6 +6,7 @@ import { todayIso } from '../lib/dates'
 import { startTimer } from '../lib/timer'
 import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { HabitEditor } from '../features/habits/HabitEditor'
+import { canEdit } from '../features/habits/canEdit'
 import { HabitScreen } from '../features/habits/detail/HabitScreen'
 import { FriendsScreen } from '../features/friends/FriendsScreen'
 import { SharedHabitScreen } from '../features/friends/SharedHabitScreen'
@@ -130,6 +131,17 @@ function Overlay() {
       return null
     case 'habitEditor': {
       const habit = habits.find((h) => h.id === screen.habitId) ?? null
+
+      /*
+       * Форма правки чужой привычки не открывается вовсе.
+       *
+       * Кнопки к ней у приглашённого больше нет, но путь остаётся: экран
+       * помнится в стеке, и вернувшись назад после того, как привычку отдали
+       * другому, человек попал бы в форму, которая ничего не сохранит.
+       * Заслон стоит здесь, у самого входа, а не только у кнопок.
+       */
+      if (habit && !canEdit(habit)) return <Placeholder title={habit.name} note={note} onBack={nav.pop} />
+
       return <HabitEditor habit={habit} onClose={nav.pop} />
     }
     case 'settings':

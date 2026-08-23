@@ -58,6 +58,13 @@
   transition: transform var(--t-fast) var(--ease-spring);
 }
 
+/* Держит третью ячейку шапки, когда кнопки правки нет: только размер,
+   без фона и без обводки. */
+.barSpacer {
+  width: 40px;
+  height: 40px;
+}
+
 .iconButton:active {
   transform: scale(0.88);
 }

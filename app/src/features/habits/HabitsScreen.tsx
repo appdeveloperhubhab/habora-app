@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../ui/ConfirmDialog'
 import { HabitCard } from './HabitCard'
 import { HabitCardBoard } from './HabitCardBoard'
 import { ReorderList } from './ReorderList'
+import { canEdit } from './canEdit'
 import styles from './HabitsScreen.module.css'
 
 /**
@@ -126,12 +127,18 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
             icon: 'friends',
             onSelect: () => menuFor && void invite(menuFor),
           },
-          {
-            id: 'edit',
-            label: t.actions.edit,
-            icon: 'pencil',
-            onSelect: () => menuFor && nav.push({ name: 'habitEditor', habitId: menuFor.id }),
-          },
+          // «Редактировать» — только у создателя: у остальных форма
+          // открывалась, но сохранить ничего не могла.
+          ...(menuFor && canEdit(menuFor)
+            ? [
+                {
+                  id: 'edit',
+                  label: t.actions.edit,
+                  icon: 'pencil' as const,
+                  onSelect: () => nav.push({ name: 'habitEditor', habitId: menuFor.id }),
+                },
+              ]
+            : []),
           {
             id: 'delete',
             label: t.actions.delete,
