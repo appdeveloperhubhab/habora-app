@@ -7,7 +7,7 @@ import { Icon } from '../../../ui/Icon'
 import { Avatar } from '../../../ui/Avatar'
 import { TimePicker } from '../../../ui/TimePicker'
 import { canEdit } from '../canEdit'
-import { shareLink } from '../../../lib/telegram'
+import { currentUserId, shareLink } from '../../../lib/telegram'
 import { currentStreak } from '../../../lib/streak'
 import { formatDuration } from '../../../lib/timer'
 import { ActivityGrid } from './ActivityGrid'
@@ -58,6 +58,18 @@ export function HabitScreen({
   }
 
   const members = habit.members ?? []
+  const shared = members.length > 1
+
+  /**
+   * С какого дня человек ведёт эту привычку.
+   *
+   * Запасное значение — день заведения самой привычки: у привычек, ведомых
+   * без сервера, участников нет вовсе, и спросить дату вступления не у кого.
+   */
+  const sinceOf = (userId: number | null) =>
+    members.find((m) => m.userId === userId)?.joinedAt ?? habit.createdAt
+
+  const mySince = sinceOf(currentUserId())
 
   /** Кто ведёт эту же привычку вместе с вами — с их отметками по ней. */
   const sharedWith = friends
@@ -180,7 +192,35 @@ export function HabitScreen({
           ним работают. Дальше хронология и сетка года: их разглядывают, и
           ждать своей очереди они могут.
         */}
-        <MetricCards habit={habit} dates={dates} lang={settings.lang} t={t} />
+        {/*
+          У совместной привычки цифры показываются по каждому: свои и каждого
+          напарника, одними и теми же четырьмя плашками. Раньше здесь была
+          только своя аналитика, а чужая пряталась за переходом на отдельный
+          экран — то есть увидеть, как идут дела вдвоём, можно было только
+          выйдя из привычки, о которой и речь.
+
+          У привычки в одиночку подписи не нужны: цифры и так очевидно свои,
+          а заголовок «Вы» над единственным набором только шумит.
+        */}
+        {shared && <h3 className={styles.whose}>{t.friends.you}</h3>}
+        <MetricCards habit={habit} dates={dates} since={mySince} lang={settings.lang} t={t} />
+
+        {sharedWith.map(({ friend, shared: theirs }) => (
+          <div key={friend.userId} className={styles.partner}>
+            <h3 className={styles.whose}>
+              <Avatar name={friend.firstName} photoUrl={friend.photoUrl} size={20} />
+              {friend.firstName}
+            </h3>
+            <MetricCards
+              habit={habit}
+              dates={theirs.dates}
+              since={sinceOf(friend.userId)}
+              lang={settings.lang}
+              t={t}
+            />
+          </div>
+        ))}
+
         <MonthCalendar
           dates={dates}
           color={habit.color}

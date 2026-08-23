@@ -36,14 +36,6 @@ async function isMember(habitId, userId) {
   return rows.length > 0
 }
 
-/**
- * Ставит человеку его собственное время напоминания по этой привычке.
- *
- * Отметка о сегодняшней отправке снимается вместе со временем — и только у
- * него одного. Без этого переставивший час с девяти на шесть не дождался бы
- * напоминания сегодня: сервер считал бы, что ему уже отправлено. У остальных
- * участников свой час и своя отметка, трогать их незачем.
- */
 /** Собственное время напоминания человека по этой привычке; null — выключено. */
 async function ownReminder(habitId, userId) {
   const { rows } = await db.execute({
@@ -53,6 +45,14 @@ async function ownReminder(habitId, userId) {
   return rows[0]?.remind_at ?? null
 }
 
+/**
+ * Ставит человеку его собственное время напоминания по этой привычке.
+ *
+ * Отметка о сегодняшней отправке снимается вместе со временем — и только у
+ * него одного. Без этого переставивший час с девяти на шесть не дождался бы
+ * напоминания сегодня: сервер считал бы, что ему уже отправлено. У остальных
+ * участников свой час и своя отметка, трогать их незачем.
+ */
 async function setOwnReminder(habitId, userId, remindAt) {
   await db.execute({
     sql: `UPDATE habit_members
@@ -82,7 +82,7 @@ async function membersOf(habitIds, date) {
 
   const placeholders = habitIds.map(() => '?').join(',')
   const { rows } = await db.execute({
-    sql: `SELECT m.habit_id, m.user_id, u.first_name, u.username, u.photo_url,
+    sql: `SELECT m.habit_id, m.user_id, m.joined_at, u.first_name, u.username, u.photo_url,
                  h.user_id AS owner_id,
                  CASE WHEN e.habit_id IS NULL THEN 0 ELSE 1 END AS done_today
             FROM habit_members m
@@ -103,6 +103,7 @@ async function membersOf(habitIds, date) {
       firstName: row.first_name ?? '',
       username: row.username,
       photoUrl: row.photo_url,
+      joinedAt: row.joined_at,
       isOwner: Number(row.owner_id) === Number(row.user_id),
       doneToday: row.done_today === 1,
     })

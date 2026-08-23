@@ -22,18 +22,25 @@ import styles from './MetricCards.module.css'
 
 interface Props {
   habit: Habit
+  /** Отметки того, чьи цифры считаем: свои либо напарника. */
   dates: string[]
+  /**
+   * С какого дня этот человек ведёт привычку. У создателя — день заведения,
+   * у приглашённого — день перехода по ссылке: длительность у каждого своя,
+   * и считать её напарнику от рождения привычки было бы неправдой.
+   */
+  since: string
   lang: Lang
   t: Dict
 }
 
-export function MetricCards({ habit, dates, lang, t }: Props) {
+export function MetricCards({ habit, dates, since, lang, t }: Props) {
   const current = currentStreak(dates, habit.schedule)
   const longest = longestStreak(dates, habit.schedule)
   const rate = Math.round(completionRate(dates, habit.schedule, 30) * 100)
 
   /*
-   * Длительность — сколько привычка вообще живёт, от дня заведения до
+   * Длительность — сколько человек ведёт привычку, от своего первого дня до
    * сегодня. Это не заслуга, а стаж: он растёт сам, даже когда серия
    * прервалась, и в этом его смысл — напомнить, что дело идёт давно и
    * бросать его из-за одного пропуска не стоит.
@@ -41,11 +48,11 @@ export function MetricCards({ habit, dates, lang, t }: Props) {
    * Первый день считается за день, а не за ноль: заведя привычку сегодня,
    * человек видит «1 день», а не пустое место.
    *
-   * День заведения берётся местный, а не первые десять знаков отметки
-   * времени: там всемирное время, и после полуночи по местному оно ещё
-   * вчерашнее. Привычка, заведённая минуту назад, показывала бы «2 дня».
+   * День берётся местный, а не первые десять знаков отметки времени: там
+   * всемирное время, и после полуночи по местному оно ещё вчерашнее.
+   * Привычка, заведённая минуту назад, показывала бы «2 дня».
    */
-  const age = Math.max(1, diffDays(todayIso(), toIso(new Date(habit.createdAt))) + 1)
+  const age = Math.max(1, diffDays(todayIso(), toIso(new Date(since))) + 1)
 
   /** Дни или недели — у расписания «N раз в неделю» серия считается неделями. */
   const streakUnit = (value: number) =>

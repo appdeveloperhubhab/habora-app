@@ -66,6 +66,12 @@ export interface HabitMember {
   firstName: string
   username: string | null
   photoUrl: string | null
+  /**
+   * Когда человек вошёл в привычку. У создателя совпадает с её заведением,
+   * у приглашённого — день перехода по ссылке: длительность у каждого своя,
+   * и считать её всем от рождения привычки было бы неправдой.
+   */
+  joinedAt: string
   /** Завёл привычку: только он вправе её менять и удалять у всех. */
   isOwner: boolean
   doneToday: boolean
