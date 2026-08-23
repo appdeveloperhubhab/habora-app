@@ -61,6 +61,9 @@ export function HabitScreen({
   const members = habit.members ?? []
   const shared = members.length > 1
 
+  /** Создатель привычки: только он вправе её менять. */
+  const mine = canEdit(habit)
+
   /**
    * С какого дня человек ведёт эту привычку.
    *
@@ -125,7 +128,7 @@ export function HabitScreen({
         {/* Карандаш — только у создателя. Приглашённому он открывал форму,
             которая ничего не сохраняла: правка чужой привычки запрещена на
             сервере, и галочка просто не срабатывала. */}
-        {canEdit(habit) ? (
+        {mine ? (
           <button className={`${styles.iconButton} ${styles.edit}`} onClick={onEdit} aria-label={t.common.edit}>
             <Icon name="pencil" size={20} />
           </button>
@@ -182,26 +185,29 @@ export function HabitScreen({
         </button>
 
         {/*
-          Напоминание — своё у каждого участника, и настраивается оно здесь.
-          Не в редакторе: редактор открывает только создатель, а час нужен
-          каждому. Приглашённый входит с выключенным и назначает себе сам, ни
-          на кого не влияя.
+          Напоминание — своё у каждого участника, но показано здесь только
+          приглашённому: у создателя тот же час стоит в редакторе, и второй
+          такой же переключатель на экране привычки выглядел бы как ещё одна,
+          отдельная настройка. Приглашённому редактор не открывается вовсе —
+          назначить себе час ему больше негде.
         */}
-        <section className={styles.remind}>
-          <h3 className={styles.remindTitle}>{t.editor.remind}</h3>
-          <TimePicker
-            value={habit.remindAt}
-            color={habit.color}
-            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
-            onChange={(next) => void setReminder(habit.id, next)}
-          />
+        {!mine && (
+          <section className={styles.remind}>
+            <h3 className={styles.remindTitle}>{t.editor.remind}</h3>
+            <TimePicker
+              value={habit.remindAt}
+              color={habit.color}
+              labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
+              onChange={(next) => void setReminder(habit.id, next)}
+            />
 
-          {/* Выключенные в настройках напоминания гасят и этот час: обещать
-              письмо, которое не придёт, хуже, чем не обещать ничего. */}
-          {habit.remindAt && !settings.reminders && (
-            <p className={styles.remindOff}>{t.detail.remindersOff}</p>
-          )}
-        </section>
+            {/* Выключенные в настройках напоминания гасят и этот час: обещать
+                письмо, которое не придёт, хуже, чем не обещать ничего. */}
+            {habit.remindAt && !settings.reminders && (
+              <p className={styles.remindOff}>{t.detail.remindersOff}</p>
+            )}
+          </section>
+        )}
 
         {/* Таймер живёт здесь, а не на карточке в списке: там он мешал
             полоскам недели и был лишним для большинства привычек. */}
