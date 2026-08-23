@@ -7,6 +7,7 @@ import { HabitIcon } from '../../ui/habitIcons'
 import { weekProgress } from '../../lib/streak'
 import { scheduleLabel } from './scheduleLabel'
 import { DayBars } from './DayBars'
+import { NO_PARTNERS, type PersonMarks } from './participants'
 import { HabitMembers } from './HabitMembers'
 import { CheckButton } from './CheckButton'
 import styles from './HabitCard.module.css'
@@ -23,6 +24,8 @@ import styles from './HabitCard.module.css'
 interface Props {
   habit: Habit
   dates: string[]
+  /** С кем привычка общая — их отметки красят свою долю полоски дня. */
+  partners?: PersonMarks[]
   done: boolean
   onToggle(): void
   /** Короткий тап — экран привычки с её аналитикой. */
@@ -35,7 +38,16 @@ interface Props {
 
 const LONG_PRESS_MS = 480
 
-export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, hint = false }: Props) {
+export function HabitCard({
+  habit,
+  dates,
+  partners = NO_PARTNERS,
+  done,
+  onToggle,
+  onOpen,
+  onLongPress,
+  hint = false,
+}: Props) {
   const { settings } = useStore()
   const t = dict(settings.lang)
 
@@ -122,7 +134,7 @@ export function HabitCard({ habit, dates, done, onToggle, onOpen, onLongPress, h
 
       {/* Полоски — прямой ребёнок карточки, а не части с текстом: только так
           их ширину можно задать в долях самой карточки. */}
-      <DayBars days={weekProgress(dates)} color={habit.color} pulseKey={pulseKey} />
+      <DayBars days={weekProgress(dates)} color={habit.color} partners={partners} pulseKey={pulseKey} />
 
       <CheckButton done={done} color={habit.color} hint={hint} onToggle={handleToggle} />
     </article>

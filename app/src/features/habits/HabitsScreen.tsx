@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Habit } from '../../types'
 import { useStore } from '../../store/context'
 import { useNav } from '../../shell/navigation'
@@ -13,6 +13,7 @@ import { HabitCard } from './HabitCard'
 import { HabitCardBoard } from './HabitCardBoard'
 import { ReorderList } from './ReorderList'
 import { canEdit } from './canEdit'
+import { NO_PARTNERS, partnersOf, type PersonMarks } from './participants'
 import styles from './HabitsScreen.module.css'
 
 /**
@@ -25,8 +26,19 @@ import styles from './HabitsScreen.module.css'
  * Вид карточек общий для всех привычек и переключается в режиме «Порядок».
  */
 export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
-  const { habits, settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink, reorderHabits } =
-    useStore()
+  const {
+    habits,
+    settings,
+    isDone,
+    datesOf,
+    toggleEntry,
+    deleteHabit,
+    saveSettings,
+    inviteLink,
+    reorderHabits,
+    friends,
+    refreshFriends,
+  } = useStore()
   const nav = useNav()
   const t = dict(settings.lang)
   const today = todayIso()
@@ -34,6 +46,28 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
 
   const [menuFor, setMenuFor] = useState<Habit | null>(null)
   const [deleting, setDeleting] = useState<Habit | null>(null)
+
+  /*
+   * Отметки друзей ставятся на их телефонах и сами собой не приходят. Раньше
+   * их спрашивали только на вкладке «Друзья» и внутри привычки — а теперь они
+   * нужны и здесь, на первом же экране: без них совместные дни красились бы
+   * одним цветом до тех пор, пока человек не сходит к друзьям и обратно.
+   */
+  useEffect(() => {
+    void refreshFriends()
+  }, [refreshFriends])
+
+  /*
+   * Напарники по каждой привычке. Считаются разом и запоминаются: список
+   * зависит только от друзей, а не от отметок, и не должен пересобираться от
+   * каждого нажатия галочки — иначе карточки перерисовывали бы свои сетки,
+   * в годовом виде это четыре сотни клеток на ровном месте.
+   */
+  const partnersByHabit = useMemo(() => {
+    const map = new Map<string, PersonMarks[]>()
+    for (const habit of habits) map.set(habit.id, partnersOf(habit.id, friends))
+    return map
+  }, [habits, friends])
 
   if (habits.length === 0) {
     return <EmptyState title={t.habits.empty} hint={t.habits.emptyHint} />
@@ -94,6 +128,7 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
             <HabitCard
               habit={habit}
               dates={datesOf(habit.id)}
+              partners={partnersByHabit.get(habit.id) ?? NO_PARTNERS}
               done={isDone(habit.id, today)}
               hint={showHint && index === 0}
               onToggle={() => handleToggle(habit.id)}
@@ -104,6 +139,7 @@ export function HabitsScreen({ orderMode = false }: { orderMode?: boolean }) {
             <HabitCardBoard
               habit={habit}
               dates={datesOf(habit.id)}
+              partners={partnersByHabit.get(habit.id) ?? NO_PARTNERS}
               done={isDone(habit.id, today)}
               size={view}
               t={t}

@@ -3,6 +3,7 @@ import type { Lang } from '../../../types'
 import { addMonths, formatMonthYear, fromIso, monthGrid, todayIso, weekdayMin } from '../../../lib/dates'
 import { hapticSelect, hapticTick, hapticUntick } from '../../../lib/haptics'
 import { Icon } from '../../../ui/Icon'
+import { shareFill, type PersonMarks } from '../participants'
 import styles from './MonthCalendar.module.css'
 
 /**
@@ -19,36 +20,6 @@ import styles from './MonthCalendar.module.css'
  * отметку задним числом — но только свою. Будущие дни недоступны.
  */
 
-/** Чьи отметки рисуем в клетках и каким цветом. */
-export interface CalendarPerson {
-  key: string
-  marks: Set<string>
-  color: string
-}
-
-/**
- * Заливка клетки: по доле на участника, в том же порядке.
- *
- * Доли режутся жёсткими границами, а не переходом: это не градиент, а две
- * краски рядом, и мягкая растушёвка между ними читалась бы как третий цвет.
- * Не отметившийся получает цвет пустого дня — так видно и что день сделан,
- * и кем именно.
- */
-function fill(people: CalendarPerson[], кто: boolean[]): string | undefined {
-  // Никто не отметил — пусть клетку красит обычное правило из стилей.
-  if (!кто.some(Boolean)) return undefined
-
-  // Один участник — сплошная заливка, без лишней возни с долями.
-  if (people.length === 1) return people[0].color
-
-  const доля = 100 / people.length
-  const части = people.map((человек, i) => {
-    const цвет = кто[i] ? человек.color : 'var(--cell-empty)'
-    return `${цвет} ${i * доля}% ${(i + 1) * доля}%`
-  })
-  return `linear-gradient(135deg, ${части.join(', ')})`
-}
-
 export function MonthCalendar({
   dates,
   people,
@@ -59,7 +30,7 @@ export function MonthCalendar({
   /** Свои отметки: только их и переключает тап по дню. */
   dates: string[]
   /** Все участники с их отметками — сам человек первым. */
-  people: CalendarPerson[]
+  people: PersonMarks[]
   color: string
   lang: Lang
   onToggleDay(date: string): void
@@ -68,6 +39,9 @@ export function MonthCalendar({
   const [month, setMonth] = useState(today)
   const done = new Set(dates)
   const weeks = monthGrid(month)
+
+  // Цвета участников считаем один раз на месяц, а не на каждую из 42 клеток.
+  const colors = people.map((человек) => человек.color)
 
   const shiftMonth = (delta: number) => {
     hapticSelect()
@@ -134,7 +108,7 @@ export function MonthCalendar({
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                style={{ background: fill(people, кто) }}
+                style={{ background: shareFill(colors, кто) }}
                 disabled={isFuture}
                 onClick={() => {
                   if (isDone) hapticUntick()

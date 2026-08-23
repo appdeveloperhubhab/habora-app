@@ -5,6 +5,7 @@ import { activityGrid } from '../../lib/stats'
 import { hapticSelect, hapticTick, hapticUntick } from '../../lib/haptics'
 import { HabitIcon } from '../../ui/habitIcons'
 import { HabitMembers } from './HabitMembers'
+import { NO_PARTNERS, shareFill, type PersonMarks } from './participants'
 import styles from './HabitCardBoard.module.css'
 
 /**
@@ -13,6 +14,10 @@ import styles from './HabitCardBoard.module.css'
  *
  * Один компонент на два вида — месяц и год: они отличаются глубиной показанной
  * истории и размером карточки, но не устройством.
+ *
+ * У совместной привычки клетка делится по диагонали — по доле на участника,
+ * каждая своим цветом, как в календаре внутри привычки. День, закрытый обоими,
+ * виден двумя красками сразу.
  */
 
 /**
@@ -62,6 +67,8 @@ const RIPPLE_SPREAD_MS = 460
 interface Props {
   habit: Habit
   dates: string[]
+  /** С кем привычка общая — их отметки красят свою долю клетки. */
+  partners?: PersonMarks[]
   done: boolean
   size: 'month' | 'year'
   t: Dict
@@ -72,7 +79,17 @@ interface Props {
 
 const LONG_PRESS_MS = 480
 
-export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, onLongPress }: Props) {
+export function HabitCardBoard({
+  habit,
+  dates,
+  partners = NO_PARTNERS,
+  done,
+  size,
+  t,
+  onToggle,
+  onOpen,
+  onLongPress,
+}: Props) {
   const [pulseKey, setPulseKey] = useState(0)
   const longPressTimer = useRef<number | undefined>(undefined)
   const longPressFired = useRef(false)
@@ -96,6 +113,17 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
     }
     return split
   }, [dates, size])
+
+  /*
+   * Цвета долей: свой первым — цветом привычки, каким клетка красилась и в
+   * одиночку. Считается отдельно и запоминается, потому что входит в сетку:
+   * новый список на каждую отрисовку заставлял бы пересобирать все клетки,
+   * а в году их четыре сотни.
+   */
+  const colors = useMemo(
+    () => (partners.length > 0 ? [habit.color, ...partners.map((человек) => человек.color)] : []),
+    [habit.color, partners],
+  )
 
   const startLongPress = () => {
     longPressFired.current = false
@@ -162,34 +190,50 @@ export function HabitCardBoard({ habit, dates, done, size, t, onToggle, onOpen, 
           <span key={band[0][0].date} className={styles.cells}>
             {band.map((week, weekInBand) => (
               <span key={week[0].date} className={styles.week}>
-                {week.map((cell, dayIndex) => (
-                  <span
-                    key={cell.date}
-                    className={[
-                      styles.cell,
-                      cell.done ? styles.cellDone : '',
-                      cell.isToday ? styles.cellToday : '',
-                      cell.isFuture ? styles.cellFuture : '',
-                      rippleClass,
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    style={{
-                      animationDelay: `${Math.round(
-                        (Math.hypot(todayWeek - weekInBand, todayDay - (bandIndex * 7 + dayIndex)) /
-                          reach) *
-                          RIPPLE_SPREAD_MS,
-                      )}ms`,
-                    }}
-                  />
-                ))}
+                {week.map((cell, dayIndex) => {
+                  // Кто отметил этот день: сам человек первым, дальше напарники —
+                  // в том же порядке идут и доли клетки.
+                  const кто =
+                    colors.length > 0
+                      ? [cell.done, ...partners.map((человек) => человек.marks.has(cell.date))]
+                      : []
+
+                  return (
+                    <span
+                      key={cell.date}
+                      className={[
+                        styles.cell,
+                        (colors.length > 0 ? кто.some(Boolean) : cell.done) ? styles.cellDone : '',
+                        cell.isToday ? styles.cellToday : '',
+                        cell.isFuture ? styles.cellFuture : '',
+                        rippleClass,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      style={{
+                        animationDelay: `${Math.round(
+                          (Math.hypot(todayWeek - weekInBand, todayDay - (bandIndex * 7 + dayIndex)) /
+                            reach) *
+                            RIPPLE_SPREAD_MS,
+                        )}ms`,
+                        // Незакрашенная доля берёт цвет пустой клетки этой же
+                        // сетки — он подмешан к цвету привычки, и общий серый
+                        // выглядел бы на карточке чужим.
+                        background:
+                          colors.length > 0
+                            ? shareFill(colors, кто, { empty: 'var(--cell-blank)' })
+                            : undefined,
+                      }}
+                    />
+                  )
+                })}
               </span>
             ))}
           </span>
         ))}
       </span>
     ),
-    [bands, rippleClass, todayWeek, todayDay, reach],
+    [bands, colors, partners, rippleClass, todayWeek, todayDay, reach],
   )
 
   return (

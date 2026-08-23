@@ -107,6 +107,12 @@
   display: flex;
   gap: var(--cell-gap, 3px);
   width: 100%;
+
+  /* Невыполненный день. Отдельной переменной — потому что тем же цветом
+     красится доля участника, который день не отметил: у совместной привычки
+     клетка делится на доли, и пустая половинка должна совпадать с пустой
+     клеткой один в один. */
+  --cell-blank: color-mix(in srgb, var(--habit) 12%, var(--cell-empty));
 }
 
 /* Полосы года: одна под другой, разделены вчетверо заметнее, чем клетки внутри
@@ -161,7 +167,7 @@
 .cell {
   aspect-ratio: 1;
   border-radius: var(--cell-radius, 3px);
-  background: color-mix(in srgb, var(--habit) 12%, var(--cell-empty));
+  background: var(--cell-blank);
   transition: background var(--t-check-fill) var(--ease-soft);
 }
 
