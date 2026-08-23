@@ -9,6 +9,7 @@ import { TimePicker } from '../../../ui/TimePicker'
 import { canEdit } from '../canEdit'
 import { currentUserId, shareLink } from '../../../lib/telegram'
 import { currentStreak } from '../../../lib/streak'
+import { personColor } from '../../../lib/personColor'
 import { formatDuration } from '../../../lib/timer'
 import { ActivityGrid } from './ActivityGrid'
 import { MetricCards } from './MetricCards'
@@ -71,12 +72,32 @@ export function HabitScreen({
 
   const mySince = sinceOf(currentUserId())
 
+
   /** Кто ведёт эту же привычку вместе с вами — с их отметками по ней. */
   const sharedWith = friends
     .map((friend) => ({ friend, shared: friend.habits.find((item) => item.habitId === habit.id) }))
     .filter((entry): entry is { friend: (typeof friends)[number]; shared: { habitId: string; dates: string[] } } =>
       entry.shared !== undefined,
     )
+
+  /*
+   * Участники для плашек: сам человек первым, дальше напарники. Порядок
+   * важен — в каждой плашке числа идут в нём же, и своё должно стоять слева,
+   * там, где его и ищут.
+   *
+   * Свой цвет — цвет привычки: это её экран, и красить себя чем-то третьим
+   * значило бы завести на нём ещё один цвет без нужды.
+   */
+  const people = [
+    { key: 'me', name: t.friends.you, dates, since: mySince, color: habit.color },
+    ...sharedWith.map(({ friend, shared: theirs }) => ({
+      key: String(friend.userId),
+      name: friend.firstName,
+      dates: theirs.dates,
+      since: sinceOf(friend.userId),
+      color: personColor(friend.firstName),
+    })),
+  ]
 
   return (
     <div className={styles.screen} style={{ '--habit': habit.color } as React.CSSProperties}>
@@ -193,33 +214,26 @@ export function HabitScreen({
           ждать своей очереди они могут.
         */}
         {/*
-          У совместной привычки цифры показываются по каждому: свои и каждого
-          напарника, одними и теми же четырьмя плашками. Раньше здесь была
-          только своя аналитика, а чужая пряталась за переходом на отдельный
-          экран — то есть увидеть, как идут дела вдвоём, можно было только
-          выйдя из привычки, о которой и речь.
+          Цифры всех участников — в одних и тех же четырёх плашках, парами.
+          Сначала было по набору на человека, но восемь плашек вместо четырёх
+          вытесняли календарь за нижний край, а сравнивать числа приходилось,
+          переводя взгляд между блоками. Рядом это делается само.
 
-          У привычки в одиночку подписи не нужны: цифры и так очевидно свои,
-          а заголовок «Вы» над единственным набором только шумит.
+          Кто где — видно по цвету: своё число цветом привычки, напарника —
+          его собственным, тем же, каким он покрашен во вкладке «Друзья».
+          Подпись с именами нужна только когда людей больше одного.
         */}
-        {shared && <h3 className={styles.whose}>{t.friends.you}</h3>}
-        <MetricCards habit={habit} dates={dates} since={mySince} lang={settings.lang} t={t} />
-
-        {sharedWith.map(({ friend, shared: theirs }) => (
-          <div key={friend.userId} className={styles.partner}>
-            <h3 className={styles.whose}>
-              <Avatar name={friend.firstName} photoUrl={friend.photoUrl} size={20} />
-              {friend.firstName}
-            </h3>
-            <MetricCards
-              habit={habit}
-              dates={theirs.dates}
-              since={sinceOf(friend.userId)}
-              lang={settings.lang}
-              t={t}
-            />
+        {shared && (
+          <div className={styles.whose}>
+            {people.map((человек) => (
+              <span key={человек.key} className={styles.whoseItem}>
+                <span className={styles.whoseDot} style={{ background: человек.color }} />
+                {человек.name}
+              </span>
+            ))}
           </div>
-        ))}
+        )}
+        <MetricCards habit={habit} people={people} lang={settings.lang} t={t} />
 
         <MonthCalendar
           dates={dates}

@@ -28,6 +28,7 @@
 .value {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 5px;
   min-width: 0;
 }
@@ -37,9 +38,29 @@
   font-weight: var(--fw-bold);
   letter-spacing: -0.03em;
   line-height: 1.05;
-  color: var(--habit);
-  /* Цифры одной ширины: иначе плашки в паре расходятся по высоте текста. */
+  /* Цвет задаётся в разметке: у каждого участника он свой, и по нему видно,
+     чьё это число. */
   font-variant-numeric: tabular-nums;
+}
+
+/* Число вместе с разделителем перед ним — чтобы точка не отрывалась от пары
+   при переносе. */
+.pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+/*
+ * Разделитель между числами участников: точка, а не запятая или косая черта.
+ * Запятая читается как разряд внутри одного числа, косая — как дробь.
+ */
+.sep {
+  width: 3px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--text-faint);
+  transform: translateY(-6px);
 }
 
 .unit {
