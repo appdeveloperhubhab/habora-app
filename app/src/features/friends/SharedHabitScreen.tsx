@@ -29,13 +29,25 @@ interface Props {
   friend: Friend
   myDates: string[]
   friendDates: string[]
+  /** Сколько раз выполнено сегодня — у привычки с нормой на день. */
+  count?: number
   lang: Lang
   t: Dict
   onBack(): void
   onToggle(): void
 }
 
-export function SharedHabitScreen({ habit, friend, myDates, friendDates, lang, t, onBack, onToggle }: Props) {
+export function SharedHabitScreen({
+  habit,
+  friend,
+  myDates,
+  friendDates,
+  count = 0,
+  lang,
+  t,
+  onBack,
+  onToggle,
+}: Props) {
   const scroller = useRef<HTMLDivElement>(null)
 
   const mine = activityGrid(myDates, WEEKS_SHOWN)
@@ -93,7 +105,14 @@ export function SharedHabitScreen({ habit, friend, myDates, friendDates, lang, t
             первой, до всей истории. */}
         <div className={styles.todayRow}>
           <span className={styles.todayLabel}>{done(doneToday, t)}</span>
-          <CheckButton done={doneToday} color={habit.color} size={48} onToggle={onToggle} />
+          <CheckButton
+            done={doneToday}
+            color={habit.color}
+            count={count}
+            target={habit.target}
+            size={48}
+            onToggle={onToggle}
+          />
         </div>
 
         <section className={styles.grid}>

@@ -17,7 +17,7 @@ import styles from './TimerScreen.module.css'
  * время, а не то, на котором всё замерло.
  */
 export function TimerScreen({ onClose }: { onClose(): void }) {
-  const { settings, habits, saveSettings, toggleEntry } = useStore()
+  const { settings, habits, saveSettings, markEntry } = useStore()
   const t = dict(settings.lang)
   const timer = settings.timer
 
@@ -36,13 +36,14 @@ export function TimerScreen({ onClose }: { onClose(): void }) {
     finishing.current = true
 
     // Отмечаем тем же способом, что и обычное нажатие: срабатывают те же
-    // анимация, вибрация и проверка вех.
-    await toggleEntry(timer.id, todayIso())
+    // анимация, вибрация и проверка вех. Именно один раз, а не «день закрыт»:
+    // отсчёт прошёл однажды, и у привычки с нормой это одно выполнение из.
+    await markEntry(timer.id, todayIso(), 'inc')
 
     hapticSuccess()
     await saveSettings({ timer: null })
     onClose()
-  }, [timer, toggleEntry, saveSettings, onClose])
+  }, [timer, markEntry, saveSettings, onClose])
 
   /*
    * Проверка завершения живёт внутри тика, а не в отдельном эффекте.

@@ -27,6 +27,8 @@ interface Props {
   /** С кем привычка общая — их отметки красят свою долю полоски дня. */
   partners?: PersonMarks[]
   done: boolean
+  /** Сколько раз выполнено сегодня — у привычки с нормой на день. */
+  count?: number
   onToggle(): void
   /** Короткий тап — экран привычки с её аналитикой. */
   onOpen(): void
@@ -43,6 +45,7 @@ export function HabitCard({
   dates,
   partners = NO_PARTNERS,
   done,
+  count = 0,
   onToggle,
   onOpen,
   onLongPress,
@@ -77,9 +80,13 @@ export function HabitCard({
   }
 
   const handleToggle = () => {
-    // Только при простановке отметки: волна по неделе и вспышка карточки —
-    // подтверждение выполненного, а снятие отметки праздновать не с чем.
-    if (!done) setPulseKey((key) => key + 1)
+    /*
+     * Волна по неделе и вспышка карточки — подтверждение закрытого дня.
+     * У привычки с нормой они приходят с последней долей, а не с каждой:
+     * праздновать первый стакан из трёх не за что, а снятие отметки — тем
+     * более.
+     */
+    if (!done && count + 1 >= habit.target) setPulseKey((key) => key + 1)
     onToggle()
   }
 
@@ -136,7 +143,14 @@ export function HabitCard({
           их ширину можно задать в долях самой карточки. */}
       <DayBars days={weekProgress(dates)} color={habit.color} partners={partners} pulseKey={pulseKey} />
 
-      <CheckButton done={done} color={habit.color} hint={hint} onToggle={handleToggle} />
+      <CheckButton
+        done={done}
+        color={habit.color}
+        count={count}
+        target={habit.target}
+        hint={hint}
+        onToggle={handleToggle}
+      />
     </article>
   )
 }

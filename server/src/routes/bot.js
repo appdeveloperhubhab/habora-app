@@ -1,4 +1,5 @@
 import { db, isBlocked } from '../db.js'
+import { markEntry } from '../entries.js'
 import {
   answerCallback,
   editMessageText,
@@ -242,22 +243,26 @@ async function handleCallback(query, webAppUrl) {
     return
   }
 
-  // Именно вставка, а не переключение: кнопка называется «отметить», и
-  // повторное нажатие не должно снимать отметку, поставленную секунду назад.
-  const { rowsAffected } = await db.execute({
-    sql: 'INSERT OR IGNORE INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
-    args: [query.from.id, habitId, date],
-  })
+  /*
+   * Прибавляем один раз, а не ставим факт: у привычки с нормой на день кнопку
+   * жмут столько раз, сколько раз выполнили. Снять отметку кнопка по-прежнему
+   * не может — она называется «отметить», и отменять секундной давности
+   * нажатие ею было бы неожиданно.
+   */
+  const marked = await markEntry(habitId, query.from.id, date, 'inc')
 
-  // Напарникам — только если отметка действительно появилась. Повторное
-  // нажатие по той же кнопке ничего не меняет, и новостью не является.
-  if (rowsAffected > 0) {
+  // Напарникам — только когда день закрылся целиком. Повторное нажатие по
+  // набранной норме ничего не меняет и новостью не является.
+  if (marked.completed) {
     void notifyPartnersMarked(habitId, query.from.id, date).catch(() => {
       // Весть не ушла — на самой отметке это никак не сказывается.
     })
   }
 
-  await answerCallback(query.id, t.markedToast)
+  await answerCallback(
+    query.id,
+    marked.target > 1 ? t.markedToastOf(marked.count, marked.target) : t.markedToast,
+  )
 
   const message = query.message
   if (!message) return
@@ -268,7 +273,20 @@ async function handleCallback(query, webAppUrl) {
    * отмечается: список несделанного в ответ на «сделал» выглядел бы упрёком.
    */
   if (kind === 't') {
-    await editMessageText(message.chat.id, message.message_id, t.markedOne(escapeHtml(habit.name)), [])
+    /*
+     * Норма ещё не набрана — оставляем кнопку: человек нажал «выпил», но
+     * впереди ещё два раза, и убирать единственный быстрый путь к отметке
+     * посреди дня незачем.
+     */
+    const left = marked.count < marked.target
+    await editMessageText(
+      message.chat.id,
+      message.message_id,
+      left
+        ? t.markedOf(escapeHtml(habit.name), marked.count, marked.target)
+        : t.markedOne(escapeHtml(habit.name)),
+      left ? [[{ text: t.markButton, callback_data: `t:${habitId}:${date}` }]] : [],
+    )
     return
   }
 

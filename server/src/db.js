@@ -69,10 +69,16 @@ await db.executeMultiple(`
 
   CREATE INDEX IF NOT EXISTS idx_members_user ON habit_members (user_id);
 
+  /*
+   * Отметки. Строка есть — в этот день привычкой занимались, а счётчик
+   * говорит сколько раз. У привычки с нормой в один раз это всегда единица,
+   * и всё остаётся как было: строка есть — день выполнен.
+   */
   CREATE TABLE IF NOT EXISTS entries (
     user_id  INTEGER NOT NULL,
     habit_id TEXT    NOT NULL REFERENCES habits (id) ON DELETE CASCADE,
     date     TEXT    NOT NULL,
+    count    INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (habit_id, user_id, date)
   );
 
@@ -182,6 +188,22 @@ await addColumnIfMissing('users', 'photo_url', 'TEXT')
  * блокировка — редкое решение владельца бота, а не что-то, что случается само.
  */
 await addColumnIfMissing('users', 'blocked', 'INTEGER NOT NULL DEFAULT 0')
+
+/*
+ * Норма на день: сколько раз привычку нужно выполнить, чтобы день считался
+ * закрытым. Вода — три раза, таблетки — два, пробежка — один.
+ *
+ * Единица по умолчанию, и это не случайно: у всех заведённых до этого
+ * привычек норма становится прежним «сделал — значит день закрыт», и ни одна
+ * серия, ни один процент от появления счётчика не сдвигается.
+ *
+ * Свойство привычки, а не участника: договорились пить трижды — значит оба
+ * трижды, иначе у одной привычки было бы два разных смысла.
+ */
+await addColumnIfMissing('habits', 'target', 'INTEGER NOT NULL DEFAULT 1')
+
+/** Сколько раз за день привычку выполнили. У прежних отметок — один раз. */
+await addColumnIfMissing('entries', 'count', 'INTEGER NOT NULL DEFAULT 1')
 
 /*
  * Столбцы для напоминания в назначенный час.
@@ -448,6 +470,9 @@ export function rowToHabit(row) {
     color: row.color,
     icon: row.icon,
     schedule: JSON.parse(row.schedule),
+    // Норма на день. У привычек, заведённых до её появления, столбца в строке
+    // может не быть вовсе — тогда прежний смысл: один раз и день закрыт.
+    target: Number(row.target ?? 1),
     streakGoal: row.streak_goal,
     // В SQLite нет отдельного булева типа — хранится 0 или 1.
     tinted: row.tinted === 1,

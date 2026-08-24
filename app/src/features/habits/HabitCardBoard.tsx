@@ -8,6 +8,9 @@ import { HabitMembers } from './HabitMembers'
 import { NO_PARTNERS, shareFill, type PersonMarks } from './participants'
 import styles from './HabitCardBoard.module.css'
 
+/** Общий пустой набор: у привычки без нормы недобранных дней не бывает. */
+const NO_PARTIAL: Set<string> = new Set()
+
 /**
  * Карточка привычки с сеткой выполнения: иконка с названием сверху, сетка
  * посередине, кнопка «Отметить» внизу.
@@ -69,7 +72,11 @@ interface Props {
   dates: string[]
   /** С кем привычка общая — их отметки красят свою долю клетки. */
   partners?: PersonMarks[]
+  /** Дни, в которые норму начали, но не добрали. */
+  partial?: Set<string>
   done: boolean
+  /** Сколько раз выполнено сегодня — у привычки с нормой на день. */
+  count?: number
   size: 'month' | 'year'
   t: Dict
   onToggle(): void
@@ -83,7 +90,9 @@ export function HabitCardBoard({
   habit,
   dates,
   partners = NO_PARTNERS,
+  partial = NO_PARTIAL,
   done,
+  count = 0,
   size,
   t,
   onToggle,
@@ -137,11 +146,12 @@ export function HabitCardBoard({
   const handleToggle = () => {
     if (done) hapticUntick()
     else hapticTick()
+    const closes = !done && count + 1 >= habit.target
     // Всплеск, вспышка карточки и ореол кнопки — подтверждение выполненного.
     // При снятии отметки они неуместны: отменять привычку не с чем поздравлять.
     // Тактильный отклик остаётся в обоих случаях — он говорит, что нажатие
     // засчитано, а не хвалит за него.
-    if (!done) setPulseKey((key) => key + 1)
+    if (closes) setPulseKey((key) => key + 1)
     onToggle()
   }
 
@@ -204,6 +214,7 @@ export function HabitCardBoard({
                       className={[
                         styles.cell,
                         (colors.length > 0 ? кто.some(Boolean) : cell.done) ? styles.cellDone : '',
+                        !cell.done && partial.has(cell.date) ? styles.cellPartial : '',
                         cell.isToday ? styles.cellToday : '',
                         cell.isFuture ? styles.cellFuture : '',
                         rippleClass,
@@ -233,7 +244,7 @@ export function HabitCardBoard({
         ))}
       </span>
     ),
-    [bands, colors, partners, rippleClass, todayWeek, todayDay, reach],
+    [bands, colors, partners, partial, rippleClass, todayWeek, todayDay, reach],
   )
 
   return (
@@ -290,7 +301,16 @@ export function HabitCardBoard({
           </svg>
         </span>
 
-        <span className={styles.markLabel}>{done ? t.habits.marked : t.habits.mark}</span>
+        <span className={styles.markLabel}>
+          {done ? t.habits.marked : t.habits.mark}
+          {/* У привычки с нормой рядом с подписью — сколько уже сделано:
+              на плитке кольца долей не видно, кнопка здесь другая. */}
+          {habit.target > 1 && (
+            <span className={styles.markCount}>
+              {t.habits.ofTarget.replace('{done}', String(count)).replace('{target}', String(habit.target))}
+            </span>
+          )}
+        </span>
       </button>
     </article>
   )

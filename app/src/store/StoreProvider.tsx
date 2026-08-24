@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import { telegramLang } from '../lib/telegram'
 import { detectMilestone, type Milestone } from '../lib/milestones'
-import { DEFAULT_SETTINGS, type DataSource } from './datasource'
+import { DEFAULT_SETTINGS, type DataSource, type MarkAction } from './datasource'
 import { pickDataSource } from './pickDataSource'
 import { AccessDenied } from './api'
 import { clearSnapshot, readSnapshot, writeSnapshot } from './snapshot'
@@ -140,11 +140,31 @@ export function StoreProvider({ children, source }: Props) {
     writeSnapshot(habits, entries, settings)
   }, [ready, denied, dataSource, habits, entries, settings])
 
-  const doneKeys = useMemo(() => new Set(entries.map((e) => entryKey(e.habitId, e.date))), [entries])
+  /** Сколько раз привычку выполнили в каждый из дней. */
+  const counts = useMemo(
+    () => new Map(entries.map((e) => [entryKey(e.habitId, e.date), e.count ?? 1])),
+    [entries],
+  )
 
+  /** Норма привычки; привычки нет — считаем, что раз в день. */
+  const targetOf = useCallback(
+    (habitId: string) => Math.max(1, habits.find((habit) => habit.id === habitId)?.target ?? 1),
+    [habits],
+  )
+
+  const countOf = useCallback(
+    (habitId: string, date: IsoDate) => counts.get(entryKey(habitId, date)) ?? 0,
+    [counts],
+  )
+
+  /*
+   * День выполнен, когда набрана норма. У привычки с нормой в один раз это
+   * ровно прежнее «отметка есть — день выполнен», поэтому серии, проценты и
+   * календари от появления счётчика не сдвинулись ни на день.
+   */
   const isDone = useCallback(
-    (habitId: string, date: IsoDate) => doneKeys.has(entryKey(habitId, date)),
-    [doneKeys],
+    (habitId: string, date: IsoDate) => countOf(habitId, date) >= targetOf(habitId),
+    [countOf, targetOf],
   )
 
   /*
@@ -158,25 +178,49 @@ export function StoreProvider({ children, source }: Props) {
    * позволяет карточке узнать, что у неё ничего не поменялось.
    */
   const previousDates = useRef(new Map<string, IsoDate[]>())
+  const previousPartial = useRef(new Map<string, IsoDate[]>())
 
-  const datesByHabit = useMemo(() => {
-    const map = new Map<string, IsoDate[]>()
+  /**
+   * Дни по привычкам: отдельно закрытые, отдельно начатые и недобранные.
+   *
+   * Закрытые — то, чем живёт вся аналитика: серии, проценты, календари,
+   * сетка года. Список тот же самый, что и раньше, поэтому ни одну из них
+   * счётчик не коснулся.
+   *
+   * Недобранные нужны только для показа: день, где выпито два стакана из
+   * трёх, не выполнен — но и не пуст, и выглядеть как нетронутый не должен.
+   */
+  const [datesByHabit, partialByHabit] = useMemo(() => {
+    const full = new Map<string, IsoDate[]>()
+    const partial = new Map<string, IsoDate[]>()
+
     for (const entry of entries) {
+      const done = (entry.count ?? 1) >= Math.max(1, habits.find((h) => h.id === entry.habitId)?.target ?? 1)
+      const map = done ? full : partial
       const list = map.get(entry.habitId)
       if (list) list.push(entry.date)
       else map.set(entry.habitId, [entry.date])
     }
-    for (const list of map.values()) list.sort()
 
-    for (const [habitId, list] of map) {
-      const before = previousDates.current.get(habitId)
-      if (before?.length === list.length && before.every((date, i) => date === list[i])) {
-        map.set(habitId, before)
+    for (const map of [full, partial]) for (const list of map.values()) list.sort()
+
+    // Те же самые массивы для привычек, которых отметка не коснулась.
+    const keep = (map: Map<string, IsoDate[]>, before: Map<string, IsoDate[]>) => {
+      for (const [habitId, list] of map) {
+        const was = before.get(habitId)
+        if (was?.length === list.length && was.every((date, i) => date === list[i])) {
+          map.set(habitId, was)
+        }
       }
+      return map
     }
-    previousDates.current = map
-    return map
-  }, [entries])
+
+    keep(full, previousDates.current)
+    keep(partial, previousPartial.current)
+    previousDates.current = full
+    previousPartial.current = partial
+    return [full, partial]
+  }, [entries, habits])
 
   // Пустой список тоже должен быть одной и той же ссылкой: иначе привычка без
   // отметок получала бы новый массив при каждом обращении и перерисовывалась
@@ -188,28 +232,54 @@ export function StoreProvider({ children, source }: Props) {
     [datesByHabit, noDates],
   )
 
+  const partialDatesOf = useCallback(
+    (habitId: string) => partialByHabit.get(habitId) ?? noDates,
+    [partialByHabit, noDates],
+  )
+
   /** Дни с любой активностью — для общей серии приложения. */
   const activeDates = useMemo(() => [...new Set(entries.map((entry) => entry.date))], [entries])
 
-  const toggleEntry = useCallback(
-    async (habitId: string, date: IsoDate) => {
+  const markEntry = useCallback(
+    async (habitId: string, date: IsoDate, action: MarkAction = 'inc') => {
       const key = entryKey(habitId, date)
-      const wasDone = doneKeys.has(key)
-      const nextEntries = wasDone
-        ? entries.filter((e) => entryKey(e.habitId, e.date) !== key)
-        : [...entries, { habitId, date }]
+      const target = Math.max(1, habits.find((h) => h.id === habitId)?.target ?? 1)
+      const before = counts.get(key) ?? 0
+
+      const after =
+        action === 'full'
+          ? target
+          : action === 'clear'
+            ? 0
+            : action === 'dec'
+              ? Math.max(0, before - 1)
+              : Math.min(target, before + 1)
+
+      if (after === before) return
+
+      const nextEntries =
+        after === 0
+          ? entries.filter((e) => entryKey(e.habitId, e.date) !== key)
+          : counts.has(key)
+            ? entries.map((e) => (entryKey(e.habitId, e.date) === key ? { ...e, count: after } : e))
+            : [...entries, { habitId, date, count: after }]
 
       setEntries(nextEntries)
 
-      // Вехи проверяем только при простановке отметки: снятие галочки —
-      // не повод для салюта.
-      if (!wasDone) {
+      /*
+       * Салют — только когда день закрылся именно сейчас. Не на каждое
+       * нажатие: у привычки с нормой в три раза он вылетал бы трижды за день,
+       * и первый же из них был бы за недоделанное.
+       */
+      if (after >= target && before < target) {
         const habit = habits.find((h) => h.id === habitId)
         if (habit) {
           const found = detectMilestone({
             habit,
+            // Только закрытые дни: веха «сто дней подряд» не должна
+            // засчитывать день, в котором норму так и не добрали.
             habitDates: nextEntries
-              .filter((e) => e.habitId === habitId)
+              .filter((e) => e.habitId === habitId && (e.count ?? 1) >= target)
               .map((e) => e.date)
               .sort(),
             activeDates: [...new Set([...activeDates, date])],
@@ -227,13 +297,13 @@ export function StoreProvider({ children, source }: Props) {
       }
 
       try {
-        await dataSource.toggleEntry(habitId, date)
+        await dataSource.markEntry(habitId, date, action)
       } catch {
         // Запись не прошла — возвращаем интерфейс к тому, что реально в хранилище.
         setEntries(await dataSource.getEntries())
       }
     },
-    [dataSource, doneKeys, entries, habits, activeDates, settings.celebrated],
+    [dataSource, counts, entries, habits, activeDates, settings.celebrated],
   )
 
   const createHabit = useCallback(
@@ -337,9 +407,12 @@ export function StoreProvider({ children, source }: Props) {
       refreshFriends,
       inviteLink,
       isDone,
+      countOf,
+      targetOf,
       datesOf,
+      partialDatesOf,
       activeDates,
-      toggleEntry,
+      markEntry,
       createHabit,
       updateHabit,
       setReminder,
@@ -351,7 +424,7 @@ export function StoreProvider({ children, source }: Props) {
     }),
     [
       ready, failed, denied, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
-      isDone, datesOf, activeDates, toggleEntry,
+      isDone, countOf, targetOf, datesOf, partialDatesOf, activeDates, markEntry,
       createHabit, updateHabit, setReminder, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,
     ],

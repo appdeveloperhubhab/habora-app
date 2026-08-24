@@ -28,6 +28,13 @@ import styles from './HabitEditor.module.css'
 
 const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6]
 
+/*
+ * Потолок нормы. Не техническое ограничение: привычка, которую нужно
+ * выполнить чаще десяти раз в день, — это уже не привычка, а будильник, и
+ * такой счётчик человек бросит на второй день.
+ */
+const MAX_TARGET = 10
+
 /**
  * Убирает клавиатуру по нажатию на клавишу ввода.
  *
@@ -88,6 +95,13 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
     habit ? habit.remindAt : DEFAULT_TIME,
   )
 
+  /*
+   * Норма на день: сколько раз выполнить, чтобы день был закрыт. Единица у
+   * новой — то есть по умолчанию привычка ведёт себя ровно как раньше, и
+   * настройка попадается на глаза только тому, кому она нужна.
+   */
+  const [target, setTarget] = useState(habit?.target ?? 1)
+
   const [error, setError] = useState<string | null>(null)
   const [iconSheet, setIconSheet] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -127,6 +141,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
       // ради привычек, заведённых до этого, и хранит прежнее значение по
       // умолчанию — на расчёт серии у них оно уже не влияет.
       schedule: { type: 'weekdays', days, timesPerWeek: 3 },
+      target,
       /*
        * Цель по серии и длительность убраны из формы, но не из привычки:
        * заданные до этого — сохраняются, а не обнуляются молча при первой же
@@ -289,6 +304,44 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
                 {weekdayShort(day, settings.lang)}
               </button>
             ))}
+          </div>
+        </section>
+
+        {/*
+          Норма на день — сразу за расписанием: расписание отвечает, в какие
+          дни, норма — сколько раз внутри дня. Вместе они и описывают, что
+          значит «выполнено».
+        */}
+        <section className={styles.block}>
+          <h3 className={styles.heading}>{t.editor.perDay}</h3>
+          <p className={styles.hint}>{t.editor.perDayHint}</p>
+
+          <div className={styles.stepper}>
+            <button
+              className={styles.stepperButton}
+              onClick={() => {
+                hapticSelect()
+                setTarget((n) => Math.max(1, n - 1))
+              }}
+              disabled={target <= 1}
+              aria-label="−"
+            >
+              <Icon name="minus" size={18} />
+            </button>
+
+            <span className={styles.stepperValue}>{target}</span>
+
+            <button
+              className={styles.stepperButton}
+              onClick={() => {
+                hapticSelect()
+                setTarget((n) => Math.min(MAX_TARGET, n + 1))
+              }}
+              disabled={target >= MAX_TARGET}
+              aria-label="+"
+            >
+              <Icon name="plus" size={18} />
+            </button>
           </div>
         </section>
 

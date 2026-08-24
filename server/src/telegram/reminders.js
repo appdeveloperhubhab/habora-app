@@ -61,19 +61,30 @@ export function isScheduled(weekday, schedule) {
  * напоминание нужно каждому, а не только заведшему её.
  */
 export async function pendingHabits(userId, date, weekday) {
+  /*
+   * Недобранная норма — тоже несделанное. У привычки «вода, три раза» одна
+   * отметка из трёх закрывает день не больше, чем ноль: напомнить о ней
+   * вечером надо, просто сказать при этом, сколько уже сделано.
+   */
   const { rows } = await db.execute({
-    sql: `SELECT h.id, h.name, h.schedule
+    sql: `SELECT h.id, h.name, h.schedule, h.target, COALESCE(e.count, 0) AS done
             FROM habit_members m
             JOIN habits h ON h.id = m.habit_id
             LEFT JOIN entries e
                    ON e.habit_id = h.id AND e.user_id = m.user_id AND e.date = ?
-           WHERE m.user_id = ? AND e.habit_id IS NULL
+           WHERE m.user_id = ? AND COALESCE(e.count, 0) < COALESCE(h.target, 1)
            ORDER BY m.sort_order, h.created_at`,
     args: [date, userId],
   })
 
   return rows
-    .map((row) => ({ id: row.id, name: row.name, schedule: JSON.parse(row.schedule) }))
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      schedule: JSON.parse(row.schedule),
+      target: Math.max(1, Number(row.target ?? 1)),
+      done: Number(row.done ?? 0),
+    }))
     // Расписание нужно и дальше — по нему в напоминании видно, в какие дни
     // привычку положено выполнять, — поэтому оно едет с привычкой, а не
     // выбрасывается сразу после отбора.
@@ -90,7 +101,16 @@ export async function pendingHabits(userId, date, weekday) {
 export function habitLines(habits, language) {
   const t = texts(language)
   return habits
-    .map((habit) => t.reminderItem(escapeHtml(habit.name), scheduleLabel(habit.schedule, language)))
+    .map((habit) =>
+      /*
+       * У привычки с нормой вместо расписания — счётчик: «Вода — 1 из 3».
+       * Расписание там сказало бы «каждый день», что и так понятно, а вот
+       * сколько осталось до нормы — единственное, чего человек не знает.
+       */
+      Number(habit.target ?? 1) > 1
+        ? t.reminderItemOf(escapeHtml(habit.name), Number(habit.done ?? 0), Number(habit.target))
+        : t.reminderItem(escapeHtml(habit.name), scheduleLabel(habit.schedule, language)),
+    )
     .join('\n')
 }
 
@@ -229,7 +249,7 @@ export function minutesOfDay(value) {
 export async function runTimedReminders(webAppUrl, now = Date.now()) {
   const { rows } = await db.execute(`
     SELECT m.habit_id, m.user_id, m.reminded_on, m.remind_at,
-           h.name, h.schedule,
+           h.name, h.schedule, h.target,
            u.language, u.tz_offset,
            s.data AS settings
       FROM habit_members m
@@ -271,17 +291,26 @@ export async function runTimedReminders(webAppUrl, now = Date.now()) {
 
     if (!isScheduled(weekday, JSON.parse(row.schedule))) continue
 
+    // Норма набрана — напоминать не о чем. Недобранная норма напоминание
+    // не отменяет: ради неё счётчик и заводился.
+    const target = Math.max(1, Number(row.target ?? 1))
     const done = await db.execute({
-      sql: 'SELECT 1 FROM entries WHERE habit_id = ? AND user_id = ? AND date = ?',
+      sql: 'SELECT count FROM entries WHERE habit_id = ? AND user_id = ? AND date = ?',
       args: [row.habit_id, row.user_id, date],
     })
-    if (done.rows[0]) continue
+    const already = Number(done.rows[0]?.count ?? 0)
+    if (already >= target) continue
 
     // Язык — тот же, что и у вечернего: выбранный в приложении, а если не
     // выбирали — язык Telegram.
     const t = texts(settings.lang ?? row.language)
 
-    await sendMessage(row.user_id, t.timedReminder(escapeHtml(row.name)), [
+    const text =
+      target > 1
+        ? t.timedReminderOf(escapeHtml(row.name), already, target)
+        : t.timedReminder(escapeHtml(row.name))
+
+    await sendMessage(row.user_id, text, [
       // Отметить прямо из чата — как и под вечерним напоминанием.
       [{ text: t.markButton, callback_data: `t:${row.habit_id}:${date}` }],
       [{ text: t.open, web_app: { url: webAppUrl } }],

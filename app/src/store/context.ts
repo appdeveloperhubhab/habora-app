@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import type { Milestone } from '../lib/milestones'
+import type { MarkAction } from './datasource'
 
 export interface StoreValue {
   ready: boolean
@@ -26,14 +27,20 @@ export interface StoreValue {
    */
   inviteLink(habitId: string): Promise<string | null>
 
-  /** Быстрая проверка «день отмечен» без перебора массива отметок. */
+  /** Набрана ли за день норма привычки. */
   isDone(habitId: string, date: IsoDate): boolean
-  /** Все отмеченные дни одной привычки, по возрастанию даты. */
+  /** Сколько раз привычку выполнили в этот день. */
+  countOf(habitId: string, date: IsoDate): number
+  /** Норма привычки — сколько раз в день её нужно выполнить. */
+  targetOf(habitId: string): number
+  /** Дни, в которые норма набрана, по возрастанию даты. Ими живёт вся аналитика. */
   datesOf(habitId: string): IsoDate[]
+  /** Дни, в которые привычкой занимались, но норму не добрали. Только для показа. */
+  partialDatesOf(habitId: string): IsoDate[]
   /** Дни, в которые была хоть какая-то активность — отметка привычки или выполненная задача. */
   activeDates: IsoDate[]
 
-  toggleEntry(habitId: string, date: IsoDate): Promise<void>
+  markEntry(habitId: string, date: IsoDate, action?: MarkAction): Promise<void>
   createHabit(input: HabitInput): Promise<Habit>
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<void>
   setReminder(id: string, remindAt: string | null): Promise<void>

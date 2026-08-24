@@ -76,6 +76,9 @@ export function OnboardingScreen() {
           color: starter.color,
           tinted: true,
           schedule: { type: 'weekdays', days: EVERY_DAY, timesPerWeek: 7 },
+          // Готовые привычки — по разу в день: норму человек выставит сам,
+          // когда поймёт, что она ему нужна.
+          target: 1,
           streakGoal: null,
           durationSec: null,
           remindAt: null,

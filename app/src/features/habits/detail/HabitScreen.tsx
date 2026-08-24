@@ -36,11 +36,27 @@ export function HabitScreen({
   onEdit(): void
   onOpenTimer(): void
 }) {
-  const { settings, datesOf, toggleEntry, inviteLink, friends, refreshFriends, setReminder } =
-    useStore()
+  const {
+    settings,
+    datesOf,
+    partialDatesOf,
+    countOf,
+    markEntry,
+    inviteLink,
+    friends,
+    refreshFriends,
+    setReminder,
+  } = useStore()
   const nav = useNav()
   const t = dict(settings.lang)
   const dates = datesOf(habit.id)
+
+  /*
+   * Дни, где норму начали, но не добрали. Только свои: у напарников приходят
+   * лишь закрытые дни — чужой недобор нас не касается и подглядывать за ним
+   * незачем.
+   */
+  const partial = new Set(partialDatesOf(habit.id))
 
   /*
    * Отметки друзей ставятся на их телефонах и сами собой не приходят —
@@ -252,15 +268,23 @@ export function HabitScreen({
         )}
         <MetricCards habit={habit} people={people} lang={settings.lang} t={t} />
 
+        {/*
+          Тап по дню в календаре закрывает его целиком или стирает, а не
+          прибавляет по одному: позавчерашнюю воду вспоминают целым днём, а не
+          по стаканам, и три касания ради неё были бы издевательством.
+        */}
         <MonthCalendar
           dates={dates}
+          partial={partial}
           people={calendarPeople}
           color={habit.color}
           lang={settings.lang}
-          onToggleDay={(date) => void toggleEntry(habit.id, date)}
+          onToggleDay={(date) =>
+            void markEntry(habit.id, date, countOf(habit.id, date) >= habit.target ? 'clear' : 'full')
+          }
         />
         <TimelineChart dates={dates} color={habit.color} lang={settings.lang} t={t} />
-        <ActivityGrid dates={dates} color={habit.color} lang={settings.lang} />
+        <ActivityGrid dates={dates} partial={partial} color={habit.color} lang={settings.lang} />
       </div>
     </div>
   )

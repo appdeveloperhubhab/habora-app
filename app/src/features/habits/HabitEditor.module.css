@@ -326,3 +326,47 @@
     transform: translateY(20px);
   }
 }
+
+/*
+ * Норма на день: минус, число, плюс. Не поле ввода и не колесо — значений
+ * всего десять, и они набираются одним-двумя касаниями; клавиатура ради
+ * одной цифры перекрыла бы пол-экрана.
+ */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  padding: var(--sp-2);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.stepperButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  color: var(--text);
+  background: var(--surface);
+  transition: transform var(--t-fast) var(--ease-spring), opacity var(--t-fast) linear;
+}
+
+.stepperButton:active {
+  transform: scale(0.88);
+}
+
+.stepperButton:disabled {
+  opacity: 0.3;
+}
+
+/* Число крупное и в ширину зафиксировано: иначе кнопки прыгали бы при
+   переходе с однозначного на двузначное. */
+.stepperValue {
+  min-width: 2ch;
+  text-align: center;
+  font-size: 22px;
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}

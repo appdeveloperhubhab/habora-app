@@ -43,6 +43,16 @@ const TEXTS = {
     reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Осталось:',
     timedReminder: (habit) => `<b>${habit}</b>\nПора выполнить привычку`,
+    /*
+     * Те же сообщения для привычки с нормой на день. Счётчик в них — не
+     * украшение: «пора выпить воду» в третий раз за день без «2 из 3»
+     * читается как сбой рассылки.
+     */
+    reminderItemOf: (habit, done, target) => `• ${habit} — ${done} из ${target}`,
+    timedReminderOf: (habit, done, target) =>
+      `<b>${habit}</b>\nПора выполнить — ${done} из ${target}`,
+    markedOf: (habit, done, target) => `<b>${habit}</b>\nВыполнено ${done} из ${target}`,
+    markedToastOf: (done, target) => `${done} из ${target}`,
     markButton: 'Отметить',
     everyday: 'каждый день',
     noSchedule: 'без расписания',
@@ -84,6 +94,11 @@ const TEXTS = {
     reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Still left:',
     timedReminder: (habit) => `<b>${habit}</b>\nTime to do this habit`,
+    reminderItemOf: (habit, done, target) => `• ${habit} — ${done} of ${target}`,
+    timedReminderOf: (habit, done, target) =>
+      `<b>${habit}</b>\nTime to do this — ${done} of ${target}`,
+    markedOf: (habit, done, target) => `<b>${habit}</b>\nDone ${done} of ${target}`,
+    markedToastOf: (done, target) => `${done} of ${target}`,
     markButton: 'Mark done',
     everyday: 'every day',
     noSchedule: 'no schedule',
@@ -117,6 +132,11 @@ const TEXTS = {
     reminderItem: (habit, when) => `• ${habit} — ${when}`,
     remainingTitle: 'Залишилося:',
     timedReminder: (habit) => `<b>${habit}</b>\nЧас виконати звичку`,
+    reminderItemOf: (habit, done, target) => `• ${habit} — ${done} з ${target}`,
+    timedReminderOf: (habit, done, target) =>
+      `<b>${habit}</b>\nЧас виконати — ${done} з ${target}`,
+    markedOf: (habit, done, target) => `<b>${habit}</b>\nВиконано ${done} з ${target}`,
+    markedToastOf: (done, target) => `${done} з ${target}`,
     markButton: 'Відмітити',
     everyday: 'щодня',
     noSchedule: 'без розкладу',

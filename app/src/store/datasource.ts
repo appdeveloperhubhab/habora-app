@@ -1,6 +1,13 @@
 import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 
 /**
+ * Что сделать с отметкой за день: прибавить, убавить, закрыть день целиком
+ * или стереть. Первые два — кнопка на карточке, вторые два — календарь, где
+ * день ставят задним числом.
+ */
+export type MarkAction = 'inc' | 'dec' | 'full' | 'clear'
+
+/**
  * Единственный способ, которым интерфейс общается с хранилищем.
  *
  * Реализации две: `LocalDataSource` (localStorage, этапы M0–M6) и
@@ -30,8 +37,14 @@ export interface DataSource {
 
   /** Отметки за период; без аргументов — вся история (нужна аналитике). */
   getEntries(range?: { from: IsoDate; to: IsoDate }): Promise<Entry[]>
-  /** Переключает отметку за день. Возвращает новое состояние: true — выполнено. */
-  toggleEntry(habitId: string, date: IsoDate): Promise<boolean>
+  /**
+   * Меняет отметку за день и возвращает новое число выполнений.
+   *
+   * Не «переключить»: у привычки с нормой больше одного раза переключать
+   * нечего — счётчик растёт и убывает по одному, а календарь закрывает и
+   * стирает день целиком.
+   */
+  markEntry(habitId: string, date: IsoDate, action: MarkAction): Promise<number>
 
   getSettings(): Promise<Settings>
   saveSettings(patch: Partial<Settings>): Promise<Settings>

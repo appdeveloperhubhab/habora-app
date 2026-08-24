@@ -95,6 +95,8 @@ export const ru = {
     timesAWeekFew: 'раза в неделю',
     mark: 'Отметить',
     marked: 'Отмечено',
+    // Счётчик у привычки с нормой на день: «2 из 3».
+    ofTarget: '{done} из {target}',
     viewMonth: 'Месяц',
     viewYear: 'Год',
     viewWeek: 'Неделя',
@@ -139,6 +141,8 @@ export const ru = {
     color: 'Цвет',
     schedule: 'Расписание',
     scheduleHint: 'В какие дни недели выполнять',
+    perDay: 'Сколько раз в день',
+    perDayHint: 'День засчитан, когда выполнено столько раз. Вода — три, пробежка — один',
     remind: 'Напоминание',
     remindHint: 'Бот напишет в чат в назначенный час — в дни из расписания',
     remindOff: 'Не напоминать',

@@ -119,7 +119,7 @@ export function AppShell() {
 /** Экраны поверх главного. */
 function Overlay() {
   const nav = useNav()
-  const { habits, friends, settings, saveSettings, datesOf, toggleEntry } = useStore()
+  const { habits, friends, settings, saveSettings, datesOf, isDone, countOf, markEntry } = useStore()
   const t = dict(settings.lang)
 
   const note =
@@ -190,7 +190,10 @@ function Overlay() {
           lang={settings.lang}
           t={t}
           onBack={nav.pop}
-          onToggle={() => void toggleEntry(habit.id, todayIso())}
+          count={countOf(habit.id, todayIso())}
+          onToggle={() =>
+            void markEntry(habit.id, todayIso(), isDone(habit.id, todayIso()) ? 'dec' : 'inc')
+          }
         />
       )
     }

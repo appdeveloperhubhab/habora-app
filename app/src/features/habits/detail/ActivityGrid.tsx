@@ -14,10 +14,13 @@ const WEEKS_SHOWN = 26
 
 export function ActivityGrid({
   dates,
+  partial,
   color,
   lang,
 }: {
   dates: string[]
+  /** Дни, где норму начали, но не добрали. */
+  partial?: Set<string>
   color: string
   lang: Lang
 }) {
@@ -50,6 +53,7 @@ export function ActivityGrid({
                   className={[
                     styles.cell,
                     cell.done ? styles.done : '',
+                    !cell.done && partial?.has(cell.date) ? styles.partial : '',
                     cell.isToday ? styles.today : '',
                     cell.isFuture ? styles.future : '',
                   ]

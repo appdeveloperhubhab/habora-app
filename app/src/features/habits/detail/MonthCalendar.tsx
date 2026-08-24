@@ -22,6 +22,7 @@ import styles from './MonthCalendar.module.css'
 
 export function MonthCalendar({
   dates,
+  partial,
   people,
   color,
   lang,
@@ -29,6 +30,8 @@ export function MonthCalendar({
 }: {
   /** Свои отметки: только их и переключает тап по дню. */
   dates: string[]
+  /** Свои дни, где норму начали, но не добрали. */
+  partial?: Set<string>
   /** Все участники с их отметками — сам человек первым. */
   people: PersonMarks[]
   color: string
@@ -102,6 +105,7 @@ export function MonthCalendar({
                 className={[
                   styles.day,
                   кто.some(Boolean) ? styles.done : '',
+                  !isDone && partial?.has(cell.date) ? styles.partial : '',
                   отметилиВсе ? styles.everyone : '',
                   cell.date === today ? styles.today : '',
                   cell.outside ? styles.outside : '',

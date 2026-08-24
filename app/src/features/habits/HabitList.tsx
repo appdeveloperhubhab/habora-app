@@ -55,8 +55,19 @@ export function HabitList({
    */
   padded?: boolean
 }) {
-  const { settings, isDone, datesOf, toggleEntry, deleteHabit, saveSettings, inviteLink, reorderHabits, friends } =
-    useStore()
+  const {
+    settings,
+    isDone,
+    countOf,
+    datesOf,
+    partialDatesOf,
+    markEntry,
+    deleteHabit,
+    saveSettings,
+    inviteLink,
+    reorderHabits,
+    friends,
+  } = useStore()
   const nav = useNav()
   const t = dict(settings.lang)
   const today = todayIso()
@@ -78,8 +89,30 @@ export function HabitList({
     return map
   }, [habits, friends, partnerId])
 
-  const handleToggle = (habitId: string) => {
-    void toggleEntry(habitId, today)
+  /*
+   * Недобранные дни по привычкам — готовыми наборами. Сетка спрашивает про
+   * каждый свой день, а в году их четыре сотни: перебирать список дат на
+   * каждую клетку значит считать одно и то же тысячи раз.
+   */
+  const partialByHabit = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const habit of habits) {
+      const days = partialDatesOf(habit.id)
+      if (days.length > 0) map.set(habit.id, new Set(days))
+    }
+    return map
+  }, [habits, partialDatesOf])
+
+  /*
+   * Нажатие на кнопку отметки. У привычки с нормой в один раз это по-прежнему
+   * переключатель; у привычки с нормой — счётчик: пока норма не набрана,
+   * прибавляем, а на набранной убавляем.
+   *
+   * Убавляем, а не обнуляем: три стакана набирались тремя касаниями, и стирать
+   * их одним — слишком просто для случайного тычка.
+   */
+  const handleToggle = (habitId: string, done: boolean) => {
+    void markEntry(habitId, today, done ? 'dec' : 'inc')
     if (!settings.hintSeen) void saveSettings({ hintSeen: true })
   }
 
@@ -124,14 +157,17 @@ export function HabitList({
           if (!habit) return null
           const index = habits.indexOf(habit)
 
+          const done = isDone(habit.id, today)
+
           return view === 'week' ? (
             <HabitCard
               habit={habit}
               dates={datesOf(habit.id)}
               partners={partnersByHabit.get(habit.id) ?? NO_PARTNERS}
-              done={isDone(habit.id, today)}
+              done={done}
+              count={countOf(habit.id, today)}
               hint={hint && index === 0}
-              onToggle={() => handleToggle(habit.id)}
+              onToggle={() => handleToggle(habit.id, done)}
               onOpen={() => nav.push({ name: 'habit', habitId: habit.id })}
               onLongPress={() => setMenuFor(habit)}
             />
@@ -140,10 +176,12 @@ export function HabitList({
               habit={habit}
               dates={datesOf(habit.id)}
               partners={partnersByHabit.get(habit.id) ?? NO_PARTNERS}
-              done={isDone(habit.id, today)}
+              partial={partialByHabit.get(habit.id)}
+              done={done}
+              count={countOf(habit.id, today)}
               size={view}
               t={t}
-              onToggle={() => handleToggle(habit.id)}
+              onToggle={() => handleToggle(habit.id, done)}
               onOpen={() => nav.push({ name: 'habit', habitId: habit.id })}
               onLongPress={() => setMenuFor(habit)}
             />

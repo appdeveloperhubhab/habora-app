@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db, rowToHabit } from '../db.js'
+import { markEntry } from '../entries.js'
 import { botUsername } from '../telegram/api.js'
 import { notifyHabitDeleted, notifyPartnersMarked } from '../telegram/partners.js'
 import {
@@ -8,7 +9,7 @@ import {
   habitsQuerySchema,
   reminderSchema,
   reorderSchema,
-  toggleEntrySchema,
+  markEntrySchema,
   updateHabitSchema,
 } from '../schemas.js'
 
@@ -162,6 +163,7 @@ export async function habitRoutes(app) {
       color: input.color,
       icon: input.icon,
       schedule: input.schedule,
+      target: input.target ?? 1,
       streakGoal: input.streakGoal ?? null,
       tinted: input.tinted ?? true,
       durationSec: input.durationSec ?? null,
@@ -174,8 +176,8 @@ export async function habitRoutes(app) {
       [
         {
           sql: `INSERT INTO habits (id, user_id, name, description, color, icon, schedule,
-                                    streak_goal, tinted, duration_sec, sort_order, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    target, streak_goal, tinted, duration_sec, sort_order, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
             habit.id,
             request.userId,
@@ -184,6 +186,7 @@ export async function habitRoutes(app) {
             habit.color,
             habit.icon,
             JSON.stringify(habit.schedule),
+            habit.target,
             habit.streakGoal,
             habit.tinted ? 1 : 0,
             habit.durationSec,
@@ -221,7 +224,7 @@ export async function habitRoutes(app) {
     await db.execute({
       sql: `UPDATE habits
               SET name = ?, description = ?, color = ?, icon = ?, schedule = ?,
-                  streak_goal = ?, tinted = ?, duration_sec = ?
+                  target = ?, streak_goal = ?, tinted = ?, duration_sec = ?
             WHERE id = ? AND user_id = ?`,
       args: [
         merged.name,
@@ -229,6 +232,7 @@ export async function habitRoutes(app) {
         merged.color,
         merged.icon,
         JSON.stringify(merged.schedule),
+        merged.target,
         merged.streakGoal,
         merged.tinted ? 1 : 0,
         merged.durationSec,
@@ -405,53 +409,46 @@ export async function habitRoutes(app) {
     const { rows } =
       from && to
         ? await db.execute({
-            sql: 'SELECT habit_id, date FROM entries WHERE user_id = ? AND date BETWEEN ? AND ?',
+            sql: 'SELECT habit_id, date, count FROM entries WHERE user_id = ? AND date BETWEEN ? AND ?',
             args: [request.userId, from, to],
           })
         : await db.execute({
-            sql: 'SELECT habit_id, date FROM entries WHERE user_id = ?',
+            sql: 'SELECT habit_id, date, count FROM entries WHERE user_id = ?',
             args: [request.userId],
           })
 
-    return rows.map((row) => ({ habitId: row.habit_id, date: row.date }))
+    return rows.map((row) => ({
+      habitId: row.habit_id,
+      date: row.date,
+      count: Number(row.count ?? 1),
+    }))
   })
 
-  app.post('/api/entries/toggle', { schema: toggleEntrySchema }, async (request, reply) => {
-    const { habitId, date } = request.body
+  app.post('/api/entries/mark', { schema: markEntrySchema }, async (request, reply) => {
+    const { habitId, date, action = 'inc' } = request.body
 
     // Отмечать вправе любой участник, а не только создатель.
     if (!(await isMember(habitId, request.userId))) {
       return reply.code(404).send({ error: 'Привычка не найдена' })
     }
 
-    const existing = await db.execute({
-      sql: 'SELECT 1 FROM entries WHERE habit_id = ? AND user_id = ? AND date = ?',
-      args: [habitId, request.userId, date],
-    })
-
-    if (existing.rows[0]) {
-      await db.execute({
-        sql: 'DELETE FROM entries WHERE habit_id = ? AND user_id = ? AND date = ?',
-        args: [habitId, request.userId, date],
-      })
-      return { done: false }
-    }
-
-    await db.execute({
-      sql: 'INSERT INTO entries (user_id, habit_id, date) VALUES (?, ?, ?)',
-      args: [request.userId, habitId, date],
-    })
+    const result = await markEntry(habitId, request.userId, date, action)
 
     /*
      * Напарникам — весть, но не дожидаясь её отправки: галочка в приложении
      * должна отзываться мгновенно, а поход в Telegram занимает сотни
      * миллисекунд на каждого участника. Не дошло — не беда, отметка уже
      * записана, и ради неё сюда и обращались.
+     *
+     * Сообщаем только о закрытом дне, а не о каждом разе: у привычки с нормой
+     * в три раза напарник получал бы три сообщения об одном и том же дне.
      */
-    void notifyPartnersMarked(habitId, request.userId, date).catch((error) => {
-      app.log.error({ error, habitId }, 'не удалось известить напарников')
-    })
+    if (result.completed) {
+      void notifyPartnersMarked(habitId, request.userId, date).catch((error) => {
+        app.log.error({ error, habitId }, 'не удалось известить напарников')
+      })
+    }
 
-    return { done: true }
+    return { count: result.count, done: result.done }
   })
 }

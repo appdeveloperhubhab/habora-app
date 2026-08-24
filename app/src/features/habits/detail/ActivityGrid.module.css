@@ -76,3 +76,8 @@
 .future {
   opacity: 0.35;
 }
+
+/* Начатый, но недобранный день: бледнее выполненного, заметнее пустого. */
+.partial {
+  background: color-mix(in srgb, var(--habit) 40%, var(--cell-empty));
+}

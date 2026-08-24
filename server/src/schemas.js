@@ -43,6 +43,12 @@ const habitFields = {
   color,
   icon,
   schedule,
+  /*
+   * Норма на день. Потолок в десять раз — не техническое ограничение:
+   * привычка, которую нужно выполнить чаще, это уже не привычка, а будильник,
+   * и десяти напоминаний в день достаточно, чтобы человек выключил бота.
+   */
+  target: { type: 'integer', minimum: 1, maximum: 10 },
   // Пустая цель приходит как null — «без цели» это её отсутствие, а не ноль.
   streakGoal: { type: ['integer', 'null'], minimum: 0, maximum: 365 },
   tinted: { type: 'boolean' },
@@ -88,13 +94,22 @@ export const reorderSchema = {
   },
 }
 
-export const toggleEntrySchema = {
+/**
+ * Отметка за день.
+ *
+ * Не «переключить», а действие: у привычки с нормой больше одного раза
+ * переключать нечего — счётчик растёт по одному. Четыре действия покрывают
+ * все пути: кнопка на карточке прибавляет и убавляет, календарь закрывает и
+ * стирает день целиком.
+ */
+export const markEntrySchema = {
   body: {
     type: 'object',
     required: ['habitId', 'date'],
     properties: {
       habitId: { type: 'string', minLength: 1, maxLength: 64 },
       date: isoDate,
+      action: { type: 'string', enum: ['inc', 'dec', 'full', 'clear'] },
     },
     additionalProperties: false,
   },

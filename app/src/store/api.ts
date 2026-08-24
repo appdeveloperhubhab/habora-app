@@ -1,7 +1,7 @@
 import type { Entry, Friend, Habit, HabitInput, IsoDate, Settings } from '../types'
 import { initData } from '../lib/telegram'
 import { todayIso } from '../lib/dates'
-import { normalizeSettings, type DataSource } from './datasource'
+import { normalizeSettings, type DataSource, type MarkAction } from './datasource'
 
 /**
  * Хранилище на сервере. Подключается, когда приложение открыто внутри Telegram
@@ -101,12 +101,12 @@ export class ApiDataSource implements DataSource {
     return this.request<Entry[]>(`/api/entries${query}`)
   }
 
-  async toggleEntry(habitId: string, date: IsoDate) {
-    const result = await this.request<{ done: boolean }>('/api/entries/toggle', {
+  async markEntry(habitId: string, date: IsoDate, action: MarkAction) {
+    const result = await this.request<{ count: number }>('/api/entries/mark', {
       method: 'POST',
-      body: JSON.stringify({ habitId, date }),
+      body: JSON.stringify({ habitId, date, action }),
     })
-    return result.done
+    return result.count
   }
 
   async getSettings() {
