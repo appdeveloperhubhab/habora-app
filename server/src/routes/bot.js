@@ -10,6 +10,7 @@ import {
 import { escapeHtml, texts } from '../telegram/messages.js'
 import { habitLines, pendingHabits, runReminderTick, weekdayOf } from '../telegram/reminders.js'
 import { notifyPartnersMarked } from '../telegram/partners.js'
+import { handleAdminCallback, handleAdminMessage } from '../telegram/admin.js'
 
 /**
  * Приём событий из Telegram и будильник рассылки.
@@ -89,6 +90,9 @@ async function handleMessage(message, webAppUrl) {
             chat_started = 1`,
     args: [from.id, from.first_name ?? '', from.username ?? null, from.language_code ?? null, now, now],
   })
+
+  // Хозяйские команды — до всего остального: список людей и блокировка.
+  if (await handleAdminMessage(message)) return
 
   const text = message.text ?? ''
   if (text.startsWith('/start')) {
@@ -212,6 +216,9 @@ async function handleJoin(from, habitId, webAppUrl) {
  * сообщение после нажатия.
  */
 async function handleCallback(query, webAppUrl) {
+  // Кнопки из хозяйского списка людей — не про привычки, разбираются отдельно.
+  if (await handleAdminCallback(query)) return
+
   const t = texts(query.from?.language_code)
   const [kind, habitId, date] = String(query.data ?? '').split(':')
 
