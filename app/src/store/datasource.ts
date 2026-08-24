@@ -30,7 +30,8 @@ export interface DataSource {
   getHabits(): Promise<Habit[]>
   createHabit(input: HabitInput): Promise<Habit>
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<Habit>
-  setReminder(id: string, remindAt: string | null): Promise<void>
+  /** Свои времена напоминаний: у каждого участника они личные. */
+  setReminders(id: string, times: string[]): Promise<void>
   deleteHabit(id: string): Promise<void>
   /** Новый порядок привычек, полным списком id сверху вниз. */
   reorderHabits(ids: string[]): Promise<Habit[]>

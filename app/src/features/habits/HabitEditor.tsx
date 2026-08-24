@@ -91,8 +91,8 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
    * У уже заведённой привычки берётся её собственное значение: там выключено
    * значит выключено, и трогать чужой выбор нельзя.
    */
-  const [remindAt, setRemindAt] = useState<string | null>(
-    habit ? habit.remindAt : DEFAULT_TIME,
+  const [remindTimes, setRemindTimes] = useState<string[]>(
+    habit ? habit.remindTimes : [DEFAULT_TIME],
   )
 
   /*
@@ -149,7 +149,7 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
        */
       streakGoal: habit?.streakGoal ?? null,
       durationSec: habit?.durationSec ?? null,
-      remindAt,
+      remindTimes,
     }
 
     if (habit) {
@@ -351,10 +351,15 @@ export function HabitEditor({ habit, onClose }: { habit: Habit | null; onClose()
           <h3 className={styles.heading}>{t.editor.remind}</h3>
           <p className={styles.hint}>{t.editor.remindHint}</p>
           <TimePicker
-            value={remindAt}
+            value={remindTimes}
             color={color}
-            labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
-            onChange={setRemindAt}
+            labels={{
+              on: t.editor.remindOn,
+              off: t.editor.remindOff,
+              add: t.editor.remindAdd,
+              remove: t.editor.remindRemove,
+            }}
+            onChange={setRemindTimes}
           />
         </section>
 

@@ -43,7 +43,7 @@ export interface StoreValue {
   markEntry(habitId: string, date: IsoDate, action?: MarkAction): Promise<void>
   createHabit(input: HabitInput): Promise<Habit>
   updateHabit(id: string, patch: Partial<HabitInput>): Promise<void>
-  setReminder(id: string, remindAt: string | null): Promise<void>
+  setReminders(id: string, times: string[]): Promise<void>
   deleteHabit(id: string): Promise<void>
   reorderHabits(ids: string[]): Promise<void>
 

@@ -33,6 +33,19 @@ function entryKey(habitId: string, date: IsoDate): string {
   return `${habitId}|${date}`
 }
 
+/**
+ * Времена напоминаний записанной привычки.
+ *
+ * Привычки, заведённые до появления списка, хранят одно время в поле
+ * `remindAt` — читаем его как список из одного часа. Поле в типе больше не
+ * описано, поэтому его достаём через запись с неизвестными полями.
+ */
+function readTimes(habit: Habit): string[] {
+  if (Array.isArray(habit.remindTimes)) return habit.remindTimes
+  const old = (habit as unknown as { remindAt?: string | null }).remindAt
+  return old ? [old] : []
+}
+
 export class LocalDataSource implements DataSource {
   async getHabits(): Promise<Habit[]> {
     return read<Habit[]>(KEY_HABITS, [])
@@ -42,7 +55,8 @@ export class LocalDataSource implements DataSource {
         ...habit,
         tinted: habit.tinted ?? true,
         durationSec: habit.durationSec ?? null,
-        remindAt: habit.remindAt ?? null,
+        // Привычки, заведённые с одним временем, читаются как список из него.
+        remindTimes: readTimes(habit),
         target: habit.target ?? 1,
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -71,9 +85,12 @@ export class LocalDataSource implements DataSource {
     return updated
   }
 
-  async setReminder(id: string, remindAt: string | null): Promise<void> {
+  async setReminders(id: string, times: string[]): Promise<void> {
     const habits = read<Habit[]>(KEY_HABITS, [])
-    write(KEY_HABITS, habits.map((h) => (h.id === id ? { ...h, remindAt } : h)))
+    write(
+      KEY_HABITS,
+      habits.map((h) => (h.id === id ? { ...h, remindTimes: [...new Set(times)].sort() } : h)),
+    )
   }
 
   async deleteHabit(id: string): Promise<void> {

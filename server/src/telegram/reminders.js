@@ -238,25 +238,27 @@ export function minutesOfDay(value) {
 }
 
 /**
- * Напоминание в назначенный привычке час.
+ * Напоминания в назначенные привычке часы.
  *
- * Время у привычки одно на всех участников: договариваются делать вместе, и
- * разное время у каждого означало бы разные привычки под одним названием.
- * А вот наступает оно у всех по-своему — участники живут в разных часовых
- * поясах, — поэтому перебираем не привычки, а участие в них, и дату отправки
- * помним у каждого свою.
+ * Часов у одного человека по одной привычке может быть несколько: воду пьют
+ * трижды в день. У каждого своя строка и своя дата последней отправки —
+ * одной на привычку не хватило бы, отправив в девять, сервер счёл бы день
+ * закрытым и промолчал бы в час и в шесть.
+ *
+ * Часы личные: один идёт с утра, другой после работы, и общий час одному из
+ * них сделал бы напоминание бесполезным.
  */
 export async function runTimedReminders(webAppUrl, now = Date.now()) {
   const { rows } = await db.execute(`
-    SELECT m.habit_id, m.user_id, m.reminded_on, m.remind_at,
+    SELECT r.habit_id, r.user_id, r.reminded_on, r.at AS remind_at,
            h.name, h.schedule, h.target,
            u.language, u.tz_offset,
            s.data AS settings
-      FROM habit_members m
-      JOIN habits h ON h.id = m.habit_id
-      JOIN users  u ON u.user_id = m.user_id
-      LEFT JOIN settings s ON s.user_id = m.user_id
-     WHERE m.remind_at IS NOT NULL AND u.chat_started = 1 AND u.blocked = 0
+      FROM habit_reminders r
+      JOIN habits h ON h.id = r.habit_id
+      JOIN users  u ON u.user_id = r.user_id
+      LEFT JOIN settings s ON s.user_id = r.user_id
+     WHERE u.chat_started = 1 AND u.blocked = 0
   `)
 
   const result = { checked: rows.length, sent: 0, skipped: 0 }
@@ -285,8 +287,8 @@ export async function runTimedReminders(webAppUrl, now = Date.now()) {
      * следующим стуком будильника — весь остаток отведённого времени.
      */
     await db.execute({
-      sql: 'UPDATE habit_members SET reminded_on = ? WHERE habit_id = ? AND user_id = ?',
-      args: [date, row.habit_id, row.user_id],
+      sql: 'UPDATE habit_reminders SET reminded_on = ? WHERE habit_id = ? AND user_id = ? AND at = ?',
+      args: [date, row.habit_id, row.user_id, row.remind_at],
     })
 
     if (!isScheduled(weekday, JSON.parse(row.schedule))) continue

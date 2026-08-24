@@ -45,7 +45,7 @@ export function HabitScreen({
     inviteLink,
     friends,
     refreshFriends,
-    setReminder,
+    setReminders,
   } = useStore()
   const nav = useNav()
   const t = dict(settings.lang)
@@ -211,15 +211,20 @@ export function HabitScreen({
           <section className={styles.remind}>
             <h3 className={styles.remindTitle}>{t.editor.remind}</h3>
             <TimePicker
-              value={habit.remindAt}
+              value={habit.remindTimes}
               color={habit.color}
-              labels={{ on: t.editor.remindOn, off: t.editor.remindOff }}
-              onChange={(next) => void setReminder(habit.id, next)}
+              labels={{
+                on: t.editor.remindOn,
+                off: t.editor.remindOff,
+                add: t.editor.remindAdd,
+                remove: t.editor.remindRemove,
+              }}
+              onChange={(next) => void setReminders(habit.id, next)}
             />
 
-            {/* Выключенные в настройках напоминания гасят и этот час: обещать
+            {/* Выключенные в настройках напоминания гасят и эти часы: обещать
                 письмо, которое не придёт, хуже, чем не обещать ничего. */}
-            {habit.remindAt && !settings.reminders && (
+            {habit.remindTimes.length > 0 && !settings.reminders && (
               <p className={styles.remindOff}>{t.detail.remindersOff}</p>
             )}
           </section>

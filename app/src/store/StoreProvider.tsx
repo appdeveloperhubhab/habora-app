@@ -330,10 +330,11 @@ export function StoreProvider({ children, source }: Props) {
    * отзываться мгновенно, а час — личная настройка, и разойтись с чужими
    * данными она не может.
    */
-  const setReminder = useCallback(
-    async (id: string, remindAt: string | null) => {
-      setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, remindAt } : h)))
-      await dataSource.setReminder(id, remindAt)
+  const setReminders = useCallback(
+    async (id: string, times: string[]) => {
+      const sorted = [...new Set(times)].sort()
+      setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, remindTimes: sorted } : h)))
+      await dataSource.setReminders(id, sorted)
     },
     [dataSource],
   )
@@ -415,7 +416,7 @@ export function StoreProvider({ children, source }: Props) {
       markEntry,
       createHabit,
       updateHabit,
-      setReminder,
+      setReminders,
       deleteHabit,
       reorderHabits,
       saveSettings,
@@ -425,7 +426,7 @@ export function StoreProvider({ children, source }: Props) {
     [
       ready, failed, denied, retry, habits, entries, settings, friends, refreshFriends, inviteLink,
       isDone, countOf, targetOf, datesOf, partialDatesOf, activeDates, markEntry,
-      createHabit, updateHabit, setReminder, deleteHabit, reorderHabits,
+      createHabit, updateHabit, setReminders, deleteHabit, reorderHabits,
       saveSettings, celebration, dismissCelebration,
     ],
   )

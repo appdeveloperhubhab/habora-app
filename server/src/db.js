@@ -206,6 +206,24 @@ await addColumnIfMissing('habits', 'target', 'INTEGER NOT NULL DEFAULT 1')
 await addColumnIfMissing('entries', 'count', 'INTEGER NOT NULL DEFAULT 1')
 
 /*
+ * Времена напоминаний: у каждого участника по каждой привычке их может быть
+ * несколько. Воду пьют трижды в день, и напомнить о ней надо трижды.
+ *
+ * Отдельной таблицей, а не списком в столбце: у каждого времени своя отметка
+ * о сегодняшней отправке. Одной на привычку не хватило бы — отправив в
+ * девять, сервер считал бы день закрытым и промолчал бы в час и в шесть.
+ */
+await db.executeMultiple(`
+  CREATE TABLE IF NOT EXISTS habit_reminders (
+    habit_id    TEXT    NOT NULL REFERENCES habits (id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL,
+    at          TEXT    NOT NULL,
+    reminded_on TEXT,
+    PRIMARY KEY (habit_id, user_id, at)
+  );
+`)
+
+/*
  * Столбцы для напоминания в назначенный час.
  *
  * `habit_members.remind_at` — время `ЧЧ:ММ`, своё у каждого участника.
@@ -262,6 +280,33 @@ if (Number(кПереезду.rows[0].n) > 0) {
     ],
     'write',
   )
+}
+
+/*
+ * Переезд единственного времени в список.
+ *
+ * Одним заходом и один раз: сразу после переноса источник обнуляется, поэтому
+ * повторный запуск сервера ничего не находит и ничего не делает. Без этого
+ * удалённое человеком время возвращалось бы при каждом перезапуске.
+ */
+{
+  const { rows } = await db.execute(
+    'SELECT habit_id, user_id, remind_at, reminded_on FROM habit_members WHERE remind_at IS NOT NULL',
+  )
+
+  if (rows.length > 0) {
+    await db.batch(
+      [
+        ...rows.map((row) => ({
+          sql: `INSERT OR IGNORE INTO habit_reminders (habit_id, user_id, at, reminded_on)
+                VALUES (?, ?, ?, ?)`,
+          args: [row.habit_id, row.user_id, row.remind_at, row.reminded_on ?? null],
+        })),
+        { sql: 'UPDATE habit_members SET remind_at = NULL', args: [] },
+      ],
+      'write',
+    )
+  }
 }
 
 /*
@@ -477,7 +522,12 @@ export function rowToHabit(row) {
     // В SQLite нет отдельного булева типа — хранится 0 или 1.
     tinted: row.tinted === 1,
     durationSec: row.duration_sec,
-    remindAt: row.remind_at,
+    /*
+     * Времени напоминания здесь нет намеренно: оно личное и лежит отдельной
+     * таблицей. Столбец у привычки остался только как источник для переезда,
+     * и отдавать его приложению значило бы гасить у человека его собственные
+     * часы пустотой из старого поля.
+     */
     sortOrder: row.sort_order,
     createdAt: row.created_at,
   }

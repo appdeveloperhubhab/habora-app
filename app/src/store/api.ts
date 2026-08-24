@@ -77,11 +77,11 @@ export class ApiDataSource implements DataSource {
     return this.request<Habit>(`/api/habits/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
   }
 
-  /** Своё время напоминания: у каждого участника оно личное. */
-  async setReminder(id: string, remindAt: string | null) {
+  /** Свои времена напоминаний: у каждого участника они личные. */
+  async setReminders(id: string, times: string[]) {
     await this.request(`/api/habits/${id}/reminder`, {
       method: 'PATCH',
-      body: JSON.stringify({ remindAt }),
+      body: JSON.stringify({ times }),
     })
   }
 

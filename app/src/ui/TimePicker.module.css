@@ -1,10 +1,31 @@
+.block {
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
 .row {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-lg);
-  background: var(--surface-2);
+}
+
+/*
+ * Назначенные часы. Переносятся, когда перестают помещаться: пять плашек в
+ * одну строку не влезают ни на одном телефоне, а горизонтальная прокрутка
+ * прятала бы часть из них — то есть прятала бы напоминания, о которых
+ * человек не вспомнит, пока они не придут.
+ *
+ * Занимают всё место между колокольчиком и переключателем, поэтому
+ * `margin-right: auto` у самой плашки больше не нужен.
+ */
+.times {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
 }
 
 .icon {
@@ -35,8 +56,7 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  margin-right: auto;
-  padding: var(--sp-1) var(--sp-3);
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--habit) 16%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 28%, transparent);
@@ -53,8 +73,60 @@
   }
 }
 
-.pill:active {
+/* Промин — на само поле, а не на плашку целиком: иначе крестик рядом
+   уезжал бы вместе с цифрами при нажатии на них. */
+.pillLabel:active {
   transform: scale(0.94);
+}
+
+.pillLabel {
+  display: flex;
+  align-items: center;
+  transition: transform var(--t-fast) var(--ease-spring);
+}
+
+/*
+ * Убрать час. Крестик мелкий и приглушённый: он рядом с цифрами, по которым
+ * нажимают часто, и в полную силу отвлекал бы на себя каждое такое нажатие.
+ */
+.remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  border-radius: var(--r-pill);
+  color: color-mix(in srgb, var(--habit) 60%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring), color var(--t-fast) linear;
+}
+
+.remove:active {
+  transform: scale(0.82);
+  color: var(--habit);
+}
+
+/*
+ * Добавить час. Пунктирной обводкой, а не заливкой: это не назначенное время,
+ * а место, куда его можно поставить, и выглядеть как готовая плашка оно не
+ * должно.
+ */
+.add {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  color: color-mix(in srgb, var(--habit) 75%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--habit) 30%, transparent);
+  transition: transform var(--t-fast) var(--ease-spring), background var(--t-fast) linear;
+  animation: pillIn var(--t-mid) var(--ease-spring);
+}
+
+.add:active {
+  transform: scale(0.88);
+  background: color-mix(in srgb, var(--habit) 14%, transparent);
 }
 
 .input {

@@ -81,7 +81,7 @@ export function OnboardingScreen() {
           target: 1,
           streakGoal: null,
           durationSec: null,
-          remindAt: null,
+          remindTimes: [],
         }),
       )
     }
