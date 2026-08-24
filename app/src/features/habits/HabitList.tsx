@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Habit } from '../../types'
 import { useStore } from '../../store/context'
 import { useNav } from '../../shell/navigation'
@@ -14,6 +14,13 @@ import { ReorderList } from './ReorderList'
 import { canEdit } from './canEdit'
 import { NO_PARTNERS, partnersOf, type PersonMarks } from './participants'
 import styles from './HabitList.module.css'
+
+/*
+ * Сколько выполненная привычка стоит на месте, прежде чем уехать вниз.
+ * Ровно столько длится вспышка карточки (`--t-settle`): сначала похвала
+ * целиком, потом переезд.
+ */
+const SETTLE_MS = 900
 
 /**
  * Список карточек привычек со всем, что к ним прилагается: тап открывает
@@ -104,6 +111,52 @@ export function HabitList({
   }, [habits, partialDatesOf])
 
   /*
+   * Порядок показа: выполненные уходят вниз.
+   *
+   * Сверху остаётся то, что ещё предстоит сделать, — а список тем самым
+   * отвечает на вопрос «что осталось», не заставляя выискивать невыполненное
+   * между закрытыми карточками.
+   *
+   * Внутри каждой половины порядок прежний, тот, что человек задал сам:
+   * сортировка в JavaScript устойчива и равные между собой карточки не
+   * переставляет.
+   *
+   * В режиме «Порядок» не трогаем вовсе: там карточки перетаскивают, и
+   * уезжающая из-под пальца была бы издевательством.
+   */
+  const target = useMemo(() => {
+    const ids = habits.map((habit) => habit.id)
+    if (orderMode) return ids
+    return [...ids].sort((a, b) => Number(isDone(a, today)) - Number(isDone(b, today)))
+  }, [habits, orderMode, isDone, today])
+
+  /*
+   * Что показано сейчас. Отличается от желаемого порядка ровно то время, пока
+   * на карточке доигрывает подтверждение отметки: `--t-settle`.
+   */
+  const [shown, setShown] = useState(target)
+
+  useEffect(() => {
+    const same = shown.length === target.length && shown.every((id, i) => id === target[i])
+    if (same) return
+
+    /*
+     * Привычку завели или удалили — показываем сразу. Ждать здесь нечем:
+     * задержка нужна ради доигрывающей отметки, а её тут нет, зато лишняя
+     * секунда со стёртой привычкой на экране читается как незаписанное
+     * удаление.
+     */
+    const sameSet = shown.length === target.length && target.every((id) => shown.includes(id))
+    if (!sameSet) {
+      setShown(target)
+      return
+    }
+
+    const timer = window.setTimeout(() => setShown(target), SETTLE_MS)
+    return () => window.clearTimeout(timer)
+  }, [target, shown])
+
+  /*
    * Нажатие на кнопку отметки. У привычки с нормой в один раз это по-прежнему
    * переключатель; у привычки с нормой — счётчик: пока норма не набрана,
    * прибавляем, а на набранной убавляем.
@@ -141,7 +194,7 @@ export function HabitList({
       */}
       <ReorderList
         key={view}
-        ids={habits.map((habit) => habit.id)}
+        ids={shown}
         enabled={orderMode}
         className={[
           styles.list,
@@ -155,7 +208,9 @@ export function HabitList({
         renderItem={(id) => {
           const habit = habits.find((item) => item.id === id)
           if (!habit) return null
-          const index = habits.indexOf(habit)
+          // Подсказка новичку — у самой верхней карточки, а не у первой
+          // заведённой: показывать пальцем нужно на ту, что перед глазами.
+          const index = shown.indexOf(id)
 
           const done = isDone(habit.id, today)
 
